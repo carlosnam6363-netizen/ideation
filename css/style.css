@@ -1,0 +1,162 @@
+/* 화성시 동탄구 청년정책협의체 커스텀 스타일 및 애니메이션 */
+
+:root {
+    --primary: #2563EB;
+    --primary-dark: #1D4ED8;
+    --primary-light: #60A5FA;
+    --secondary: #0D9488;
+    --accent: #7C3AED;
+    --bg-main: #F8FAFC;
+    --card-bg: #FFFFFF;
+}
+
+/* 폰트 및 기본 세팅 */
+body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+    background-color: var(--bg-main);
+    color: #1E293B;
+    overflow-x: hidden;
+}
+
+/* 커스텀 스크롤바 */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #F1F5F9;
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
+
+/* 단계 전환 애니메이션 */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInScale {
+    from {
+        opacity: 0;
+        transform: scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.step-anim-next {
+    animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.step-anim-prev {
+    animation: slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.fade-in-scale {
+    animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 패들렛 (Padlet) 스타일 카드 */
+.padlet-column {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 1rem;
+    min-height: 520px;
+    display: flex;
+    flex-direction: column;
+}
+
+.padlet-card {
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0.85rem;
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.padlet-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px -3px rgba(37, 99, 235, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-color: #93C5FD;
+}
+
+/* 글래스모피즘 효과 */
+.glass-header {
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+/* 탭 버튼 스타일 */
+.nav-tab-btn {
+    position: relative;
+    transition: all 0.2s ease;
+}
+
+.nav-tab-btn.active {
+    color: #2563EB;
+    font-weight: 700;
+}
+
+.nav-tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #2563EB;
+    border-radius: 3px 3px 0 0;
+}
+
+/* 정책 제안서 인쇄 전용 스타일 */
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    #printable-proposal-area, #printable-proposal-area * {
+        visibility: visible;
+    }
+    #printable-proposal-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+    }
+    .no-print {
+        display: none !important;
+    }
+}

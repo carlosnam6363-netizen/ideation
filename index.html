@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 플랫폼</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="css/style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="min-h-screen flex flex-col bg-slate-50 text-slate-800 antialiased">
+
+    <!-- 최상단 헤더 네비게이션 -->
+    <header class="sticky top-0 z-40 glass-header shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- 로고 & 타이틀 -->
+                <div class="flex items-center space-x-3.5">
+                    <div class="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 text-white flex items-center justify-center shadow-md ring-2 ring-blue-100">
+                        <i data-lucide="compass" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-wider rounded-md bg-blue-100 text-blue-700">
+                                화성특례시 동탄구
+                            </span>
+                            <span class="text-xs font-semibold text-slate-500">
+                                2027~2030 정책 혁신
+                            </span>
+                        </div>
+                        <h1 class="text-lg sm:text-xl font-extrabold text-slate-900 tracking-tight">
+                            화성시 청년정책협의체 <span class="text-blue-600">동탄구 교육, 참여, 권리 분과</span>
+                        </h1>
+                    </div>
+                </div>
+
+                <!-- 위원회 현황 뱃지 -->
+                <div class="hidden md:flex items-center space-x-3 text-xs">
+                    <div class="px-3 py-1.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 flex items-center space-x-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="font-medium">분과 위원: <strong class="text-slate-900">12명 전원 연계</strong></span>
+                    </div>
+                    <div class="px-3 py-1.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-semibold flex items-center space-x-1.5">
+                        <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                        <span>온통청년 2,934건 DB 연계</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 메인 3대 탭 메뉴 -->
+            <nav class="flex space-x-8 border-t border-slate-200/80 -mb-px">
+                <button data-tab="tab-1" class="nav-tab-btn active py-3.5 text-sm font-semibold text-slate-600 hover:text-blue-600 flex items-center space-x-2">
+                    <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                    <span>1. 2027년 분과 내 교육 프로그램 취합 (패들렛)</span>
+                    <span id="nav-prog-count-badge" class="ml-1 text-[11px] px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-700 font-bold">12</span>
+                </button>
+                <button data-tab="tab-2" class="nav-tab-btn py-3.5 text-sm font-semibold text-slate-600 hover:text-blue-600 flex items-center space-x-2">
+                    <i data-lucide="lightbulb" class="w-4 h-4"></i>
+                    <span>2. 2027년 정책제안서 작성 아이디에이션 (5단계 워크플로우)</span>
+                    <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 font-bold">AI·MCP</span>
+                </button>
+                <button data-tab="tab-3" class="nav-tab-btn py-3.5 text-sm font-semibold text-slate-600 hover:text-blue-600 flex items-center space-x-2">
+                    <i data-lucide="file-check-2" class="w-4 h-4"></i>
+                    <span>3. 회칙 정리 (별도 파일 공유 예정)</span>
+                    <span class="ml-1 text-[10px] px-1.5 py-0.5 rounded-full bg-slate-200 text-slate-700 font-bold">초안 및 파일함</span>
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- ============================================================== -->
+        <!-- 탭 1: 2027년 분과 내 교육 프로그램 취합 (패들렛 보드) -->
+        <!-- ============================================================== -->
+        <section id="tab-1" class="tab-content-panel space-y-6">
+            <!-- 탭 안내 배너 -->
+            <div class="bg-gradient-to-r from-blue-900 via-indigo-800 to-blue-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div class="relative z-10 max-w-3xl">
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/20 text-blue-200 text-xs font-semibold mb-3 border border-blue-400/30">
+                        <i data-lucide="users" class="w-3.5 h-3.5 text-teal-300"></i>
+                        <span>12명 위원 개별 맞춤 교육 설계 보드</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+                        2027년 분과 내 필요 교육 프로그램 취합
+                    </h2>
+                    <p class="text-blue-100 text-sm sm:text-base leading-relaxed">
+                        패들렛(Padlet)과 유사한 인터랙티브 보드 형태로, 동탄구 교육·참여·권리 분과 12명의 위원이 본인의 전문성과 분과 활동에 필요한 교육 프로그램을 등록하고 피드백을 나눕니다.
+                    </p>
+                </div>
+                <div class="absolute -right-12 -bottom-12 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+            </div>
+
+            <!-- 컨트롤 바 (필터, 검색, 뷰 전환, 신규 제안 버튼) -->
+            <div class="glass-card p-4 rounded-xl flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm">
+                <!-- 좌측: 카테고리 필터 -->
+                <div class="flex items-center space-x-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0">
+                    <span class="text-xs font-bold text-slate-400 mr-1 uppercase">분야:</span>
+                    <button data-cat="all" class="padlet-cat-filter px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white transition">전체보기</button>
+                    <button data-cat="교육" class="padlet-cat-filter px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-600 hover:bg-slate-100 transition border border-slate-200">교육 혁신</button>
+                    <button data-cat="참여" class="padlet-cat-filter px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-600 hover:bg-slate-100 transition border border-slate-200">시정 참여</button>
+                    <button data-cat="권리" class="padlet-cat-filter px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-600 hover:bg-slate-100 transition border border-slate-200">청년 권익</button>
+                </div>
+
+                <!-- 우측: 검색, 뷰모드, 액션 버튼 -->
+                <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                    <!-- 검색창 -->
+                    <div class="relative w-48 sm:w-60">
+                        <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                        <input id="padlet-search-input" type="text" placeholder="프로그램, 위원, 태그 검색..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                    </div>
+
+                    <!-- 뷰 전환 토글 (컬럼별 vs 그리드) -->
+                    <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100">
+                        <button id="view-columns-btn" title="12명 위원 컬럼 뷰" class="px-2.5 py-1 text-xs font-bold rounded-md bg-blue-600 text-white transition flex items-center space-x-1">
+                            <i data-lucide="columns-3" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">위원별</span>
+                        </button>
+                        <button id="view-grid-btn" title="통합 카드 그리드 뷰" class="px-2.5 py-1 text-xs font-medium rounded-md bg-white text-slate-700 hover:bg-slate-50 transition flex items-center space-x-1">
+                            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                            <span class="hidden sm:inline">전체그리드</span>
+                        </button>
+                    </div>
+
+                    <!-- CSV 내보내기 -->
+                    <button id="export-programs-csv-btn" class="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg flex items-center space-x-1 shadow-sm transition">
+                        <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span class="hidden sm:inline">엑셀출력</span>
+                    </button>
+
+                    <!-- 신규 교육 등록 버튼 -->
+                    <button id="open-program-modal-btn" class="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm flex items-center space-x-1 transition">
+                        <i data-lucide="plus" class="w-4 h-4"></i>
+                        <span>교육 제안</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 패들렛 보드 메인 컨테이너 (JS 렌더링) -->
+            <div id="padlet-board-container" class="min-h-[500px]">
+                <!-- Dynamic Content injected via JS -->
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 탭 2: 2027 정책제안서 아이디에이션 (5단계 스텝 위저드 & 애니메이션) -->
+        <!-- ============================================================== -->
+        <section id="tab-2" class="tab-content-panel hidden space-y-8">
+            <!-- 아이디에이션 헤더 -->
+            <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl">
+                <div class="max-w-3xl">
+                    <span class="px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold mb-3 inline-flex items-center gap-1.5 border border-amber-400/30">
+                        <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+                        2027 화성특례시 청년정책제안서 도출 파이프라인
+                    </span>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+                        2027 청년 정책제안서 작성 아이디에이션
+                    </h2>
+                    <p class="text-slate-300 text-sm leading-relaxed">
+                        최근 청년 실태 설문조사 분석부터 본인 강점 선택, 온통청년 2,934건 정책 연계(MCP), 청년친화도시 벤치마킹, 그리고 실현 가능한 2027~2030 정책제안서 완성까지 단계별로 진행됩니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 5단계 단계별 인디케이터 (화면 전환 가이드) -->
+            <div class="glass-card p-4 sm:p-6 rounded-2xl shadow-sm">
+                <div class="flex items-center justify-between max-w-4xl mx-auto">
+                    <!-- Step 1 -->
+                    <div onclick="App.goToStep(1)" class="flex flex-col items-center cursor-pointer group">
+                        <div id="step-indicator-1" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 transition-all">
+                            1
+                        </div>
+                        <span class="text-[11px] font-bold text-slate-700 mt-2 text-center group-hover:text-blue-600">
+                            1. 설문조사 실태
+                        </span>
+                    </div>
+                    <div id="step-line-1" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+
+                    <!-- Step 2 -->
+                    <div onclick="App.goToStep(2)" class="flex flex-col items-center cursor-pointer group">
+                        <div id="step-indicator-2" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                            2
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
+                            2. 전문/강점 선택
+                        </span>
+                    </div>
+                    <div id="step-line-2" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+
+                    <!-- Step 3 -->
+                    <div onclick="App.goToStep(3)" class="flex flex-col items-center cursor-pointer group">
+                        <div id="step-indicator-3" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                            3
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
+                            3. 온통청년 MCP연계
+                        </span>
+                    </div>
+                    <div id="step-line-3" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+
+                    <!-- Step 4 -->
+                    <div onclick="App.goToStep(4)" class="flex flex-col items-center cursor-pointer group">
+                        <div id="step-indicator-4" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                            4
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
+                            4. 화성·친화도시 벤치마킹
+                        </span>
+                    </div>
+                    <div id="step-line-4" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+
+                    <!-- Step 5 -->
+                    <div onclick="App.goToStep(5)" class="flex flex-col items-center cursor-pointer group">
+                        <div id="step-indicator-5" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                            5
+                        </div>
+                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
+                            5. 정책제안 5선 추천
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 스텝별 컨테이너 (화면전환 애니메이션 탑재) -->
+            <div id="ideation-steps-wrapper" class="relative">
+
+                <!-- ---------------------------------------------------------- -->
+                <!-- STEP 1: 최근 청년 설문조사 크롤링/통계 분석 안내 -->
+                <!-- ---------------------------------------------------------- -->
+                <div id="ideation-step-1" class="step-panel space-y-6">
+                    <div class="glass-card p-6 sm:p-8 rounded-2xl shadow-sm">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+                            <div>
+                                <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">STEP 01. 빅데이터 실태 분석</span>
+                                <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+                                    청년들이 지금 가장 필요로 하는 도움은 무엇일까요?
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                                    국무조정실, 경기도, 화성특례시의 공식 청년 삶 실태조사 데이터를 종합 분석하여 정책 제안의 명확한 근거를 제공합니다.
+                                </p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-semibold px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 flex items-center gap-1">
+                                    <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+                                    공식 출처 데이터 반영
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- 설문조사 출처 카드 목록 -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex items-center space-x-2 text-blue-700 font-bold text-xs mb-1">
+                                    <i data-lucide="landmark" class="w-4 h-4"></i>
+                                    <span>국무조정실 / 통계청</span>
+                                </div>
+                                <h4 class="font-bold text-slate-900 text-sm mb-1">2024~2026 청년 삶 실태조사</h4>
+                                <p class="text-xs text-slate-500 mb-2">전국 17,000 청년 가구 표본, 주거비·일자리·정신건강 종합 분석</p>
+                                <a href="https://www.2030db.go.kr" target="_blank" class="text-[11px] font-semibold text-blue-600 hover:underline flex items-center gap-1">
+                                    <span>출처 데이터 원문 열람</span>
+                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                </a>
+                            </div>
+
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex items-center space-x-2 text-teal-700 font-bold text-xs mb-1">
+                                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
+                                    <span>경기연구원 / 경기도</span>
+                                </div>
+                                <h4 class="font-bold text-slate-900 text-sm mb-1">경기 청년 패널조사 보고서</h4>
+                                <p class="text-xs text-slate-500 mb-2">경기도 청년 3,500명 대상, 출퇴근 피로도 및 노동환경 실태</p>
+                                <a href="https://youth.gg.go.kr" target="_blank" class="text-[11px] font-semibold text-teal-600 hover:underline flex items-center gap-1">
+                                    <span>경기청년포털 확인</span>
+                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                </a>
+                            </div>
+
+                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                                <div class="flex items-center space-x-2 text-indigo-700 font-bold text-xs mb-1">
+                                    <i data-lucide="map-pin" class="w-4 h-4"></i>
+                                    <span>화성특례시 / 화성연구원</span>
+                                </div>
+                                <h4 class="font-bold text-slate-900 text-sm mb-1">화성시 청년 사회경제 통계</h4>
+                                <p class="text-xs text-slate-500 mb-2">동탄 권역 청년 1,200명 대상 특화 수요, 1인가구 거점 욕구</p>
+                                <a href="https://hey.hscity.go.kr" target="_blank" class="text-[11px] font-semibold text-indigo-600 hover:underline flex items-center gap-1">
+                                    <span>화성시 청년청 확인</span>
+                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- 설문조사 차트 및 핵심 니즈 영역 -->
+                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-6">
+                            <!-- 차트 영역 -->
+                            <div class="lg:col-span-6 bg-white p-5 rounded-xl border border-slate-200 flex flex-col justify-between">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h4 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
+                                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-600"></i>
+                                        청년들의 주요 애로사항 및 지원 필요도
+                                    </h4>
+                                    <span class="text-[11px] text-slate-400">단위: %</span>
+                                </div>
+                                <div class="h-64 relative">
+                                    <canvas id="surveyChart"></canvas>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-2 text-right">* 국무조정실 및 경기연구원 패널자료 재구성</p>
+                            </div>
+
+                            <!-- 4대 세부 니즈 카드 -->
+                            <div class="lg:col-span-6 space-y-3">
+                                <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-100">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h5 class="font-bold text-blue-900 text-sm">🎓 교육 & 직무 역량강화 (68.4% 필요)</h5>
+                                        <span class="text-xs font-bold text-blue-700">핵심 1순위</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        AI·소프트웨어·반도체 등 첨단 기술 실무 교육 및 포트폴리오 프로젝트 기회 부족 호소. 단순 이론형 자격증보다 <strong>기업 채용과 직결되는 실전 멘토링</strong> 요구.
+                                    </p>
+                                </div>
+
+                                <div class="p-4 rounded-xl bg-purple-50/70 border border-purple-100">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h5 class="font-bold text-purple-900 text-sm">⚖️ 청년 권익 & 주거·노동 안전망 (74.8% 불안)</h5>
+                                        <span class="text-xs font-bold text-purple-700">최대 불안</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        동탄 오피스텔 등 <strong>전세사기 불안(78.3%)</strong>과 중소·스타트업 포괄임금제/수당 미지급 등 <strong>노동권 침해(41.2%)</strong>에 대한 전문 법률·노무 무료 안전망 필요.
+                                    </p>
+                                </div>
+
+                                <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h5 class="font-bold text-emerald-900 text-sm">🗳️ 시정 참여 & 자치 권한 (71.4% 확대 희망)</h5>
+                                        <span class="text-xs font-bold text-emerald-700">거버넌스</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        시정 참여 기회가 형식적 자문에 그친다는 응답 67.8%. <strong>청년참여자율예산 및 리빙랩</strong>을 통해 청년이 예산을 직접 실행하는 실권 부여 강력 요구.
+                                    </p>
+                                </div>
+
+                                <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-100">
+                                    <div class="flex items-center justify-between mb-1">
+                                        <h5 class="font-bold text-amber-900 text-sm">🏢 동탄 청년 거점 & 1인가구 케어 (62.1% 요청)</h5>
+                                        <span class="text-xs font-bold text-amber-700">인프라</span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">
+                                        타향살이 1인가구 청년 고립감(38.5%) 해소를 위한 <strong>무료 공유오피스, 소셜다이닝, 공구 대여</strong> 등 퇴근 후 모일 수 있는 생활 거점 공간 조성 요구.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 하단 다음 버튼 -->
+                        <div class="pt-6 border-t border-slate-200 flex justify-end">
+                            <button onclick="App.goToStep(2)" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md flex items-center space-x-2 transition">
+                                <span>다음 단계: 본인의 전문·강점 분야 선택하기</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ---------------------------------------------------------- -->
+                <!-- STEP 2: 본인이 전문 or 강점인 분야를 선택 -->
+                <!-- ---------------------------------------------------------- -->
+                <div id="ideation-step-2" class="step-panel hidden space-y-6">
+                    <div class="glass-card p-6 sm:p-8 rounded-2xl shadow-sm">
+                        <div class="pb-6 border-b border-slate-200">
+                            <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">STEP 02. 전문 역량 매칭</span>
+                            <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+                                본인이 가장 전문성을 갖추었거나 강점이 있는 분야를 선택해주세요
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                                선택하신 분야를 기반으로 3단계에서 온통청년 2,934건 정책과의 연계(MCP) 및 5단계 최적화 제안서 모델이 맞춤 추천됩니다.
+                            </p>
+                        </div>
+
+                        <!-- 5대 전문 트랙 카드 그리드 -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 my-8">
+                            <!-- Track 1 -->
+                            <div data-track="track-1" class="specialty-track-card cursor-pointer p-6 rounded-2xl border-2 border-blue-600 ring-2 ring-blue-500 bg-blue-50/50 hover:shadow-lg transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="w-12 h-12 rounded-xl bg-blue-600 text-white flex items-center justify-center mb-4 shadow-md">
+                                        <i data-lucide="cpu" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-700 uppercase">교육 혁신</span>
+                                    <h4 class="font-extrabold text-slate-900 text-lg mt-2 mb-1">디지털·AI & 반도체 미래교육</h4>
+                                    <p class="text-xs text-blue-700 font-semibold mb-2">4차 산업혁명 선도 실무형 청년 인재 양성</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                        동탄 테크노밸리와 연계한 AI 실무, 반도체 공정, 디지털 전환(AX) 교육을 통해 청년의 질 높은 일자리 진입을 지원합니다.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-slate-200/80 flex flex-wrap gap-1">
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#생성형AI</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#반도체클러스터</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#실무부트캠프</span>
+                                </div>
+                            </div>
+
+                            <!-- Track 2 -->
+                            <div data-track="track-2" class="specialty-track-card cursor-pointer p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-400 bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center mb-4 shadow-md">
+                                        <i data-lucide="vote" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 uppercase">참여 거버넌스</span>
+                                    <h4 class="font-extrabold text-slate-900 text-lg mt-2 mb-1">청년 시정참여 & 자치 거버넌스</h4>
+                                    <p class="text-xs text-emerald-700 font-semibold mb-2">청년이 제안하고 결정하는 특례시 자치모델</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                        청년참여자율예산제, 동탄구 청년리빙랩, 청년의회 연계 등을 통해 청년의 목소리가 실제 시 정책과 예산으로 구현되도록 합니다.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-slate-200/80 flex flex-wrap gap-1">
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#청년참여예산</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#동탄리빙랩</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#청년활동포인트</span>
+                                </div>
+                            </div>
+
+                            <!-- Track 3 -->
+                            <div data-track="track-3" class="specialty-track-card cursor-pointer p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-400 bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="w-12 h-12 rounded-xl bg-purple-600 text-white flex items-center justify-center mb-4 shadow-md">
+                                        <i data-lucide="scale" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-purple-100 text-purple-700 uppercase">권익 안전망</span>
+                                    <h4 class="font-extrabold text-slate-900 text-lg mt-2 mb-1">청년 권익보호 & 노동·법률 안전망</h4>
+                                    <p class="text-xs text-purple-700 font-semibold mb-2">사회초년생과 청년 노동자를 위한 권리 지킴이</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                        근로기준법 상담, 전세사기 예방 원스톱 컨설팅, 고립은둔 조기예방, 청년 옴부즈만을 통해 청년의 권익을 안전하게 보호합니다.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-slate-200/80 flex flex-wrap gap-1">
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#노동권익</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#전세사기예방</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#마음건강바우처</span>
+                                </div>
+                            </div>
+
+                            <!-- Track 4 -->
+                            <div data-track="track-4" class="specialty-track-card cursor-pointer p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-400 bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="w-12 h-12 rounded-xl bg-amber-500 text-white flex items-center justify-center mb-4 shadow-md">
+                                        <i data-lucide="building-2" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 uppercase">인프라 거점</span>
+                                    <h4 class="font-extrabold text-slate-900 text-lg mt-2 mb-1">동탄 청년 인프라 & 1인가구 거점</h4>
+                                    <p class="text-xs text-amber-700 font-semibold mb-2">청년이 머물고 교류하는 스마트 청년플랫폼</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                        동탄역 및 호수공원 중심의 청년복합공간 구축, 1인가구 소셜다이닝, 동아리 활동 바우처로 청년 커뮤니티 활성화를 이끕니다.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-slate-200/80 flex flex-wrap gap-1">
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#청년스테이션</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#1인가구소셜다이닝</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#공유공간</span>
+                                </div>
+                            </div>
+
+                            <!-- Track 5 -->
+                            <div data-track="track-5" class="specialty-track-card cursor-pointer p-6 rounded-2xl border-2 border-slate-200 hover:border-blue-400 bg-white hover:shadow-lg transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="w-12 h-12 rounded-xl bg-rose-600 text-white flex items-center justify-center mb-4 shadow-md">
+                                        <i data-lucide="rocket" class="w-6 h-6"></i>
+                                    </div>
+                                    <span class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-100 text-rose-700 uppercase">창업 & 로컬</span>
+                                    <h4 class="font-extrabold text-slate-900 text-lg mt-2 mb-1">청년 혁신창업 & 로컬 비즈니스</h4>
+                                    <p class="text-xs text-rose-700 font-semibold mb-2">동탄형 스타트업 육성과 지역 정주 생태계</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                                        아이디어 발굴부터 공간 지원, 임차료 지원, 크라우드 펀딩까지 청년 창업가가 동탄에서 자리 잡을 수 있는 사다리를 놓습니다.
+                                    </p>
+                                </div>
+                                <div class="pt-3 border-t border-slate-200/80 flex flex-wrap gap-1">
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#청년창업보육</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#임차료지원</span>
+                                    <span class="text-[10px] bg-white border border-slate-200 px-2 py-0.5 rounded-md text-slate-600 font-medium">#로컬크리에이터</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 하단 네비게이션 -->
+                        <div class="pt-6 border-t border-slate-200 flex items-center justify-between">
+                            <button onclick="App.goToStep(1)" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm flex items-center space-x-2 transition">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>이전 단계</span>
+                            </button>
+                            <button onclick="App.goToStep(3)" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md flex items-center space-x-2 transition">
+                                <span>다음 단계: 관련 정책 MCP(정책연계) 진행</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ---------------------------------------------------------- -->
+                <!-- STEP 3: 관련 정책들 MCP(정책연계) 진행 (첨부 데이터 기반) -->
+                <!-- ---------------------------------------------------------- -->
+                <div id="ideation-step-3" class="step-panel hidden space-y-6">
+                    <div class="glass-card p-6 sm:p-8 rounded-2xl shadow-sm">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+                            <div>
+                                <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">STEP 03. MCP 정책연계 엔진</span>
+                                <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+                                    온통청년 2,934건 데이터 기반 관련 정책 MCP 연계
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                                    carlosnam6363-netizen/ideation 배포 데이터 및 중앙·경기도·화성시 정책을 분석하여 우리 분과 정책에 접목할 핵심 착안점을 도출합니다.
+                                </p>
+                            </div>
+                            <div id="mcp-selected-track-badge" class="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-800 border border-blue-200 text-xs font-bold">
+                                선택된 전문 분야: 디지털·AI 미래교육
+                            </div>
+                        </div>
+
+                        <!-- 검색 및 필터 툴바 -->
+                        <div class="flex flex-col md:flex-row items-center justify-between gap-4 my-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <!-- 분야 탭 -->
+                            <div class="flex items-center space-x-1 overflow-x-auto w-full md:w-auto">
+                                <button data-cat="all" class="mcp-cat-filter px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white">전체</button>
+                                <button data-cat="참여, 권리" class="mcp-cat-filter px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">참여·권리</button>
+                                <button data-cat="교육" class="mcp-cat-filter px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">교육</button>
+                                <button data-cat="일자리" class="mcp-cat-filter px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">일자리</button>
+                                <button data-cat="금융, 복지, 문화" class="mcp-cat-filter px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">복지·문화</button>
+                                <button data-cat="주거" class="mcp-cat-filter px-3 py-1 rounded-lg text-xs font-bold bg-slate-100 text-slate-700 hover:bg-slate-200">주거</button>
+                            </div>
+
+                            <!-- 검색창 -->
+                            <div class="relative w-full md:w-72">
+                                <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
+                                <input id="mcp-search-input" type="text" placeholder="정책명, 주관기관, 지역, 내용 검색..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+
+                        <!-- MCP 정책 카드 그리드 -->
+                        <div id="mcp-policy-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 my-6">
+                            <!-- Injected via JS -->
+                        </div>
+
+                        <!-- 하단 네비게이션 -->
+                        <div class="pt-6 border-t border-slate-200 flex items-center justify-between">
+                            <button onclick="App.goToStep(2)" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm flex items-center space-x-2 transition">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>이전 단계</span>
+                            </button>
+                            <button onclick="App.goToStep(4)" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md flex items-center space-x-2 transition">
+                                <span>다음 단계: 화성시 및 청년친화도시 정책 벤치마킹</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ---------------------------------------------------------- -->
+                <!-- STEP 4: 화성시 최근 정책 & 청년친화도시(2027~2030) 벤치마킹 -->
+                <!-- ---------------------------------------------------------- -->
+                <div id="ideation-step-4" class="step-panel hidden space-y-6">
+                    <div class="glass-card p-6 sm:p-8 rounded-2xl shadow-sm">
+                        <div class="pb-6 border-b border-slate-200">
+                            <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">STEP 04. 시정 흐름 및 벤치마킹</span>
+                            <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+                                화성특례시 정책 방향과 청년친화도시(2027~2030) 미래 비전
+                            </h3>
+                            <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                                화성특례시 동탄구의 도시적 특성과 청년친화도시(부산진구, 공주시, 관악구, 대전 등)의 성공 모델을 결합해 실현 가능한 정책 기획의 틀을 완성합니다.
+                            </p>
+                        </div>
+
+                        <!-- 화성특례시 동탄구 프로필 및 정책 흐름 -->
+                        <div class="my-6 p-6 rounded-2xl bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white shadow-lg">
+                            <div class="flex items-center space-x-2 text-teal-400 text-xs font-bold uppercase mb-2">
+                                <i data-lucide="sparkle" class="w-4 h-4"></i>
+                                <span>화성특례시 동탄구 미래 비전</span>
+                            </div>
+                            <h4 class="text-xl font-extrabold mb-3">대한민국 최대 신도시, 첨단 테크와 젊음이 공존하는 기회의 땅</h4>
+                            <p class="text-xs sm:text-sm text-slate-200 leading-relaxed mb-4">
+                                평균연령 38.8세의 화성시는 2025년 특례시 출범과 함께 동탄구를 중심으로 인구 40만 이상의 거대 청년 자족도시로 재편됩니다. 삼성전자 화성캠퍼스, 현대기아차 남양연구소, 4,500여 개 기업이 밀집한 동탄테크노밸리를 갖추고 있어 <strong>'첨단 기술 교육', '생활밀착형 청년 거버넌스', '안전한 주거·노동 안전망'</strong> 구축이 2027~2030년 시정의 핵심 과제입니다.
+                            </p>
+
+                            <!-- 화성시 핵심 시정 키워드 4선 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs pt-4 border-t border-white/10">
+                                <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                                    <span class="text-teal-300 font-bold block mb-1">01. 4개 구청 체제 출범</span>
+                                    <p class="text-slate-300 text-[11px]">동탄구청 신설에 따른 구 단위 청년 자치기구 및 예산 권한 확대</p>
+                                </div>
+                                <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                                    <span class="text-teal-300 font-bold block mb-1">02. 청년활동포인트제</span>
+                                    <p class="text-slate-300 text-[11px]">시정 참여와 자원봉사, 정책제안을 포인트로 적립하여 지역화폐 보상</p>
+                                </div>
+                                <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                                    <span class="text-teal-300 font-bold block mb-1">03. AI 점프프렌즈</span>
+                                    <p class="text-slate-300 text-[11px]">생성형 AI 기술을 접목한 고위험 고립·은둔 청년 사전 발굴 및 케어</p>
+                                </div>
+                                <div class="p-3 bg-white/10 rounded-xl backdrop-blur-sm">
+                                    <span class="text-teal-300 font-bold block mb-1">04. 산학연 일자리 클러스터</span>
+                                    <p class="text-slate-300 text-[11px]">반도체·모빌리티 미래산업 중심의 청년 일자리 매치업 및 인턴십</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 청년친화도시 벤치마킹 4선 -->
+                        <div class="my-6">
+                            <h4 class="font-extrabold text-slate-900 text-base mb-4 flex items-center gap-2">
+                                <i data-lucide="award" class="w-5 h-5 text-amber-500"></i>
+                                청년친화도시 우수 도시들의 2027~2030 정책 벤치마킹 인사이트
+                            </h4>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div class="p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-blue-400 transition">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="font-bold text-slate-900 text-sm">부산광역시 부산진구</h5>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700">제1차 청년친화도시</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-700 mb-2">도심 상권 트라이얼스토어 & 청년 공모전 플랫폼</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                        전포카페거리 등 유휴 상가를 2주~3개월간 청년 팝업스토어로 무상 대여해 창업 리스크를 줄이고, 청년이 직접 참여하는 청년의회를 통해 정책 제안을 조례화함.
+                                    </p>
+                                    <div class="p-2.5 bg-blue-50/60 rounded-lg text-xs text-blue-900 border border-blue-100">
+                                        💡 <strong>동탄구 접목점:</strong> 동탄 호수공원 및 카림 상권 유휴 공간을 활용한 '동탄 청년 팝업스토어(트라이얼스토어)' 모델 설계
+                                    </div>
+                                </div>
+
+                                <div class="p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-teal-400 transition">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="font-bold text-slate-900 text-sm">충청남도 공주시</h5>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-700">제2차 청년친화도시</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-700 mb-2">청년 로컬 공유공간 & 관계인구 청년 유입 생태계</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                        원도심 유휴 건축물을 청년 커뮤니티 거점화하고 한달살이 프로그램으로 외지 청년의 지역 정착을 촉진. 2026 전국청년축제 개최 지자체로 부상.
+                                    </p>
+                                    <div class="p-2.5 bg-teal-50/60 rounded-lg text-xs text-teal-900 border border-teal-100">
+                                        💡 <strong>동탄구 접목점:</strong> 외부 이주 청년 비율이 높은 동탄 신도시 맞춤형 '동탄 웰컴키트 및 로컬 커뮤니티' 강화
+                                    </div>
+                                </div>
+
+                                <div class="p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-purple-400 transition">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="font-bold text-slate-900 text-sm">서울특별시 관악구</h5>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">청년특화 자치구</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-700 mb-2">1인가구 청년 안전망 [신림동쓰리룸] & 공구대여소</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                        청년 1인가구를 위한 무료 생활공구 대여, 전월세 안심동행 서비스, 소셜다이닝 공유주방을 한곳에서 제공하여 고립감을 해소하고 주거 안심 보장.
+                                    </p>
+                                    <div class="p-2.5 bg-purple-50/60 rounded-lg text-xs text-purple-900 border border-purple-100">
+                                        💡 <strong>동탄구 접목점:</strong> 오피스텔 1인가구 청년 밀집지에 '동탄 청년 이음 스테이션' 1인가구 복합공간 신설
+                                    </div>
+                                </div>
+
+                                <div class="p-5 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-indigo-400 transition">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="font-bold text-slate-900 text-sm">대전광역시</h5>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-700">청년친화 테크도시</span>
+                                    </div>
+                                    <p class="text-xs font-semibold text-slate-700 mb-2">대덕 R&D 연계 청년 챔프 & 참여마일리지 고도화</p>
+                                    <p class="text-xs text-slate-600 leading-relaxed mb-3">
+                                        출연연 및 IT 기업 연구원들과 청년 구직자 간 1:1 멘토링 지원, 청년활동 마일리지를 지역화폐로 100% 자동 환급하여 시정 참여 극대화.
+                                    </p>
+                                    <div class="p-2.5 bg-indigo-50/60 rounded-lg text-xs text-indigo-900 border border-indigo-100">
+                                        💡 <strong>동탄구 접목점:</strong> 동탄테크노밸리 연구원 풀을 활용한 '동탄 테크 아카데미 및 펠로우십' 연계
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 하단 네비게이션 -->
+                        <div class="pt-6 border-t border-slate-200 flex items-center justify-between">
+                            <button onclick="App.goToStep(3)" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm flex items-center space-x-2 transition">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>이전 단계</span>
+                            </button>
+                            <button onclick="App.goToStep(5)" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md flex items-center space-x-2 transition">
+                                <span>다음 단계: 2027~2030 정책 제안 예시 5선 확인 & 제안서 작성</span>
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ---------------------------------------------------------- -->
+                <!-- STEP 5: 실현 가능성 높은 정책 제안 예시 5선 추천 & 제안서 작성기 -->
+                <!-- ---------------------------------------------------------- -->
+                <div id="ideation-step-5" class="step-panel hidden space-y-6">
+                    <div class="glass-card p-6 sm:p-8 rounded-2xl shadow-sm">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
+                            <div>
+                                <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">STEP 05. 제안서 자동 생성 & 에디터</span>
+                                <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
+                                    2027~2030 화성시 정책 흐름 맞춤형 제안 예시 5선 & 작성기
+                                </h3>
+                                <p class="text-xs sm:text-sm text-slate-500 mt-1">
+                                    실현 가능성이 높고 동탄구 분과 목적에 부합하는 완성도 높은 5개 정책 제안서 초안입니다. 클릭하여 로드하고 즉시 수정·출력할 수 있습니다.
+                                </p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <button onclick="App.copyProposalToClipboard()" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition">
+                                    <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                                    <span>제안서 전체 복사</span>
+                                </button>
+                                <button onclick="App.downloadProposalTxt()" class="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition">
+                                    <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                                    <span>텍스트 다운로드</span>
+                                </button>
+                                <button onclick="App.printProposal()" class="px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-sm flex items-center space-x-1.5 transition">
+                                    <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                                    <span>인쇄 / PDF</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- 5대 추천 정책 셀렉터 그리드 -->
+                        <div class="my-6">
+                            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
+                                💡 추천 정책 5선 (클릭 시 우측 제안서 양식에 자동 입력됩니다)
+                            </h4>
+                            <div id="proposal-cards-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                <!-- Dynamic proposal cards injected via JS -->
+                            </div>
+                        </div>
+
+                        <!-- 정책제안서 정밀 에디터 폼 -->
+                        <div id="printable-proposal-area" class="bg-white p-6 sm:p-8 rounded-2xl border-2 border-slate-200 shadow-md space-y-6">
+                            <div class="border-b-2 border-slate-900 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div>
+                                    <span class="text-xs font-extrabold text-blue-600">2027 화성특례시 청년정책제안서 공식 양식</span>
+                                    <h3 class="text-xl sm:text-2xl font-black text-slate-900">
+                                        화성시 청년정책협의체 동탄구 교육·참여·권리 분과
+                                    </h3>
+                                </div>
+                                <div class="text-right text-xs text-slate-400">
+                                    문서코드: <span class="font-mono text-slate-700 font-semibold">HS-DONGTAN-2027</span>
+                                </div>
+                            </div>
+
+                            <!-- 메타 정보 행 -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="md:col-span-2">
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">■ 정책 제안명</label>
+                                    <input id="editor-title" type="text" class="w-full text-base font-bold px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">■ 정책 분과</label>
+                                    <input id="editor-field" type="text" class="w-full text-xs font-semibold px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">■ 사업 대상</label>
+                                    <input id="editor-target" type="text" class="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">■ 추정 소요 예산</label>
+                                    <input id="editor-budget" type="text" class="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700 mb-1">■ 온통청년 MCP 정책연계</label>
+                                    <input id="editor-mcp" type="text" class="w-full text-xs px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500">
+                                </div>
+                            </div>
+
+                            <!-- 1. 제안 배경 및 필요성 -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-800 mb-1">1. 제안 배경 및 필요성 (설문조사 및 지역현황 기반)</label>
+                                <textarea id="editor-background" rows="4" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+                            </div>
+
+                            <!-- 2. 사업 목적 -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-800 mb-1">2. 사업 추진 목적 및 핵심 목표</label>
+                                <textarea id="editor-objectives" rows="3" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+                            </div>
+
+                            <!-- 3. 세부 사업 내용 -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-800 mb-1">3. 세부 사업 내용 및 추진 체계</label>
+                                <textarea id="editor-details" rows="5" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+                            </div>
+
+                            <!-- 4. 연차별 추진 로드맵 -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-800 mb-1">4. 2027 ~ 2030 연차별 추진 로드맵</label>
+                                <textarea id="editor-roadmap" rows="3" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+                            </div>
+
+                            <!-- 5. 기대 효과 -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-800 mb-1">5. 기대 효과 및 성과 관리</label>
+                                <textarea id="editor-expected" rows="3" class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:bg-white focus:ring-2 focus:ring-blue-500 leading-relaxed"></textarea>
+                            </div>
+
+                            <div class="pt-4 border-t border-slate-200 flex items-center justify-between text-xs text-slate-400">
+                                <span>화성특례시 청년정책협의체 동탄구 교육, 참여, 권리 분과 위원 일동</span>
+                                <span>제안일자: 2026. 09. 29.</span>
+                            </div>
+                        </div>
+
+                        <!-- 하단 네비게이션 -->
+                        <div class="pt-6 border-t border-slate-200 flex items-center justify-between no-print">
+                            <button onclick="App.goToStep(4)" class="px-5 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 font-bold text-sm flex items-center space-x-2 transition">
+                                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                                <span>이전 단계: 벤치마킹</span>
+                            </button>
+                            <button onclick="App.copyProposalToClipboard()" class="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md flex items-center space-x-2 transition">
+                                <i data-lucide="check-circle" class="w-4 h-4"></i>
+                                <span>제안서 작성 완료 및 전체 복사</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- 탭 3: 회칙 정리 (별도 파일 공유 예정) -->
+        <!-- ============================================================== -->
+        <section id="tab-3" class="tab-content-panel hidden space-y-6">
+            <!-- 공식 안내 배너 -->
+            <div class="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div class="relative z-10 max-w-3xl">
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-extrabold mb-3 backdrop-blur-md">
+                        <i data-lucide="alert-circle" class="w-4 h-4 text-amber-100"></i>
+                        <span>공지사항</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+                        분과 회칙 정리 (별도 파일 공유 예정)
+                    </h2>
+                    <p class="text-amber-100 text-sm leading-relaxed">
+                        화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과의 공식 운영회칙 파일(HWP/PDF)은 추후 정기회의 및 전체회의를 거쳐 별도 공유될 예정입니다.<br>
+                        현재 페이지에서는 <strong>'분과 운영회칙 표준안(초안)'</strong>을 열람하실 수 있으며, 추후 파일을 공유받으시면 하단 파일 보관함에 즉시 등록·보관하실 수 있습니다.
+                    </p>
+                </div>
+                <div class="absolute -right-8 -bottom-8 w-56 h-56 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+            </div>
+
+            <!-- 회칙 표준안 뷰어 & 파일 보관함 2단 레이아웃 -->
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- 좌측: 회칙 표준안 아코디언 (8열) -->
+                <div class="lg:col-span-8 space-y-4">
+                    <div class="glass-card p-6 rounded-2xl shadow-sm">
+                        <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-200">
+                            <div>
+                                <h3 class="font-extrabold text-slate-900 text-base">분과 운영회칙 표준안 (전문 열람)</h3>
+                                <p class="text-xs text-slate-500">화성시 청년 기본 조례에 근거한 동탄구 교육·참여·권리 분과 운영 규정</p>
+                            </div>
+                            <span class="text-[11px] font-bold px-2.5 py-1 bg-slate-100 text-slate-600 rounded-lg">
+                                총 5장 13조 및 부칙
+                            </span>
+                        </div>
+
+                        <!-- 아코디언 컨테이너 (JS 렌더링) -->
+                        <div id="bylaws-articles-container">
+                            <!-- Dynamic Content -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 우측: 별도 공유 파일 업로더 & 보관함 (4열) -->
+                <div class="lg:col-span-4 space-y-4">
+                    <div class="glass-card p-6 rounded-2xl shadow-sm">
+                        <div class="flex items-center space-x-2 text-slate-900 font-bold text-sm mb-3">
+                            <i data-lucide="folder-up" class="w-4 h-4 text-blue-600"></i>
+                            <span>공유 파일 보관함</span>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-4 leading-relaxed">
+                            위원님들께 별도 공유되는 회칙 및 분과 회의록 파일(HWP, PDF, DOCX)을 드래그하여 등록해 두시면 언제든 다시 열람하실 수 있습니다.
+                        </p>
+
+                        <!-- 드래그 & 드롭 영역 -->
+                        <div id="bylaws-dropzone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-6 text-center cursor-pointer bg-slate-50 hover:bg-blue-50/40 transition">
+                            <i data-lucide="cloud-upload" class="w-8 h-8 mx-auto mb-2 text-slate-400"></i>
+                            <p class="text-xs font-bold text-slate-700">파일을 드래그하거나 클릭하여 업로드</p>
+                            <p class="text-[10px] text-slate-400 mt-1">HWP, PDF, DOCX, TXT 등 (로컬 안전 저장)</p>
+                            <input id="bylaws-file-input" type="file" multiple class="hidden">
+                        </div>
+
+                        <!-- 업로드된 파일 목록 -->
+                        <div class="mt-4">
+                            <h5 class="text-xs font-bold text-slate-700 mb-2">등록된 회칙 문서</h5>
+                            <div id="bylaws-files-list">
+                                <!-- Dynamic File Items -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 분과 위원 명부 요약 카드 -->
+                    <div class="glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <h5 class="text-xs font-bold text-slate-800 mb-3 flex items-center gap-1.5">
+                            <i data-lucide="shield-check" class="w-4 h-4 text-emerald-600"></i>
+                            동탄구 분과 임원 및 연락망
+                        </h5>
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                                <span class="font-bold text-slate-700">분과장: 강현우</span>
+                                <span class="text-slate-500">디지털·AI 미래교육</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                                <span class="font-bold text-slate-700">부분과장: 이지은</span>
+                                <span class="text-slate-500">시정참여·자치</span>
+                            </div>
+                            <div class="flex items-center justify-between p-2 bg-slate-50 rounded-lg">
+                                <span class="font-bold text-slate-700">간사: 박민준</span>
+                                <span class="text-slate-500">청년 노동인권·권익</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 교육 프로그램 신규 제안 모달 -->
+    <div id="program-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
+                        <i data-lucide="book-plus" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 text-lg">2027년 필요 교육 프로그램 제안</h3>
+                </div>
+                <button id="close-program-modal-btn" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="new-program-form" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">제안 위원 선택 *</label>
+                        <select id="program-member-select" name="memberId" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
+                            <!-- Injected via JS -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">분과 카테고리 *</label>
+                        <select name="category" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
+                            <option value="교육">교육 혁신</option>
+                            <option value="참여">시정 참여</option>
+                            <option value="권리">청년 권익</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">교육 프로그램 명칭 *</label>
+                    <input name="title" type="text" placeholder="예: 2027 동탄 생성형 AI 실무 프로젝트" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">교육 방식 및 형태</label>
+                        <input name="format" type="text" placeholder="예: 오프라인 워크숍 / 온라인 VOD" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">수강 대상 청년</label>
+                        <input name="target" type="text" placeholder="예: 동탄 구직·이직 청년 25명" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">예상 추진 일정</label>
+                        <input name="schedule" type="text" placeholder="예: 2027년 5월 ~ 6월 (총 8회)" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">추천 강사 또는 기관</label>
+                        <input name="institution" type="text" placeholder="예: 경기창조경제혁신센터, 화성문화재단" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">필요 이유 및 추진 목적 *</label>
+                    <textarea name="purpose" rows="3" placeholder="해당 교육 프로그램이 왜 필요한지, 수료 시 청년들에게 어떤 효용이 있는지 서술해주세요." class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white leading-relaxed" required></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">키워드 태그 (쉼표로 구분)</label>
+                    <input name="tags" type="text" placeholder="예: AI, 실무역량, 자격증, 취업연계" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                </div>
+
+                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                    <button type="button" onclick="document.getElementById('program-modal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">취소</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition">패들렛에 등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 하단 푸터 -->
+    <footer class="bg-white border-t border-slate-200 py-6 text-xs text-slate-500 mt-12 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+                <span class="font-semibold text-slate-700">화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과</span>
+            </div>
+            <p class="text-slate-400">
+                2027 화성특례시 동탄구 청년미래비전 & 온통청년(2,934건) 정책 연계 플랫폼
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
