@@ -5,6 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 2027년 정책 아이디에이션 및 교육 프로그램 취합 플랫폼">
     <title>화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 플랫폼</title>
+    <!-- Cache Control (강력 새로고침 없이 항상 최신 버전 반영) -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <script>
+        // 혹시 모를 이전 서비스 워커 캐시 완전 제거
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) {
+                regs.forEach(function(r) { r.unregister(); });
+            });
+        }
+    </script>
+
     <!-- Resource Preconnects -->
     <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
     <link rel="preconnect" href="https://unpkg.com" crossorigin>
@@ -15,8 +28,13 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Custom Style -->
-    <link rel="stylesheet" href="css/style.css">
+    <!-- Custom Style (타임스탬프 캐시 무효화로 항상 최신 CSS 즉시 적용) -->
+    <script>
+        document.write('<link rel="stylesheet" href="css/style.css?v=' + Date.now() + '">');
+    </script>
+    <noscript>
+        <link rel="stylesheet" href="css/style.css">
+    </noscript>
     <script>
         tailwind.config = {
             theme: {
@@ -1775,10 +1793,26 @@
         </div>
     </div>
 
-    <!-- Scripts -->
-    <script src="js/data.js"></script>
-    <script src="js/bylaws_diff.js"></script>
-    <script src="js/flow_data.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Scripts (캐시 방지 타임스탬프 쿼리스트링 자동 부착으로 강력 새로고침 없이 항상 최신 반영) -->
+    <script>
+        (function() {
+            var v = Date.now();
+            var scripts = [
+                'js/data.js',
+                'js/bylaws_diff.js',
+                'js/flow_data.js',
+                'js/app.js'
+            ];
+            for (var i = 0; i < scripts.length; i++) {
+                document.write('<script src="' + scripts[i] + '?v=' + v + '"><\/script>');
+            }
+        })();
+    </script>
+    <noscript>
+        <script src="js/data.js"></script>
+        <script src="js/bylaws_diff.js"></script>
+        <script src="js/flow_data.js"></script>
+        <script src="js/app.js"></script>
+    </noscript>
 </body>
 </html>
