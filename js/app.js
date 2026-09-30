@@ -52,7 +52,7 @@ const App = {
     divisionMembers: [],   // 분과 위원 명단
     tab5Sub: "division",   // 5번 탭의 활성 서브 탭 (기본값: 첨부 이미지와 같은 "division")
 
-    // 관리자 권한 상태 (비밀번호: 2232)
+    // 관리자 권한 상태
     isAdmin: sessionStorage.getItem("dongtan_admin_auth") === "true",
 
     init() {
@@ -1464,40 +1464,12 @@ ${data.effects}
                                 ${escapeHtml(m.role)}
                             </span>
                         </div>
-                        <!-- 수정 및 삭제 기능 단추 -->
-                        <div class="flex items-center space-x-1 shrink-0">
-                            <button 
-                                type="button" 
-                                onclick="App.openEditSteeringModal('${escapeHtml(m.id)}')" 
-                                title="위원 정보 상세 수정"
-                                class="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition"
-                            >
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                            </button>
-                            <button 
-                                type="button" 
-                                onclick="App.deleteSteeringMember('${escapeHtml(m.id)}')" 
-                                title="명단에서 제외/삭제"
-                                class="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                            >
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </div>
                     </div>
 
-                    <!-- 실명 입력 필드 -->
+                    <!-- 성명 -->
                     <div class="mt-1 mb-2">
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">성명 (클릭하여 수정 가능)</label>
-                        <div class="relative">
-                            <input 
-                                id="sm-name-${escapeHtml(m.id)}" 
-                                type="text" 
-                                value="${escapeHtml(m.name)}" 
-                                oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'name', this.value)"
-                                class="w-full text-xs font-black text-slate-900 bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded px-2 py-1 transition"
-                                placeholder="이름 입력"
-                            >
-                        </div>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">성명</label>
+                        <p class="text-sm font-black text-slate-900 px-2 py-1 bg-white border border-slate-200 rounded">${escapeHtml(m.name)}</p>
                     </div>
 
                     ${m.duties ? `
@@ -1517,23 +1489,32 @@ ${data.effects}
                     `}
                 </div>
 
-                <div class="pt-2 border-t border-slate-200/80 space-y-1">
-                    <input 
-                        id="sm-phone-${escapeHtml(m.id)}" 
-                        type="text" 
-                        value="${escapeHtml(m.phone || '')}" 
-                        oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'phone', this.value)"
-                        class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
-                        placeholder="연락처 (선택)"
-                    >
-                    <input 
-                        id="sm-email-${escapeHtml(m.id)}" 
-                        type="text" 
-                        value="${escapeHtml(m.email || '')}" 
-                        oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'email', this.value)"
-                        class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
-                        placeholder="이메일 (선택)"
-                    >
+                <div class="pt-2 border-t border-slate-200/80">
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="text-[10px] font-semibold text-slate-500">연락처 및 이메일</label>
+                        ${this.isAdmin ? `
+                            <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">관리자 인증</span>
+                        ` : `
+                            <span class="text-[9px] font-medium text-slate-400">비공개</span>
+                        `}
+                    </div>
+                    ${this.isAdmin ? `
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-1.5 px-2 py-1 bg-emerald-50/70 border border-emerald-200/80 rounded-lg text-emerald-900 text-xs font-bold font-mono">
+                                <i data-lucide="phone-call" class="w-3 h-3 text-emerald-600 shrink-0"></i>
+                                <span>${escapeHtml(m.phone || '연락처 미등록')}</span>
+                            </div>
+                            <div class="flex items-center space-x-1.5 px-2 py-1 bg-emerald-50/70 border border-emerald-200/80 rounded-lg text-emerald-900 text-xs font-mono">
+                                <i data-lucide="mail" class="w-3 h-3 text-emerald-600 shrink-0"></i>
+                                <span>${escapeHtml(m.email || '이메일 미등록')}</span>
+                            </div>
+                        </div>
+                    ` : `
+                        <div class="flex items-center space-x-1.5 px-2 py-1.5 bg-slate-100/80 border border-dashed border-slate-200 rounded-lg text-slate-400 text-xs font-mono">
+                            <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                            <span>비공개</span>
+                        </div>
+                    `}
                 </div>
             </div>
         `).join("");
@@ -1832,15 +1813,13 @@ ${data.effects}
             return list.filter(item => {
                 const matchesQuarter = quarter === "all" || item.quarter === quarter;
                 if (!matchesQuarter) return false;
-                if (!search) return true;
-                const assignedMember = this.getSteeringMember(item.inChargeKey);
-                const assignedName = assignedMember ? assignedMember.name.toLowerCase() : "";
+                const inCharge = (item.inChargeRole || "").toLowerCase();
                 return (
                     item.title.toLowerCase().includes(search) ||
                     item.summary.toLowerCase().includes(search) ||
                     item.category.toLowerCase().includes(search) ||
                     item.bylawsRef.toLowerCase().includes(search) ||
-                    assignedName.includes(search) ||
+                    inCharge.includes(search) ||
                     item.tasks.some(t => t.toLowerCase().includes(search))
                 );
             });
@@ -1924,9 +1903,8 @@ ${data.effects}
 
     // 월별 카드 HTML 빌더
     renderMonthCardHTML(item, year) {
-        const assignedMember = this.getSteeringMember(item.inChargeKey);
-        const assignedName = assignedMember ? assignedMember.name : "운영위원회";
-        const assignedRole = assignedMember ? assignedMember.role : item.inChargeRole;
+        const inCharge = item.inChargeRole === "분과장" ? "분과장" : "운영위원회 담당";
+        const isDivision = inCharge === "분과장";
 
         const categoryBadges = {
             "조직구성": "bg-slate-100 text-slate-700 border-slate-200",
@@ -2009,13 +1987,13 @@ ${data.effects}
                     </div>
                 </div>
 
-                <!-- 담당 운영위원 실명 연동 배지 -->
+                <!-- 담당 배지 (운영위원회 담당 / 분과장) -->
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                     <div class="flex items-center space-x-1.5 min-w-0">
                         <span class="text-[10px] font-bold text-slate-400 uppercase">담당:</span>
-                        <div class="px-2 py-1 rounded-lg bg-teal-50 border border-teal-200 text-teal-900 font-bold flex items-center space-x-1 truncate">
-                            <i data-lucide="user-check" class="w-3.5 h-3.5 text-teal-600 shrink-0"></i>
-                            <span class="truncate">${escapeHtml(assignedName)} <span class="font-normal text-[11px] text-teal-700">(${escapeHtml(assignedRole)})</span></span>
+                        <div class="px-2.5 py-1 rounded-lg ${isDivision ? 'bg-amber-50 border border-amber-200 text-amber-900 font-extrabold' : 'bg-blue-50 border border-blue-200 text-blue-900 font-extrabold'} flex items-center space-x-1.5 truncate shadow-xs">
+                            <i data-lucide="${isDivision ? 'user-check' : 'users'}" class="w-3.5 h-3.5 ${isDivision ? 'text-amber-600' : 'text-blue-600'} shrink-0"></i>
+                            <span class="truncate">${escapeHtml(inCharge)}</span>
                         </div>
                     </div>
                 </div>
@@ -2082,25 +2060,6 @@ ${data.effects}
                         <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${m.role === '분과장' ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-700 border border-violet-200'}">
                             ${escapeHtml(m.role)}
                         </span>
-                        <!-- 수정 및 삭제 기능 단추 -->
-                        <div class="flex items-center space-x-1 shrink-0">
-                            <button
-                                type="button"
-                                onclick="App.openEditDivisionModal('${escapeHtml(m.id)}')"
-                                title="위원 정보 수정"
-                                class="p-1 rounded text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition"
-                            >
-                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
-                            </button>
-                            <button
-                                type="button"
-                                onclick="App.deleteDivisionMember('${escapeHtml(m.id)}')"
-                                title="명단에서 제외/삭제"
-                                class="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                            >
-                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </div>
                     </div>
 
                     <!-- 성명 -->
@@ -2109,7 +2068,7 @@ ${data.effects}
                         <p class="text-sm font-black text-slate-900 px-2 py-1 bg-white border border-slate-200 rounded">${escapeHtml(m.name)}</p>
                     </div>
 
-                    <!-- 연락처 (관리자 권한 2232 인증 시에만 표기) -->
+                    <!-- 연락처 (관리자 인증 시에만 표기) -->
                     <div class="mt-2 pt-2 border-t border-slate-200/80">
                         <div class="flex items-center justify-between mb-1">
                             <label class="text-[10px] font-semibold text-slate-500">연락처</label>
@@ -2125,12 +2084,9 @@ ${data.effects}
                                 <span>${escapeHtml(m.phone || '연락처 미등록')}</span>
                             </div>
                         ` : `
-                            <div class="flex items-center justify-between px-2 py-1.5 bg-slate-100/80 border border-dashed border-slate-200 rounded-lg text-slate-400 text-[11px]">
-                                <span class="flex items-center gap-1.5">
-                                    <i data-lucide="lock" class="w-3 h-3 text-slate-400 shrink-0"></i>
-                                    <span>관리자 권한 필요</span>
-                                </span>
-                                <button type="button" onclick="App.toggleAdminAuth()" class="text-[10px] text-blue-600 hover:underline font-bold">인증</button>
+                            <div class="flex items-center space-x-1.5 px-2 py-1.5 bg-slate-100/80 border border-dashed border-slate-200 rounded-lg text-slate-400 text-xs font-mono">
+                                <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                                <span>비공개</span>
                             </div>
                         `}
                     </div>
@@ -2270,7 +2226,7 @@ ${data.effects}
     },
 
     // ==========================================
-    // 플랫폼 전체 관리자 권한 인증 (비밀번호: 2232, 모바일/PC 완벽 호환)
+    // 플랫폼 전체 관리자 보안 인증
     // ==========================================
     toggleAdminAuth() {
         this.openAdminModal();
@@ -2282,6 +2238,7 @@ ${data.effects}
                 this.isAdmin = false;
                 sessionStorage.removeItem("dongtan_admin_auth");
                 this.updateAdminUI();
+                this.renderSteeringMembersGrid();
                 this.renderDivisionMembersGrid();
                 alert("관리자 권한이 안전하게 해제되었습니다.");
             }
@@ -2324,8 +2281,9 @@ ${data.effects}
             sessionStorage.setItem("dongtan_admin_auth", "true");
             this.closeAdminModal();
             this.updateAdminUI();
+            this.renderSteeringMembersGrid();
             this.renderDivisionMembersGrid();
-            alert("✅ 관리자 권한이 정상 승인되었습니다.\n분과위원 연락처가 즉시 공개 표기됩니다.");
+            alert("✅ 관리자 권한이 정상 승인되었습니다.\n위원 연락처가 즉시 공개 표기됩니다.");
         } else {
             if (errorMsg) errorMsg.classList.remove("hidden");
             if (input) {
