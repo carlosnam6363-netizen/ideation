@@ -28,6 +28,7 @@ const App = {
     currentStep: 1,
     selectedTrack: "track-1",
     programs: [],
+    currentProgramDetailId: null,
     selectedProposalIndex: 0,
     uploadedBylawsFiles: [],
     padletViewMode: "columns", // "columns" or "grid"
@@ -82,14 +83,31 @@ const App = {
         try {
             const savedPrograms = localStorage.getItem("dongtan_padlet_programs");
             this.programs = savedPrograms ? JSON.parse(savedPrograms) : [...DONGTAN_DATA.initialPrograms];
-            // 동탄구 교육·참여·권리 분과장 김남현으로 자동 동기화 및 소제목 보강
+            // 동탄구 교육·참여·권리 분과장 김남현으로 자동 동기화 및 공공 사업카드 표준 필드 보강
             this.programs.forEach(p => {
                 if (p.memberId === 1 && (p.author || '').includes("강현우")) {
                     p.author = "김남현 (분과장)";
                 }
-                if (!p.subtitle && typeof DONGTAN_DATA !== "undefined" && DONGTAN_DATA.initialPrograms) {
+                if (typeof DONGTAN_DATA !== "undefined" && DONGTAN_DATA.initialPrograms) {
                     const match = DONGTAN_DATA.initialPrograms.find(dp => dp.id === p.id);
-                    if (match && match.subtitle) p.subtitle = match.subtitle;
+                    if (match) {
+                        if (!p.code) p.code = match.code;
+                        if (!p.vision) p.vision = match.vision || p.subtitle;
+                        if (!p.subtitle) p.subtitle = match.subtitle || match.vision;
+                        if (!p.targetGoal) p.targetGoal = match.targetGoal;
+                        if (!p.basis) p.basis = match.basis;
+                        if (!p.period) p.period = match.period || p.schedule;
+                        if (!p.location) p.location = match.location || p.institution;
+                        if (!p.target) p.target = match.target;
+                        if (!p.agency) p.agency = match.agency;
+                        if (!p.subPrograms || !p.subPrograms.length) p.subPrograms = match.subPrograms;
+                        if (!p.prevPerformance || !p.prevPerformance.length) p.prevPerformance = match.prevPerformance;
+                        if (!p.plan2027 || !p.plan2027.length) p.plan2027 = match.plan2027;
+                        if (!p.budgetRatio) p.budgetRatio = match.budgetRatio;
+                        if (!p.budgetTable || !p.budgetTable.length) p.budgetTable = match.budgetTable;
+                        if (!p.department) p.department = match.department;
+                        if (!p.contact) p.contact = match.contact;
+                    }
                 }
             });
         } catch {
@@ -282,6 +300,7 @@ const App = {
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
                 this.closeProgramModal();
+                this.closeProgramDetailModal();
                 this.closeSteeringModal();
                 this.closeDivisionModal();
                 this.closeAdminModal();
@@ -289,10 +308,57 @@ const App = {
         });
     },
 
-    openProgramModal() {
+    openProgramModal(progId = null) {
         const modal = document.getElementById("program-modal");
         if (!modal) return;
         this.populateMemberSelect();
+        const form = document.getElementById("new-program-form");
+        const titleEl = document.getElementById("program-modal-title");
+        const editingInput = document.getElementById("program-editing-id");
+
+        if (progId) {
+            const prog = this.programs.find(p => p.id === progId);
+            if (prog && form) {
+                if (titleEl) titleEl.textContent = "2027년 교육 프로그램 사업카드 수정";
+                if (editingInput) editingInput.value = prog.id;
+                if (form.elements["memberId"]) form.elements["memberId"].value = prog.memberId;
+                if (form.elements["category"]) form.elements["category"].value = prog.category || "교육";
+                if (form.elements["code"]) form.elements["code"].value = prog.code || "";
+                if (form.elements["title"]) form.elements["title"].value = prog.title || "";
+                if (form.elements["subtitle"]) form.elements["subtitle"].value = prog.vision || prog.subtitle || "";
+                if (form.elements["targetGoal"]) form.elements["targetGoal"].value = prog.targetGoal || "";
+                if (form.elements["basis"]) form.elements["basis"].value = prog.basis || "";
+                if (form.elements["schedule"]) form.elements["schedule"].value = prog.period || prog.schedule || "";
+                if (form.elements["institution"]) form.elements["institution"].value = prog.location || prog.institution || "";
+                if (form.elements["target"]) form.elements["target"].value = prog.target || "";
+                if (form.elements["purpose"]) form.elements["purpose"].value = prog.purpose || "";
+                if (form.elements["agency"]) form.elements["agency"].value = prog.agency || "";
+                if (form.elements["format"]) form.elements["format"].value = prog.format || "";
+                
+                const subText = (prog.subPrograms || []).map(s => `${s.cat || '과정'} | ${s.name || ''} | ${s.desc || ''}`).join("\n");
+                if (form.elements["subProgramsText"]) form.elements["subProgramsText"].value = subText;
+                
+                const prevText = (prog.prevPerformance || []).join("\n");
+                if (form.elements["prevPerformanceText"]) form.elements["prevPerformanceText"].value = prevText;
+                
+                const planText = (prog.plan2027 || []).join("\n");
+                if (form.elements["plan2027Text"]) form.elements["plan2027Text"].value = planText;
+                
+                const budgetText = prog.budgetRatio || "시비 100%";
+                if (form.elements["budgetInfo"]) form.elements["budgetInfo"].value = budgetText;
+                
+                if (form.elements["tags"]) form.elements["tags"].value = (prog.tags || []).join(", ");
+            }
+        } else {
+            if (form) form.reset();
+            if (titleEl) titleEl.textContent = "2027년 교육 프로그램 사업카드 작성";
+            if (editingInput) editingInput.value = "";
+            if (form && form.elements["code"]) form.elements["code"].value = `1-${this.programs.length + 1}`;
+            if (form && form.elements["basis"]) form.elements["basis"].value = "「화성시 청년 기본 조례」 제21조, 「청년일자리 창출 촉진 조례」 제6조";
+            if (form && form.elements["agency"]) form.elements["agency"].value = "화성시 청년청소년과 / 교육·참여·권리 분과 직접사업";
+            if (form && form.elements["budgetInfo"]) form.elements["budgetInfo"].value = "시비 100%, 25,000천원";
+        }
+
         modal.classList.remove("hidden");
         modal.classList.add("flex");
         this.updateIcons();
@@ -308,6 +374,42 @@ const App = {
             modal.classList.add("hidden");
             modal.classList.remove("flex");
         }
+    },
+
+    openProgramDetailModal(progId) {
+        const prog = this.programs.find(p => p.id === progId);
+        if (!prog) return;
+        this.currentProgramDetailId = progId;
+        const area = document.getElementById("printable-program-card-area");
+        if (area) {
+            area.innerHTML = this.renderProgramReportCardHTML(prog);
+        }
+        const modal = document.getElementById("program-detail-modal");
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        this.updateIcons();
+    },
+
+    closeProgramDetailModal() {
+        const modal = document.getElementById("program-detail-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+        this.currentProgramDetailId = null;
+    },
+
+    printCurrentProgramCard() {
+        window.print();
+    },
+
+    editCurrentProgramCard() {
+        if (!this.currentProgramDetailId) return;
+        const targetId = this.currentProgramDetailId;
+        this.closeProgramDetailModal();
+        this.openProgramModal(targetId);
     },
 
     switchTab(tabId) {
@@ -442,56 +544,138 @@ const App = {
     },
 
     handleCreateProgram(form) {
+        const editingId = form.elements["editingId"] ? form.elements["editingId"].value : "";
         const memberId = parseInt(form.elements["memberId"].value, 10);
         const member = (this.divisionMembers && this.divisionMembers.find(m => m.id === memberId))
             || (typeof DONGTAN_DATA !== "undefined" && DONGTAN_DATA.members.find(m => m.id === memberId))
             || { name: "제안위원", role: "위원" };
+
         const title = form.elements["title"].value.trim();
         const subtitle = form.elements["subtitle"] ? form.elements["subtitle"].value.trim() : "";
+        const targetGoal = form.elements["targetGoal"] ? form.elements["targetGoal"].value.trim() : "";
         const category = form.elements["category"].value;
-        const format = form.elements["format"].value.trim();
-        const target = form.elements["target"].value.trim();
-        const schedule = form.elements["schedule"].value.trim();
-        const institution = form.elements["institution"].value.trim();
+        const code = form.elements["code"] && form.elements["code"].value.trim() ? form.elements["code"].value.trim() : `1-${this.programs.length + 1}`;
+        const basis = form.elements["basis"] ? form.elements["basis"].value.trim() : "「화성시 청년 기본 조례」 제21조";
+        const schedule = form.elements["schedule"] ? form.elements["schedule"].value.trim() : "2027. 1. ~ 12.";
+        const institution = form.elements["institution"] ? form.elements["institution"].value.trim() : "화성시 동탄 청년공간";
+        const target = form.elements["target"] ? form.elements["target"].value.trim() : "화성시 거주 및 활동 19세 ~ 39세 청년";
         const purpose = form.elements["purpose"].value.trim();
+        const agency = form.elements["agency"] ? form.elements["agency"].value.trim() : "화성시 청년청소년과 / 교육·참여·권리 분과 직접사업";
+        const format = form.elements["format"] ? form.elements["format"].value.trim() : "오프라인 실무";
+        const budgetInfo = form.elements["budgetInfo"] ? form.elements["budgetInfo"].value.trim() : "시비 100%";
+
+        const subText = form.elements["subProgramsText"] ? form.elements["subProgramsText"].value.trim() : "";
+        let subPrograms = [];
+        if (subText) {
+            subPrograms = subText.split("\n").map(line => {
+                const parts = line.split("|").map(s => s.trim());
+                if (parts.length >= 3) {
+                    return { cat: parts[0], name: parts[1], desc: parts[2] };
+                } else if (parts.length === 2) {
+                    return { cat: "프로그램", name: parts[0], desc: parts[1] };
+                } else if (parts[0]) {
+                    return { cat: "교육내용", name: parts[0], desc: "" };
+                }
+                return null;
+            }).filter(Boolean);
+        }
+        if (!subPrograms.length) {
+            subPrograms = [
+                { cat: "기초실무", name: title + " 기초과정", desc: "이론 및 필수 실무 기초 교육" },
+                { cat: "실무심화", name: title + " 실무프로젝트", desc: "현업 문제 해결형 프로젝트" }
+            ];
+        }
+
+        const prevText = form.elements["prevPerformanceText"] ? form.elements["prevPerformanceText"].value.trim() : "";
+        const prevPerformance = prevText ? prevText.split("\n").map(s => s.trim()).filter(Boolean) : [
+            "2026. 10. 동탄 청년 대상 본 사업 사전 수요조사 완료 (응답 청년 85% 이상 필요 응답)"
+        ];
+
+        const planText = form.elements["plan2027Text"] ? form.elements["plan2027Text"].value.trim() : "";
+        const plan2027 = planText ? planText.split("\n").map(s => s.trim()).filter(Boolean) : [
+            `2027. 1. ~ 2. : 사업계획 수립 및 교육생 모집`,
+            `2027. 4. ~ 6. : ${title} 본 과정 집중 운영`,
+            `2027. 7. ~ 8. : 성과평가 및 사후지원`
+        ];
+
         const tagsInput = form.elements["tags"].value.trim();
         const tags = tagsInput ? tagsInput.split(",").map(t => t.trim()).filter(Boolean) : ["2027교육"];
 
         if (!title || !purpose) {
-            alert("프로그램명과 필요 이유/추진 목적을 입력해주세요.");
+            alert("사업명과 사업내용(필요이유/추진목적)을 입력해주세요.");
             return;
         }
 
-        const newProg = {
-            id: "prog-" + Date.now(),
-            memberId: memberId,
-            author: `${member.name} (${member.role || '위원'})`,
-            title: title,
-            subtitle: subtitle,
-            category: category,
-            format: format || "오프라인 실무",
-            target: target || "동탄 청년",
-            schedule: schedule || "2027년 중",
-            institution: institution || "화성시 및 전문기관",
-            purpose: purpose,
-            likes: 1,
-            status: "제안됨",
-            tags: tags,
-            comments: []
-        };
+        if (editingId) {
+            const existing = this.programs.find(p => p.id === editingId);
+            if (existing) {
+                existing.memberId = memberId;
+                existing.author = `${member.name} (${member.role || '위원'})`;
+                existing.code = code;
+                existing.title = title;
+                existing.subtitle = subtitle;
+                existing.vision = subtitle || existing.vision;
+                existing.targetGoal = targetGoal || existing.targetGoal;
+                existing.category = category;
+                existing.basis = basis;
+                existing.period = schedule;
+                existing.schedule = schedule;
+                existing.location = institution;
+                existing.institution = institution;
+                existing.target = target;
+                existing.purpose = purpose;
+                existing.agency = agency;
+                existing.format = format;
+                existing.subPrograms = subPrograms;
+                existing.prevPerformance = prevPerformance;
+                existing.plan2027 = plan2027;
+                existing.budgetRatio = budgetInfo;
+                existing.tags = tags;
+            }
+        } else {
+            const newProg = {
+                id: "prog-" + Date.now(),
+                code: code,
+                memberId: memberId,
+                author: `${member.name} (${member.role || '위원'})`,
+                contact: member.contact || "010-3351-6363",
+                title: title,
+                subtitle: subtitle,
+                vision: subtitle || "청년 역량 강화 및 실무 연계 지원",
+                targetGoal: targetGoal || "연간 교육생 및 참여자 30명, 만족도 4.5점 이상",
+                category: category,
+                basis: basis,
+                period: schedule,
+                schedule: schedule,
+                location: institution,
+                institution: institution,
+                target: target,
+                purpose: purpose,
+                agency: agency,
+                format: format,
+                subPrograms: subPrograms,
+                prevPerformance: prevPerformance,
+                plan2027: plan2027,
+                budgetRatio: budgetInfo,
+                budgetTable: [
+                    { item: "◇ 사 업 비", prev: "20,000", curr: "22,000", exec: "21,000", next: "25,000" },
+                    { item: " - 강사료 및 멘토링비", prev: "10,000", curr: "11,000", exec: "10,800", next: "12,500" },
+                    { item: " - 실습장비 및 교재비", prev: "6,000", curr: "6,500", exec: "6,200", next: "7,500" },
+                    { item: " - 운영비 및 사후관리", prev: "4,000", curr: "4,500", exec: "4,000", next: "5,000" }
+                ],
+                department: "청년청소년과 / 교육·참여·권리 분과",
+                likes: 1,
+                status: "제안됨",
+                tags: tags,
+                comments: []
+            };
+            this.programs.unshift(newProg);
+        }
 
-        this.programs.unshift(newProg);
         this.savePrograms();
         this.renderPadletBoard();
-
-        const modal = document.getElementById("program-modal");
-        if (modal) {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-        }
-        form.reset();
-
-        alert("2027년 교육 프로그램 제안이 패들렛에 성공적으로 등록되었습니다!");
+        this.closeProgramModal();
+        alert(editingId ? "교육 프로그램 사업카드가 성공적으로 수정되었습니다!" : "2027년 교육 프로그램 사업카드가 성공적으로 등록되었습니다!");
     },
 
     renderPadletBoard() {
@@ -586,46 +770,62 @@ const App = {
         return `
             <div class="padlet-card p-4 flex flex-col justify-between" id="${escapeHtml(prog.id)}">
                 <div>
-                    <div class="flex items-start justify-between gap-2 mb-2">
-                        <span class="text-[11px] px-2 py-0.5 font-bold rounded border ${catBadgeColors[prog.category] || 'bg-slate-100 text-slate-700'}">
-                            ${escapeHtml(prog.category)}
-                        </span>
+                    <!-- 상단 넘버 배지 및 카테고리 -->
+                    <div class="flex items-center justify-between gap-1.5 mb-2.5">
+                        <div class="flex items-center space-x-1.5">
+                            <span class="px-2 py-0.5 text-[11px] font-black bg-blue-900 text-white rounded shadow-sm">
+                                ${escapeHtml(prog.code || '1-1')}
+                            </span>
+                            <span class="text-[11px] px-2 py-0.5 font-bold rounded border ${catBadgeColors[prog.category] || 'bg-slate-100 text-slate-700'}">
+                                ${escapeHtml(prog.category)}
+                            </span>
+                        </div>
                         <span class="text-[10px] px-2 py-0.5 rounded-full border font-semibold ${statusBadge[prog.status] || ''}">
                             ${escapeHtml(prog.status)}
                         </span>
                     </div>
 
-                    <h4 class="font-bold text-slate-900 text-sm leading-snug mb-1 hover:text-blue-600 cursor-pointer">
-                        ${escapeHtml(prog.title)}
+                    <!-- 사업명 (클릭 시 상세 사업카드 팝업) -->
+                    <h4 onclick="App.openProgramDetailModal('${escapeHtml(prog.id)}')" class="font-extrabold text-slate-900 text-sm leading-snug mb-2 hover:text-blue-600 cursor-pointer flex items-center justify-between group">
+                        <span>${escapeHtml(prog.title)}</span>
+                        <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 transition shrink-0 ml-1"></i>
                     </h4>
 
-                    ${prog.subtitle ? `
-                        <p class="text-xs font-semibold text-blue-600 mb-2 truncate flex items-center gap-1.5" title="${escapeHtml(prog.subtitle)}">
-                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
-                            <span class="truncate">${escapeHtml(prog.subtitle)}</span>
+                    <!-- 핵심 비전 & 목표 (첨부 양식 상단 테두리 박스 요약) -->
+                    <div class="border-l-2 border-blue-600 pl-2.5 py-1 mb-2.5 bg-blue-50/60 rounded-r">
+                        <p class="text-[11px] font-bold text-slate-800 line-clamp-1">
+                            ◆ ${escapeHtml(prog.vision || prog.subtitle || '청년 역량강화 및 고용안정 도모')}
                         </p>
-                    ` : `<div class="mb-2"></div>`}
+                        ${prog.targetGoal ? `
+                            <p class="text-[10px] font-semibold text-blue-700 line-clamp-1 mt-0.5">
+                                ◆ 목표: ${escapeHtml(prog.targetGoal)}
+                            </p>
+                        ` : ''}
+                    </div>
 
-                    <p class="text-xs text-slate-600 line-clamp-3 mb-3 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">
-                        ${escapeHtml(prog.purpose)}
-                    </p>
-
-                    <div class="space-y-1 text-[11px] text-slate-500 mb-3">
-                        <div class="flex items-center space-x-1 truncate">
-                            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                            <span class="truncate">일정: ${escapeHtml(prog.schedule)}</span>
+                    <!-- 사업 개요 요약 -->
+                    <div class="bg-slate-50 p-2.5 rounded-lg border border-slate-100 mb-3 space-y-1 text-[11px] text-slate-600">
+                        <div class="flex items-center space-x-1.5 truncate">
+                            <span class="font-bold text-slate-800 shrink-0">대상:</span>
+                            <span class="truncate">${escapeHtml(prog.target || '화성 청년')}</span>
                         </div>
-                        <div class="flex items-center space-x-1 truncate">
-                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                            <span class="truncate">방식: ${escapeHtml(prog.format)} | ${escapeHtml(prog.target)}</span>
+                        <div class="flex items-center space-x-1.5 truncate">
+                            <span class="font-bold text-slate-800 shrink-0">기간:</span>
+                            <span class="truncate">${escapeHtml(prog.period || prog.schedule || '2027년 중')}</span>
                         </div>
-                        <div class="flex items-center space-x-1 truncate">
-                            <i data-lucide="building" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                            <span class="truncate">추천기관: ${escapeHtml(prog.institution)}</span>
+                        <div class="flex items-center space-x-1.5 truncate">
+                            <span class="font-bold text-slate-800 shrink-0">위치:</span>
+                            <span class="truncate">${escapeHtml(prog.location || prog.institution || '동탄 청년공간')}</span>
                         </div>
                     </div>
 
-                    <div class="flex flex-wrap gap-1 mb-3">
+                    <!-- 공공 사업카드 전체보기 버튼 -->
+                    <button type="button" onclick="App.openProgramDetailModal('${escapeHtml(prog.id)}')" class="w-full mb-3 py-1.5 px-2 bg-slate-900 hover:bg-blue-800 active:scale-98 text-white font-bold text-xs rounded-lg flex items-center justify-center space-x-1.5 shadow-sm transition cursor-pointer">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5 text-blue-300"></i>
+                        <span>화성시 사업카드 양식 전체보기</span>
+                    </button>
+
+                    <div class="flex flex-wrap gap-1 mb-2">
                         ${(prog.tags || []).map(t => `<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">#${escapeHtml(t)}</span>`).join("")}
                     </div>
                 </div>
@@ -635,16 +835,210 @@ const App = {
                         ✍️ ${escapeHtml(prog.author)}
                     </span>
                     <div class="flex items-center space-x-2">
-                        <button onclick="App.handleVote('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition">
+                        <button onclick="App.handleVote('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition cursor-pointer">
                             <i data-lucide="heart" class="w-3.5 h-3.5 fill-rose-500"></i>
                             <span>${prog.likes || 0}</span>
                         </button>
-                        <button onclick="App.openCommentModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        <button onclick="App.openCommentModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
                             <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
                             <span>${(prog.comments || []).length}</span>
                         </button>
                     </div>
                 </div>
+            </div>
+        `;
+    },
+
+    renderProgramReportCardHTML(prog) {
+        const contactDisplay = this.isAdminAuthenticated
+            ? (prog.contact || "010-3351-6363")
+            : (prog.contact ? "010-****-**** (관리자 인증 필요)" : "010-****-****");
+
+        const subProgramsList = (prog.subPrograms && prog.subPrograms.length) ? prog.subPrograms : [
+            { cat: "기초역량", name: prog.title + " 기초과정", desc: "이론 및 필수 실무 기초 교육" },
+            { cat: "실무심화", name: prog.title + " 실무프로젝트", desc: "현업 문제 해결형 실전 프로젝트" },
+            { cat: "사후연계", name: "취업 및 정책 연계", desc: "전문가 멘토링 및 관내 청년 네트워크 구축" }
+        ];
+
+        const prevList = (prog.prevPerformance && prog.prevPerformance.length) ? prog.prevPerformance : [
+            "2026. 10. 동탄 청년 대상 본 사업 사전 수요조사 실시 (설문 참여자 85% 이상 필요 응답)",
+            "2026. 11. 청년협의체 교육·참여·권리 분과 정기회의 의제 채택 및 세부기획안 검토"
+        ];
+
+        const planList = (prog.plan2027 && prog.plan2027.length) ? prog.plan2027 : [
+            `2027. 1. ~ 2. : 사업계획 수립 및 참여 대상 청년 모집·선정`,
+            `2027. 3. ~ 4. : 전문 강사진 섭외 및 교육 인프라 준비`,
+            `2027. 5. ~ 10. : ${prog.title} 본 프로그램 집중 운영`,
+            `2027. 11. ~ 12. : 사업 성과보고회 및 만족도 조사, 차년도 환류`
+        ];
+
+        const budgetRows = (prog.budgetTable && prog.budgetTable.length) ? prog.budgetTable : [
+            { item: "◇ 사 업 비", prev: "20,000", curr: "22,000", exec: "21,000", next: "25,000" },
+            { item: " - 전문 강사료 및 멘토링비", prev: "10,000", curr: "11,000", exec: "10,800", next: "12,500" },
+            { item: " - 교육장 대관 및 교재비", prev: "6,000", curr: "6,500", exec: "6,200", next: "7,500" },
+            { item: " - 운영비 및 행사 진행비", prev: "4,000", curr: "4,500", exec: "4,000", next: "5,000" }
+        ];
+
+        return `
+            <div class="bg-white p-6 sm:p-9 rounded-xl border border-slate-300 shadow-sm max-w-3xl mx-auto text-slate-900 font-sans print:p-0 print:border-none leading-normal">
+                <!-- 상단 타이틀 바: [ 1-1 ] 사업명 -->
+                <div class="flex items-center space-x-3 pb-2.5 border-b-[3px] border-blue-900 mb-4">
+                    <div class="bg-blue-900 text-white font-black text-lg sm:text-xl px-3.5 py-1 rounded shadow-sm shrink-0">
+                        ${escapeHtml(prog.code || '1-1')}
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-black text-slate-950 tracking-tight flex-1">
+                        ${escapeHtml(prog.title)}
+                    </h2>
+                </div>
+
+                <!-- 핵심 비전 & 2027년 목표 박스 (테두리 상자) -->
+                <div class="border-2 border-slate-900 rounded-lg p-3.5 sm:p-4 mb-5 bg-slate-50/60 space-y-1.5">
+                    <div class="flex items-start space-x-2 font-bold text-slate-950 text-xs sm:text-sm">
+                        <span class="text-blue-900 shrink-0">◆</span>
+                        <span>${escapeHtml(prog.vision || prog.subtitle || '청년 역량 강화 및 현장 실습을 통한 고용안정 도모')}</span>
+                    </div>
+                    <div class="flex items-start space-x-2 font-bold text-slate-950 text-xs sm:text-sm">
+                        <span class="text-blue-900 shrink-0">◆</span>
+                        <span>2027년 목표: ${escapeHtml(prog.targetGoal || '센터 상담·프로그램 참여자 수 연간 30명, 만족도 4.5점 이상')}</span>
+                    </div>
+                </div>
+
+                <!-- □ 사업 개요 -->
+                <div class="mb-5">
+                    <div class="font-black text-slate-950 text-sm sm:text-base mb-2.5 flex items-center space-x-1.5">
+                        <span class="text-slate-950 text-sm">□</span>
+                        <span class="tracking-tight">사업 개요</span>
+                    </div>
+                    <div class="space-y-1.5 pl-1.5 text-xs sm:text-sm text-slate-800">
+                        <div class="flex items-start leading-relaxed">
+                            <span class="font-bold text-slate-950 shrink-0 w-24">○ 추진근거:</span>
+                            <span class="flex-1">${escapeHtml(prog.basis || '「화성시 청년 기본 조례」 제21조, 「청년일자리 창출 촉진 조례」 제6조')}</span>
+                        </div>
+                        <div class="flex items-start leading-relaxed">
+                            <span class="font-bold text-slate-950 shrink-0 w-24">○ 사업기간:</span>
+                            <span class="flex-1">${escapeHtml(prog.period || prog.schedule || '2027. 1. ~ 12.')}</span>
+                        </div>
+                        <div class="flex items-start leading-relaxed">
+                            <span class="font-bold text-slate-950 shrink-0 w-24">○ 위 &nbsp; &nbsp;치:</span>
+                            <span class="flex-1">${escapeHtml(prog.location || prog.institution || '화성시 동탄 청년공간 및 관내 협력기관')}</span>
+                        </div>
+                        <div class="flex items-start leading-relaxed">
+                            <span class="font-bold text-slate-950 shrink-0 w-24">○ 사업대상:</span>
+                            <span class="flex-1">${escapeHtml(prog.target || '화성시 거주 및 활동 19세 ~ 39세 미취업·이직 희망 청년')}</span>
+                        </div>
+                        <div class="flex items-start leading-relaxed">
+                            <span class="font-bold text-slate-950 shrink-0 w-24">○ 사업내용:</span>
+                            <span class="flex-1 font-medium">${escapeHtml(prog.purpose || '')}</span>
+                        </div>
+                    </div>
+
+                    <!-- 세부 프로그램 테이블 (구분 | 프로그램명 | 내용) -->
+                    <div class="mt-3 overflow-x-auto">
+                        <table class="w-full border-collapse border border-slate-700 text-xs">
+                            <thead>
+                                <tr class="bg-blue-50 text-slate-900 border-b border-slate-700">
+                                    <th class="border border-slate-700 px-3 py-1.5 w-24 text-center font-bold">구분</th>
+                                    <th class="border border-slate-700 px-3 py-1.5 w-48 text-center font-bold">프로그램명</th>
+                                    <th class="border border-slate-700 px-3 py-1.5 text-center font-bold">내 용</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${subProgramsList.map(sub => `
+                                    <tr class="hover:bg-slate-50/80">
+                                        <td class="border border-slate-700 px-3 py-1.5 text-center font-semibold bg-slate-50/50">${escapeHtml(sub.cat || '과정')}</td>
+                                        <td class="border border-slate-700 px-3 py-1.5 font-bold text-slate-900">${escapeHtml(sub.name || '')}</td>
+                                        <td class="border border-slate-700 px-3 py-1.5 text-slate-700 leading-snug">${escapeHtml(sub.desc || '')}</td>
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-2.5 pl-1.5 text-xs sm:text-sm text-slate-800 flex items-center">
+                        <span class="font-bold text-slate-950 shrink-0 w-36">○ 시행주체/시행방법:</span>
+                        <span class="flex-1 font-semibold">${escapeHtml(prog.agency || '화성시 청년청소년과 / 교육·참여·권리 분과 직접사업')}</span>
+                    </div>
+                </div>
+
+                <!-- < 2026년도 추진실적 > (점선 테두리 박스) -->
+                <div class="mb-5">
+                    <div class="text-center font-black text-xs sm:text-sm text-slate-950 mb-1.5 tracking-tight">
+                        &lt; 2026년도 추진실적 &gt;
+                    </div>
+                    <div class="border border-dashed border-slate-500 bg-slate-50/70 rounded-lg p-3 text-xs sm:text-sm text-slate-800 space-y-1">
+                        ${prevList.map(item => `
+                            <div class="flex items-start space-x-1.5">
+                                <span class="text-slate-900 shrink-0">▶</span>
+                                <span>${escapeHtml(item)}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
+
+                <!-- □ 2027년도 추진계획 -->
+                <div class="mb-5">
+                    <div class="font-black text-slate-950 text-sm sm:text-base mb-2 flex items-center space-x-1.5">
+                        <span class="text-slate-950 text-sm">□</span>
+                        <span class="tracking-tight">2027년도 추진계획</span>
+                    </div>
+                    <div class="space-y-1.5 pl-1.5 text-xs sm:text-sm text-slate-800">
+                        ${planList.map(plan => `
+                            <div class="flex items-start space-x-1.5">
+                                <span class="text-slate-700 shrink-0">○</span>
+                                <span>${escapeHtml(plan)}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
+
+                <!-- □ 예산 현황 -->
+                <div class="mb-5">
+                    <div class="flex items-center justify-between mb-2">
+                        <div class="font-black text-slate-950 text-sm sm:text-base flex items-center space-x-1.5">
+                            <span class="text-slate-950 text-sm">□</span>
+                            <span class="tracking-tight">예산 현황 : ${escapeHtml(prog.budgetRatio || '시비 100%')}</span>
+                        </div>
+                        <span class="text-[11px] text-slate-600 font-semibold">(단위 : 천원)</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full border-collapse border border-slate-700 text-xs">
+                            <thead>
+                                <tr class="bg-blue-50 text-slate-900 border-b border-slate-700">
+                                    <th rowspan="2" class="border border-slate-700 px-3 py-1 text-center font-bold">구 분</th>
+                                    <th colspan="3" class="border border-slate-700 px-3 py-1 text-center font-bold">2026년</th>
+                                    <th class="border border-slate-700 px-3 py-1 text-center font-bold bg-blue-100/70">2027년</th>
+                                </tr>
+                                <tr class="bg-blue-50 text-slate-900 border-b border-slate-700 text-[11px]">
+                                    <th class="border border-slate-700 px-2 py-1 text-center font-semibold">본예산</th>
+                                    <th class="border border-slate-700 px-2 py-1 text-center font-semibold">최종예산</th>
+                                    <th class="border border-slate-700 px-2 py-1 text-center font-semibold">집행액</th>
+                                    <th class="border border-slate-700 px-2 py-1 text-center font-bold bg-blue-100/70">본예산(안)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${budgetRows.map((b, idx) => `
+                                    <tr class="${idx === 0 ? 'font-bold bg-slate-100/80' : 'hover:bg-slate-50'}">
+                                        <td class="border border-slate-700 px-3 py-1.5 ${idx === 0 ? 'text-left font-bold' : 'text-left pl-6 text-slate-700'}">${escapeHtml(b.item)}</td>
+                                        <td class="border border-slate-700 px-2 py-1.5 text-center text-slate-700">${escapeHtml(b.prev || '-')}</td>
+                                        <td class="border border-slate-700 px-2 py-1.5 text-center text-slate-700">${escapeHtml(b.curr || '-')}</td>
+                                        <td class="border border-slate-700 px-2 py-1.5 text-center text-slate-700">${escapeHtml(b.exec || '-')}</td>
+                                        <td class="border border-slate-700 px-2 py-1.5 text-center font-bold text-blue-900 bg-blue-50/50">${escapeHtml(b.next || '-')}</td>
+                                    </tr>
+                                `).join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 담당부서 / 제안위원 하단 표 -->
+                <table class="w-full border-collapse border border-slate-700 text-xs text-center font-medium mt-4">
+                    <tr class="bg-slate-100">
+                        <th class="border border-slate-700 py-2 px-3 w-1/4 font-bold text-slate-950">담당부서(팀명)</th>
+                        <td class="border border-slate-700 py-2 px-3 w-1/4 text-slate-800 font-semibold">${escapeHtml(prog.department || '청년청소년과(청년일자리팀)')}</td>
+                        <th class="border border-slate-700 py-2 px-3 w-1/4 font-bold text-slate-950">제안위원 / 연락처</th>
+                        <td class="border border-slate-700 py-2 px-3 w-1/4 text-slate-800 font-semibold">${escapeHtml(prog.author || '김남현')} (${escapeHtml(contactDisplay)})</td>
+                    </tr>
+                </table>
             </div>
         `;
     },
@@ -693,18 +1087,20 @@ const App = {
     },
 
     exportProgramsToCSV() {
-        const headers = ["번호", "제안자", "분야", "프로그램명", "소제목", "교육방식", "교육대상", "예상일정", "추천기관", "추진목적", "상태", "추천수"];
+        const headers = ["사업코드", "제안위원", "분야", "사업명", "핵심비전(소제목)", "2027년목표", "추진근거", "사업기간", "위치", "사업대상", "사업내용", "시행주체", "상태", "추천수"];
         const rows = this.programs.map((p, idx) => [
-            idx + 1,
+            `"${(p.code || `1-${idx+1}`).replace(/"/g, '""')}"`,
             `"${(p.author || '').replace(/"/g, '""')}"`,
             `"${(p.category || '').replace(/"/g, '""')}"`,
             `"${(p.title || '').replace(/"/g, '""')}"`,
-            `"${(p.subtitle || '').replace(/"/g, '""')}"`,
-            `"${(p.format || '').replace(/"/g, '""')}"`,
+            `"${(p.vision || p.subtitle || '').replace(/"/g, '""')}"`,
+            `"${(p.targetGoal || '').replace(/"/g, '""')}"`,
+            `"${(p.basis || '').replace(/"/g, '""')}"`,
+            `"${(p.period || p.schedule || '').replace(/"/g, '""')}"`,
+            `"${(p.location || p.institution || '').replace(/"/g, '""')}"`,
             `"${(p.target || '').replace(/"/g, '""')}"`,
-            `"${(p.schedule || '').replace(/"/g, '""')}"`,
-            `"${(p.institution || '').replace(/"/g, '""')}"`,
             `"${(p.purpose || '').replace(/"/g, '""')}"`,
+            `"${(p.agency || '').replace(/"/g, '""')}"`,
             `"${(p.status || '').replace(/"/g, '""')}"`,
             p.likes || 0
         ]);

@@ -1517,14 +1517,20 @@
     </main>
 
     <!-- 교육 프로그램 신규 제안 모달 -->
-    <div id="program-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
+    <!-- ============================================================== -->
+    <!-- 2027년 교육 프로그램 사업카드 작성/수정 모달 (화성시 공공 표준 서식) -->
+    <!-- ============================================================== -->
+    <div id="program-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-3 sm:p-4">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 sm:p-7 shadow-2xl border border-slate-200 max-h-[92vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-4">
                 <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
-                        <i data-lucide="book-plus" class="w-4 h-4"></i>
+                    <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold">
+                        <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
                     </div>
-                    <h3 class="font-bold text-slate-900 text-lg">2027년 필요 교육 프로그램 제안</h3>
+                    <div>
+                        <h3 id="program-modal-title" class="font-bold text-slate-900 text-lg">2027년 교육 프로그램 사업카드 작성</h3>
+                        <p class="text-xs text-slate-500">화성시 청년정책 공식 업무보고 및 사업설명서 표준 양식</p>
+                    </div>
                 </div>
                 <button id="close-program-modal-btn" type="button" onclick="App.closeProgramModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
                     <i data-lucide="x" class="w-5 h-5"></i>
@@ -1532,71 +1538,181 @@
             </div>
 
             <form id="new-program-form" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">제안 위원 선택 *</label>
-                        <select id="program-member-select" name="memberId" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
-                            <!-- Injected via JS -->
-                        </select>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">분과 카테고리 *</label>
-                        <select name="category" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
-                            <option value="교육">교육 혁신</option>
-                            <option value="참여">시정 참여</option>
-                            <option value="권리">청년 권익</option>
-                            <option value="기타">기타</option>
-                        </select>
-                    </div>
-                </div>
+                <input type="hidden" name="editingId" id="program-editing-id" value="">
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">교육 프로그램 명칭 (메인 제목) *</label>
-                    <input name="title" type="text" placeholder="예: 2027 동탄 생성형 AI 실무 프로젝트" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
-                </div>
-
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">프로그램 소제목 (부제 / 세부 주제)</label>
-                    <input name="subtitle" type="text" placeholder="예: 실전 프롬프트 엔지니어링 및 업무 자동화 마스터" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
-                </div>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">교육 방식 및 형태</label>
-                        <input name="format" type="text" placeholder="예: 오프라인 워크숍 / 온라인 VOD" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                <!-- 1. 기본 인적 및 분류 -->
+                <div class="bg-blue-50/50 p-3.5 rounded-xl border border-blue-100 space-y-3">
+                    <div class="text-xs font-bold text-blue-900 flex items-center space-x-1">
+                        <span>[1] 사업 기본 식별 및 제안위원</span>
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">수강 대상 청년</label>
-                        <input name="target" type="text" placeholder="예: 동탄 구직·이직 청년 25명" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">제안 위원 선택 *</label>
+                            <select id="program-member-select" name="memberId" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <!-- Injected via JS -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">분과 카테고리 *</label>
+                            <select name="category" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500" required>
+                                <option value="교육">교육 혁신</option>
+                                <option value="참여">시정 참여</option>
+                                <option value="권리">청년 권익</option>
+                                <option value="기타">기타</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">사업 코드 (번호)</label>
+                            <input name="code" type="text" placeholder="예: 1-1" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold">
+                        </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <!-- 2. 사업 타이틀 및 핵심 목표 -->
+                <div class="space-y-3">
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">예상 추진 일정</label>
-                        <input name="schedule" type="text" placeholder="예: 2027년 5월 ~ 6월 (총 8회)" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                        <label class="block text-xs font-bold text-slate-800 mb-1">사업명 (교육 프로그램 명칭) *</label>
+                        <input name="title" type="text" placeholder="예: 2027 화성 생성형 AI & AX 실무 프로젝트 마스터과정" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white font-bold" required>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">◆ 핵심 비전 및 슬로건 (소제목)</label>
+                            <input name="subtitle" type="text" placeholder="예: 청년 AX 역량강화 및 일경험 기회 제공을 통한 고용안정 도모" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">◆ 2027년 정량 목표</label>
+                            <input name="targetGoal" type="text" placeholder="예: 센터 상담·프로그램 참여자 수 연간 30명, 만족도 4.5점" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. □ 사업 개요 상세 -->
+                <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
+                    <div class="text-xs font-bold text-slate-900 flex items-center space-x-1">
+                        <span>□ 사업 개요</span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">○ 추진근거</label>
+                            <input name="basis" type="text" value="「화성시 청년 기본 조례」 제21조, 「청년일자리 창출 촉진 조례」 제6조" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">○ 사업기간</label>
+                            <input name="schedule" type="text" placeholder="예: 2027. 1. ~ 12. (또는 2027. 4. ~ 6.)" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">○ 위    치 (교육 장소)</label>
+                            <input name="institution" type="text" placeholder="예: 화성시 동탄 청년공간 및 관내 협력기관" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">○ 사업대상</label>
+                            <input name="target" type="text" placeholder="예: 화성시 거주 및 활동 19세 ~ 39세 미취업 청년 25명" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">○ 사업내용 (필요성 및 추진목적) *</label>
+                        <textarea name="purpose" rows="2" placeholder="해당 교육 프로그램의 핵심 추진 내용과 수료 시 기대효과를 서술해주세요." class="w-full text-xs p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 leading-relaxed" required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">○ 세부 프로그램 (구분 | 프로그램명 | 내용 형식으로 줄바꿈 입력)</label>
+                        <textarea name="subProgramsText" rows="3" placeholder="예시:
+기초실무 | 프롬프트 엔지니어링 & AX 기초 | LLM 업무 자동화 기초 및 현업 템플릿 설계
+심화실습 | 노코드 AI 워크플로우 구축 | 사내 데이터 기반 AI 챗봇 구축 실습
+프로젝트 | 기업 연계 해커톤 및 IR 피칭 | 관내 기업 실무 과제 해결형 프로젝트" class="w-full text-xs p-2.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-[11px] leading-relaxed"></textarea>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">○ 시행주체/시행방법</label>
+                            <input name="agency" type="text" value="화성시 청년청소년과 / 교육·참여·권리 분과 직접사업" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">교육 진행 방식 및 형태</label>
+                            <input name="format" type="text" placeholder="예: 오프라인 실무 워크숍 (주 1회, 8주)" class="w-full text-xs px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. 실적, 계획 및 예산 -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">&lt; 2026년도 추진실적 &gt;</label>
+                        <textarea name="prevPerformanceText" rows="2" placeholder="예: 2026. 10. 동탄 청년 대상 AI 실무 사전 수요조사 완료 (응답 120명 중 88% 필요 응답)" class="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-700 mb-1">추천 강사 또는 기관</label>
-                        <input name="institution" type="text" placeholder="예: 경기창조경제혁신센터, 화성문화재단" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">□ 2027년도 추진계획 (월별 로드맵)</label>
+                        <textarea name="plan2027Text" rows="2" placeholder="예:
+2027. 1. ~ 2. : 교육생 모집 및 교육장 정비
+2027. 4. ~ 6. : 8주 집중 실무과정 운영" class="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">필요 이유 및 추진 목적 *</label>
-                    <textarea name="purpose" rows="3" placeholder="해당 교육 프로그램이 왜 필요한지, 수료 시 청년들에게 어떤 효용이 있는지 서술해주세요." class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white leading-relaxed" required></textarea>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">□ 예산 현황 (재원 분담비율 & 예상 사업비)</label>
+                        <input name="budgetInfo" type="text" placeholder="예: 시비 100%, 30,000천원" class="w-full text-xs px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">키워드 태그 (쉼표로 구분)</label>
+                        <input name="tags" type="text" placeholder="예: AI, 실무역량, 취업연계" class="w-full text-xs px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">키워드 태그 (쉼표로 구분)</label>
-                    <input name="tags" type="text" placeholder="예: AI, 실무역량, 자격증, 취업연계" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
-                </div>
-
-                <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
+                <div class="pt-4 border-t border-slate-200 flex items-center justify-end space-x-3">
                     <button type="button" onclick="App.closeProgramModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition cursor-pointer">취소</button>
-                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition">패들렛에 등록하기</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition">사업카드 저장 및 패들렛 등록</button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 화성시 청년정책 교육사업 설명서 (공공 표준 사업카드 뷰어 모달) -->
+    <!-- ============================================================== -->
+    <div id="program-detail-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-5 overflow-y-auto">
+        <div class="bg-slate-100 rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl border border-slate-300 max-h-[96vh] flex flex-col">
+            <!-- 모달 상단 컨트롤 툴바 -->
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-3 no-print">
+                <div class="flex items-center space-x-2">
+                    <span class="px-2.5 py-1 bg-blue-900 text-white font-bold text-xs rounded">화성시 시정보고 표준서식</span>
+                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">2027년 주요 청년사업 설명서 (사업카드)</h3>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="App.printCurrentProgramCard()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-sm transition cursor-pointer">
+                        <i data-lucide="printer" class="w-4 h-4"></i>
+                        <span>인쇄 / PDF 저장</span>
+                    </button>
+                    <button type="button" onclick="App.editCurrentProgramCard()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer">
+                        <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-500"></i>
+                        <span>내용 수정</span>
+                    </button>
+                    <button type="button" onclick="App.closeProgramDetailModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200 transition cursor-pointer">
+                        <i data-lucide="x" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 스크롤 가능한 본문 영역 (첨부 예시와 100% 동일한 A4 행정 사업카드 양식) -->
+            <div class="flex-1 overflow-y-auto pr-1">
+                <div id="printable-program-card-area">
+                    <!-- Dynamic Injected Content matching user's image -->
+                </div>
+            </div>
+
+            <!-- 모달 하단 닫기 바 -->
+            <div class="pt-3 border-t border-slate-200 flex justify-between items-center no-print">
+                <span class="text-[11px] text-slate-500">💡 [인쇄 / PDF 저장]을 누르시면 공공 보고서 양식 규격 그대로 출력 및 PDF 저장이 가능합니다.</span>
+                <button type="button" onclick="App.closeProgramDetailModal()" class="px-4 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-200 rounded-lg border border-slate-300 transition cursor-pointer">
+                    닫기
+                </button>
+            </div>
         </div>
     </div>
 

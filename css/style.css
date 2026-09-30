@@ -235,21 +235,25 @@ body {
     border-radius: 0.25rem;
 }
 
-/* 정책 제안서 인쇄 전용 스타일 */
+/* 정책 제안서 및 공공 사업카드 인쇄 전용 스타일 */
 @media print {
     body * {
         visibility: hidden;
     }
-    #printable-proposal-area, #printable-proposal-area * {
+    #printable-proposal-area, #printable-proposal-area *,
+    #printable-program-card-area, #printable-program-card-area * {
         visibility: visible;
     }
-    #printable-proposal-area {
+    #printable-proposal-area, #printable-program-card-area {
         position: absolute;
         left: 0;
         top: 0;
         width: 100%;
         margin: 0;
         padding: 20px;
+        box-shadow: none !important;
+        border: none !important;
+        background: #ffffff !important;
     }
     .no-print {
         display: none !important;
