@@ -50,6 +50,9 @@ const App = {
     flowSearch: "",
     flowCheckedTasks: {},
 
+    // 관리자 권한 상태 (비밀번호: 2232)
+    isAdmin: sessionStorage.getItem("dongtan_admin_auth") === "true",
+
     init() {
         this.loadStorage();
         this.setupNavigation();
@@ -58,6 +61,7 @@ const App = {
         this.setupBylaws();
         this.setupCouncilFlow();
         this.renderAll();
+        this.updateAdminUI();
         this.updateIcons();
     },
 
@@ -144,18 +148,26 @@ const App = {
             this.flowCheckedTasks = {};
         }
 
-        // 분과 위원 명단 불러오기
+        // 분과 위원 명단 불러오기 (엑셀 원본 연락처 데이터 동기화)
         try {
             const savedDivision = localStorage.getItem("dongtan_division_members");
-            if (savedDivision) {
+            if (savedDivision && typeof DIVISION_MEMBERS_INITIAL !== "undefined") {
                 const parsed = JSON.parse(savedDivision);
                 this.divisionMembers = Array.isArray(parsed) && parsed.length > 0 ? parsed : JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
+                // 초기 엑셀 데이터의 전화번호가 비어있는 경우 복원
+                const phoneMap = {};
+                DIVISION_MEMBERS_INITIAL.forEach(dm => {
+                    phoneMap[dm.id] = dm.phone;
+                    phoneMap[dm.name] = dm.phone;
+                });
+                this.divisionMembers.forEach(m => {
+                    if (!m.phone && (phoneMap[m.id] || phoneMap[m.name])) {
+                        m.phone = phoneMap[m.id] || phoneMap[m.name];
+                    }
+                });
+                this.saveDivisionMembers();
             } else if (typeof DIVISION_MEMBERS_INITIAL !== "undefined") {
                 this.divisionMembers = JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
-            }
-            // 항상 전화번호/이메일 공란 처리
-            if (this.divisionMembers) {
-                this.divisionMembers.forEach(m => { m.phone = ""; m.email = ""; });
                 this.saveDivisionMembers();
             }
         } catch {
@@ -2035,6 +2047,32 @@ ${data.effects}
                         <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">성명</label>
                         <p class="text-sm font-black text-slate-900 px-2 py-1 bg-white border border-slate-200 rounded">${escapeHtml(m.name)}</p>
                     </div>
+
+                    <!-- 연락처 (관리자 권한 2232 인증 시에만 표기) -->
+                    <div class="mt-2 pt-2 border-t border-slate-200/80">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-[10px] font-semibold text-slate-500">연락처</label>
+                            ${this.isAdmin ? `
+                                <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">관리자 인증</span>
+                            ` : `
+                                <span class="text-[9px] font-medium text-slate-400">비공개</span>
+                            `}
+                        </div>
+                        ${this.isAdmin ? `
+                            <div class="flex items-center space-x-1.5 px-2 py-1.5 bg-emerald-50/70 border border-emerald-200/80 rounded-lg text-emerald-900 text-xs font-bold font-mono">
+                                <i data-lucide="phone-call" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                                <span>${escapeHtml(m.phone || '연락처 미등록')}</span>
+                            </div>
+                        ` : `
+                            <div class="flex items-center justify-between px-2 py-1.5 bg-slate-100/80 border border-dashed border-slate-200 rounded-lg text-slate-400 text-[11px]">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="lock" class="w-3 h-3 text-slate-400 shrink-0"></i>
+                                    <span>관리자 권한 필요</span>
+                                </span>
+                                <button type="button" onclick="App.toggleAdminAuth()" class="text-[10px] text-blue-600 hover:underline font-bold">인증</button>
+                            </div>
+                        `}
+                    </div>
                 </div>
             </div>
         `).join("");
@@ -2124,8 +2162,8 @@ ${data.effects}
         const id = document.getElementById("modal-dm-id").value;
         const name = document.getElementById("modal-dm-name").value.trim();
         const role = document.getElementById("modal-dm-role").value.trim();
-        const phone = ""; // 항상 공란
-        const email = ""; // 항상 공란
+        const phone = document.getElementById("modal-dm-phone").value.trim();
+        const email = document.getElementById("modal-dm-email").value.trim();
 
         if (!name || !role) {
             alert("성명과 직책은 필수 입력 항목입니다.");
@@ -2164,6 +2202,60 @@ ${data.effects}
             this.saveDivisionMembers();
             this.renderDivisionMembersGrid();
         }
+    },
+
+    // ==========================================
+    // 플랫폼 전체 관리자 권한 인증 (비밀번호: 2232)
+    // ==========================================
+    toggleAdminAuth() {
+        if (this.isAdmin) {
+            if (confirm("관리자 권한을 해제(로그아웃)하시겠습니까?\n위원들의 연락처가 즉시 비공개로 전환됩니다.")) {
+                this.isAdmin = false;
+                sessionStorage.removeItem("dongtan_admin_auth");
+                this.updateAdminUI();
+                this.renderDivisionMembersGrid();
+                alert("관리자 권한이 안전하게 해제되었습니다.");
+            }
+        } else {
+            const pwd = prompt("🔐 관리자 비밀번호를 입력해주세요:");
+            if (pwd === null) return; // 취소 누름
+            if (pwd.trim() === "2232") {
+                this.isAdmin = true;
+                sessionStorage.setItem("dongtan_admin_auth", "true");
+                this.updateAdminUI();
+                this.renderDivisionMembersGrid();
+                alert("✅ 관리자 권한이 정상 실행되었습니다.\n분과위원 연락처가 공개 표기됩니다.");
+            } else {
+                alert("❌ 비밀번호가 올바르지 않습니다. (다시 시도해주세요)");
+            }
+        }
+    },
+
+    // 좌측 사이드바 관리자 권한 단추 UI 상태 갱신
+    updateAdminUI() {
+        const btn = document.getElementById("admin-auth-btn");
+        if (!btn) return;
+
+        if (this.isAdmin) {
+            btn.className = "w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl transition shadow-xs";
+            btn.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="unlock" class="w-4 h-4 text-emerald-600"></i>
+                    <span>관리자 권한 실행 중</span>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-200 text-emerald-900 font-extrabold">해제</span>
+            `;
+        } else {
+            btn.className = "w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition shadow-xs group";
+            btn.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="lock" class="w-4 h-4 text-slate-400 group-hover:text-blue-600 transition"></i>
+                    <span>관리자 권한 실행</span>
+                </div>
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold group-hover:bg-blue-50 group-hover:text-blue-700 transition">인증</span>
+            `;
+        }
+        this.updateIcons();
     },
 
     renderAll() {
