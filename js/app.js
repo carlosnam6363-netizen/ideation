@@ -703,7 +703,27 @@ const App = {
         lucide.createIcons();
     },
 
-    // Step 5: 정책 제안서 5선 렌더링 및 에디터 로드
+    // Step 3: 세부 정책 목록 열기/닫기 토글
+    toggleMcpListDetails() {
+        const content = document.getElementById("mcp-details-content");
+        const icon = document.getElementById("mcp-toggle-icon");
+        const text = document.getElementById("mcp-toggle-text");
+        if (!content) return;
+
+        const isHidden = content.classList.contains("hidden");
+        if (isHidden) {
+            content.classList.remove("hidden");
+            if (icon) icon.style.transform = "rotate(180deg)";
+            if (text) text.textContent = "상세 정책 목록 닫기";
+            this.renderMcpPolicyList();
+        } else {
+            content.classList.add("hidden");
+            if (icon) icon.style.transform = "rotate(0deg)";
+            if (text) text.textContent = "상세 정책 목록 열기";
+        }
+    },
+
+    // Step 5: 정책 제안서 5선 렌더링 및 서식 로드
     renderProposalSelector() {
         const listContainer = document.getElementById("proposal-cards-list");
         if (!listContainer) return;
@@ -716,7 +736,7 @@ const App = {
                         <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700">
                             추천 제안 ${p.num}
                         </span>
-                        <span class="text-xs text-slate-500 font-medium">${p.field}</span>
+                        <span class="text-xs text-slate-500 font-medium truncate max-w-[140px]">${p.field}</span>
                     </div>
                     <h4 class="font-bold text-slate-900 text-sm mb-1">${p.title}</h4>
                     <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${p.summary}</p>
@@ -731,90 +751,249 @@ const App = {
         const p = DONGTAN_DATA.recommendedPolicies[index];
         if (!p) return;
 
-        document.getElementById("editor-title").value = p.title;
-        document.getElementById("editor-field").value = p.field;
-        document.getElementById("editor-target").value = p.targetAudience;
-        document.getElementById("editor-budget").value = p.budget;
-        document.getElementById("editor-mcp").value = p.mcpSource;
-        document.getElementById("editor-background").value = p.proposalContent.background.join("\n\n");
-        document.getElementById("editor-objectives").value = p.proposalContent.objectives.join("\n");
-        document.getElementById("editor-details").value = p.proposalContent.details.join("\n\n");
-        document.getElementById("editor-roadmap").value = p.proposalContent.roadmap.join("\n");
-        document.getElementById("editor-expected").value = p.proposalContent.expectedEffects.join("\n");
+        const setVal = (id, val) => {
+            const el = document.getElementById(id);
+            if (el) el.value = val || "";
+        };
+
+        setVal("form-division", p.division || "동탄구 교육, 참여, 권리 분과");
+        setVal("form-title", p.title || "");
+        setVal("form-basis", p.basis || "");
+        setVal("form-ref-policy", p.refPolicy || "");
+        setVal("form-problems", p.problems || "");
+        setVal("form-solutions", p.solutions || "");
+        setVal("form-details", p.details || "");
+        setVal("form-effects", p.effects || "");
+    },
+
+    getProposalFormData() {
+        const getVal = (id) => (document.getElementById(id)?.value || "").trim();
+        return {
+            division: getVal("form-division") || "동탄구 교육, 참여, 권리 분과",
+            title: getVal("form-title") || "무제 정책 제안",
+            basis: getVal("form-basis"),
+            refPolicy: getVal("form-ref-policy"),
+            problems: getVal("form-problems"),
+            solutions: getVal("form-solutions"),
+            details: getVal("form-details"),
+            effects: getVal("form-effects")
+        };
+    },
+
+    // 한글(HWP) 파일로 추출 및 다운로드
+    exportToHWP() {
+        const data = this.getProposalFormData();
+        const safeTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
+
+        const hwpHTML = `<!DOCTYPE html>
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head>
+<meta charset="utf-8">
+<title>${data.title}</title>
+<style>
+  body { font-family: '맑은 고딕', 'Malgun Gothic', '한컴바탕', Batang, sans-serif; font-size: 11pt; line-height: 1.6; }
+  h1 { text-align: center; font-size: 20pt; font-weight: bold; margin-bottom: 25px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+  th, td { border: 1pt solid #000000; padding: 8pt 10pt; font-size: 11pt; vertical-align: middle; }
+  th { background-color: #F1F5F9; font-weight: bold; text-align: center; width: 130px; }
+  .section-hdr { background-color: #F8FAFC; font-weight: bold; text-align: center; vertical-align: middle; }
+  .sub-hdr { font-weight: bold; color: #1E3A8A; margin-bottom: 4pt; }
+  .content-text { white-space: pre-wrap; font-size: 10.5pt; color: #1E293B; }
+  .footer { text-align: right; margin-top: 25px; font-size: 11pt; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>화성시 청년정책협의체 정책 제안서</h1>
+  <table>
+    <tr>
+      <th>분 과 명</th>
+      <td colspan="2"><div class="content-text">${data.division}</div></td>
+    </tr>
+    <tr>
+      <th>제 안 명</th>
+      <td colspan="2"><div class="content-text" style="font-weight: bold; font-size: 13pt; color: #1E40AF;">${data.title}</div></td>
+    </tr>
+    <tr>
+      <th>추진근거</th>
+      <td colspan="2"><div class="content-text">${data.basis}</div></td>
+    </tr>
+    <tr>
+      <th>참고정책</th>
+      <td colspan="2"><div class="content-text">${data.refPolicy}</div></td>
+    </tr>
+    <tr>
+      <th rowspan="2">제안배경<br>및<br>필요성</th>
+      <th style="width: 120px; background-color: #FFF1F2; color: #9F1239;">현황과 문제점</th>
+      <td><div class="content-text">${data.problems}</div></td>
+    </tr>
+    <tr>
+      <th style="width: 120px; background-color: #EFF6FF; color: #1E40AF;">개선방안</th>
+      <td><div class="content-text">${data.solutions}</div></td>
+    </tr>
+    <tr>
+      <th>제안내용</th>
+      <td colspan="2"><div class="content-text">${data.details}</div></td>
+    </tr>
+    <tr>
+      <th>기대효과</th>
+      <td colspan="2"><div class="content-text">${data.effects}</div></td>
+    </tr>
+  </table>
+  <div class="footer">
+    화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 위원 일동
+  </div>
+</body>
+</html>`;
+
+        const blob = new Blob(["\ufeff" + hwpHTML], { type: "application/x-hwp;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `[화성시_정책제안서]_${safeTitle}.hwp`;
+        link.click();
+        alert(`한글(HWP) 파일이 성공적으로 다운로드되었습니다!\n한컴오피스 한글에서 완벽한 표 서식으로 열립니다.`);
+    },
+
+    // 워드(DOCX) 파일로 추출 및 다운로드
+    exportToDOCX() {
+        const data = this.getProposalFormData();
+        const safeTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
+
+        const docxHTML = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head>
+<meta charset='utf-8'>
+<title>${data.title}</title>
+<!--[if gte mso 9]>
+<xml>
+<w:WordDocument>
+<w:View>Print</w:View>
+<w:Zoom>100</w:Zoom>
+<w:DoNotOptimizeForBrowser/>
+</w:WordDocument>
+</xml>
+<![endif]-->
+<style>
+  @page { size: 21.0cm 29.7cm; margin: 2.5cm 2.0cm 2.0cm 2.0cm; }
+  body { font-family: 'Malgun Gothic', '맑은 고딕', Arial, sans-serif; font-size: 11pt; line-height: 1.6; }
+  h1 { text-align: center; font-size: 21pt; font-weight: bold; margin-bottom: 25pt; letter-spacing: -0.5pt; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15pt; }
+  th, td { border: 1.5pt solid #000000; padding: 10pt; font-size: 11pt; vertical-align: middle; }
+  th { background-color: #F1F5F9; font-weight: bold; text-align: center; width: 130px; }
+  .content-box { white-space: pre-wrap; font-size: 10.5pt; }
+  .footer { text-align: right; margin-top: 30pt; font-size: 12pt; font-weight: bold; }
+</style>
+</head>
+<body>
+  <h1>화성시 청년정책협의체 정책 제안서</h1>
+  <table>
+    <tr>
+      <th>분 과 명</th>
+      <td colspan="2"><div class="content-box">${data.division}</div></td>
+    </tr>
+    <tr>
+      <th>제 안 명</th>
+      <td colspan="2"><div class="content-box" style="font-weight: bold; font-size: 13pt; color: #1E40AF;">${data.title}</div></td>
+    </tr>
+    <tr>
+      <th>추진근거</th>
+      <td colspan="2"><div class="content-box">${data.basis}</div></td>
+    </tr>
+    <tr>
+      <th>참고정책</th>
+      <td colspan="2"><div class="content-box">${data.refPolicy}</div></td>
+    </tr>
+    <tr>
+      <th rowspan="2">제안배경<br>및<br>필요성</th>
+      <th style="width: 120px; background-color: #FFF1F2; color: #9F1239;">현황과 문제점</th>
+      <td><div class="content-box">${data.problems}</div></td>
+    </tr>
+    <tr>
+      <th style="width: 120px; background-color: #EFF6FF; color: #1E40AF;">개선방안</th>
+      <td><div class="content-box">${data.solutions}</div></td>
+    </tr>
+    <tr>
+      <th>제안내용</th>
+      <td colspan="2"><div class="content-box">${data.details}</div></td>
+    </tr>
+    <tr>
+      <th>기대효과</th>
+      <td colspan="2"><div class="content-box">${data.effects}</div></td>
+    </tr>
+  </table>
+  <div class="footer">
+    화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 위원 일동
+  </div>
+</body>
+</html>`;
+
+        const blob = new Blob(["\ufeff" + docxHTML], { type: "application/msword;charset=utf-8" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `[화성시_정책제안서]_${safeTitle}.doc`;
+        link.click();
+        alert(`워드(DOCX) 호환 문서가 성공적으로 다운로드되었습니다!\nMS Word 및 한글 오피스에서 완벽하게 표 양식이 유지됩니다.`);
     },
 
     copyProposalToClipboard() {
-        const title = document.getElementById("editor-title").value;
-        const field = document.getElementById("editor-field").value;
-        const target = document.getElementById("editor-target").value;
-        const budget = document.getElementById("editor-budget").value;
-        const mcp = document.getElementById("editor-mcp").value;
-        const background = document.getElementById("editor-background").value;
-        const objectives = document.getElementById("editor-objectives").value;
-        const details = document.getElementById("editor-details").value;
-        const roadmap = document.getElementById("editor-roadmap").value;
-        const expected = document.getElementById("editor-expected").value;
+        const data = this.getProposalFormData();
+        const text = `[제5기 화성시 청년정책협의체 정책 제안서]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 분 과 명 : ${data.division}
+■ 제 안 명 : ${data.title}
+■ 추진근거 : ${data.basis}
+■ 참고정책 : ${data.refPolicy}
+─────────────────────────────────────────────────────────
+[제안배경 및 필요성]
+● 현황과 문제점:
+${data.problems}
 
-        const fullText = `[2027 화성시 청년정책제안서 - 동탄구 교육·참여·권리 분과]
-
-■ 정책 제안명: ${title}
-■ 정책 분과: ${field}
-■ 사업 대상: ${target}
-■ 소요 예산: ${budget}
-■ 온통청년 MCP 연계: ${mcp}
-
-1. 제안 배경 및 필요성
-${background}
-
-2. 사업 추진 목적
-${objectives}
-
-3. 세부 사업 내용
-${details}
-
-4. 연차별 추진 로드맵 (2027~2030)
-${roadmap}
-
-5. 기대 효과
-${expected}
+● 개선방안:
+${data.solutions}
+─────────────────────────────────────────────────────────
+[제안내용]
+${data.details}
+─────────────────────────────────────────────────────────
+[기대효과]
+${data.effects}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 위원 일동
 `;
 
-        navigator.clipboard.writeText(fullText).then(() => {
-            alert("정책제안서 전문이 클립보드에 복사되었습니다! 한글(HWP)이나 워드에 바로 붙여넣기 하실 수 있습니다.");
+        navigator.clipboard.writeText(text).then(() => {
+            alert("공식 양식에 맞춘 정책제안서 전문이 클립보드에 복사되었습니다!\n한글 또는 워드에 바로 붙여넣기 하실 수 있습니다.");
         }).catch(() => {
-            alert("클립보드 복사에 실패했습니다. 텍스트를 직접 드래그하여 복사해주세요.");
+            alert("클립보드 복사에 실패했습니다. 텍스트를 직접 복사해주세요.");
         });
     },
 
     downloadProposalTxt() {
-        const title = document.getElementById("editor-title").value;
-        const fullText = `[2027 화성시 청년정책제안서 - 동탄구 교육·참여·권리 분과]
-제안명: ${title}
-분과: ${document.getElementById("editor-field").value}
-사업대상: ${document.getElementById("editor-target").value}
-예산: ${document.getElementById("editor-budget").value}
-MCP연계: ${document.getElementById("editor-mcp").value}
+        const data = this.getProposalFormData();
+        const safeTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
+        const text = `[제5기 화성시 청년정책협의체 정책 제안서]
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+■ 분 과 명 : ${data.division}
+■ 제 안 명 : ${data.title}
+■ 추진근거 : ${data.basis}
+■ 참고정책 : ${data.refPolicy}
+─────────────────────────────────────────────────────────
+[제안배경 및 필요성]
+● 현황과 문제점:
+${data.problems}
 
-[1. 제안 배경 및 필요성]
-${document.getElementById("editor-background").value}
-
-[2. 사업 추진 목적]
-${document.getElementById("editor-objectives").value}
-
-[3. 세부 사업 내용]
-${document.getElementById("editor-details").value}
-
-[4. 연차별 추진 로드맵]
-${document.getElementById("editor-roadmap").value}
-
-[5. 기대 효과]
-${document.getElementById("editor-expected").value}
+● 개선방안:
+${data.solutions}
+─────────────────────────────────────────────────────────
+[제안내용]
+${data.details}
+─────────────────────────────────────────────────────────
+[기대효과]
+${data.effects}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 위원 일동
 `;
-
-        const blob = new Blob([fullText], { type: "text/plain;charset=utf-8;" });
+        const blob = new Blob(["\ufeff" + text], { type: "text/plain;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `${title.replace(/[\/\\:*?"<>|]/g, '_')}_정책제안서.txt`;
+        link.download = `[화성시_정책제안서]_${safeTitle}.txt`;
         link.click();
     },
 
