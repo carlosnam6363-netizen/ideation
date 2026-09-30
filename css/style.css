@@ -255,3 +255,28 @@ body {
         display: none !important;
     }
 }
+
+/* 모바일 및 터치 환경 반응형 최적화 */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+}
+
+.overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 640px) {
+    .glass-card {
+        padding: 1rem !important;
+    }
+}
+

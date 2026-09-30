@@ -217,7 +217,7 @@ const App = {
         }
     },
 
-    // 1. 사이드바 내비게이션 탭 설정
+    // 1. 사이드바 내비게이션 탭 설정 (PC 및 모바일 반응형 완벽 대응)
     setupNavigation() {
         const tabBtns = document.querySelectorAll(".nav-tab-btn");
         tabBtns.forEach(btn => {
@@ -225,21 +225,69 @@ const App = {
                 const targetTab = btn.getAttribute("data-tab");
                 if (targetTab) {
                     this.switchTab(targetTab);
+                    // 모바일 화면에서는 탭 선택 후 사이드바 메뉴 자동 닫기
                     if (window.innerWidth < 1024) {
-                        const nav = document.getElementById("sidebar-nav-container");
-                        if (nav) nav.classList.add("hidden");
+                        const wrapper = document.getElementById("sidebar-collapsible-wrapper");
+                        if (wrapper) wrapper.classList.add("hidden");
                     }
                 }
             });
         });
 
-        // 모바일 사이드바 토글 버튼
+        // 사이드바 내부 모바일 토글 버튼
         const mobileToggleBtn = document.getElementById("mobile-sidebar-toggle-btn");
-        const sidebarNav = document.getElementById("sidebar-nav-container");
-        if (mobileToggleBtn && sidebarNav) {
+        const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
+        if (mobileToggleBtn && collapsibleWrapper) {
             mobileToggleBtn.addEventListener("click", () => {
-                sidebarNav.classList.toggle("hidden");
+                collapsibleWrapper.classList.toggle("hidden");
+                this.updateIcons();
             });
+        }
+
+        // 상단 헤더의 모바일 햄버거 메뉴 버튼
+        const headerMobileBtn = document.getElementById("header-mobile-menu-btn");
+        if (headerMobileBtn && collapsibleWrapper) {
+            headerMobileBtn.addEventListener("click", () => {
+                collapsibleWrapper.classList.toggle("hidden");
+                if (!collapsibleWrapper.classList.contains("hidden")) {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }
+                this.updateIcons();
+            });
+        }
+
+        // 모바일/PC 공통 모달 배경 클릭 및 ESC 키 닫기 지원
+        const modalBackdrops = [
+            { id: "program-modal", close: () => this.closeProgramModal() },
+            { id: "steering-member-modal", close: () => this.closeSteeringModal() },
+            { id: "division-member-modal", close: () => this.closeDivisionModal() },
+            { id: "admin-auth-modal", close: () => this.closeAdminModal() }
+        ];
+
+        modalBackdrops.forEach(({ id, close }) => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener("click", (e) => {
+                    if (e.target === el) close();
+                });
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                this.closeProgramModal();
+                this.closeSteeringModal();
+                this.closeDivisionModal();
+                this.closeAdminModal();
+            }
+        });
+    },
+
+    closeProgramModal() {
+        const modal = document.getElementById("program-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
         }
     },
 
@@ -2205,9 +2253,13 @@ ${data.effects}
     },
 
     // ==========================================
-    // 플랫폼 전체 관리자 권한 인증 (비밀번호: 2232)
+    // 플랫폼 전체 관리자 권한 인증 (비밀번호: 2232, 모바일/PC 완벽 호환)
     // ==========================================
     toggleAdminAuth() {
+        this.openAdminModal();
+    },
+
+    openAdminModal() {
         if (this.isAdmin) {
             if (confirm("관리자 권한을 해제(로그아웃)하시겠습니까?\n위원들의 연락처가 즉시 비공개로 전환됩니다.")) {
                 this.isAdmin = false;
@@ -2216,17 +2268,52 @@ ${data.effects}
                 this.renderDivisionMembersGrid();
                 alert("관리자 권한이 안전하게 해제되었습니다.");
             }
+            return;
+        }
+
+        const modal = document.getElementById("admin-auth-modal");
+        const input = document.getElementById("admin-password-input");
+        const errorMsg = document.getElementById("admin-auth-error-msg");
+
+        if (input) input.value = "";
+        if (errorMsg) errorMsg.classList.add("hidden");
+
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setTimeout(() => {
+                if (input) input.focus();
+            }, 100);
+        }
+        this.updateIcons();
+    },
+
+    closeAdminModal() {
+        const modal = document.getElementById("admin-auth-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    submitAdminAuth(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById("admin-password-input");
+        const errorMsg = document.getElementById("admin-auth-error-msg");
+        const pwd = (input ? input.value : "").trim();
+
+        if (pwd === "2232") {
+            this.isAdmin = true;
+            sessionStorage.setItem("dongtan_admin_auth", "true");
+            this.closeAdminModal();
+            this.updateAdminUI();
+            this.renderDivisionMembersGrid();
+            alert("✅ 관리자 권한이 정상 승인되었습니다.\n분과위원 연락처가 즉시 공개 표기됩니다.");
         } else {
-            const pwd = prompt("🔐 관리자 비밀번호를 입력해주세요:");
-            if (pwd === null) return; // 취소 누름
-            if (pwd.trim() === "2232") {
-                this.isAdmin = true;
-                sessionStorage.setItem("dongtan_admin_auth", "true");
-                this.updateAdminUI();
-                this.renderDivisionMembersGrid();
-                alert("✅ 관리자 권한이 정상 실행되었습니다.\n분과위원 연락처가 공개 표기됩니다.");
-            } else {
-                alert("❌ 비밀번호가 올바르지 않습니다. (다시 시도해주세요)");
+            if (errorMsg) errorMsg.classList.remove("hidden");
+            if (input) {
+                input.value = "";
+                input.focus();
             }
         }
     },
