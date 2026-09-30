@@ -29,7 +29,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "president",
             phone: "",
             email: "",
-            duties: "협의체 대표, 총회·운영위원회 소집 및 회무 총괄, 동탄구위원회 총괄",
+            duties: "협의체를 대표하고 협의체 사무를 총괄하며 총회와 운영위원회의 의장이 된다(회칙 제13조제1항). 구위원회를 소집·주관하고 구 단위 청년의견 수렴, 지역현안 발굴, 분과 간 조정 및 운영위원회 제출안건의 취합을 담당한다(제13조제3항).",
             badgeColor: "bg-blue-100 text-blue-800 border-blue-200"
         },
         {
@@ -41,7 +41,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "secretary1",
             phone: "",
             email: "",
-            duties: "총회·운영위원회 실무 운영, 위원 출결관리, 공통 행정서류 취합",
+            duties: "총회·운영위원회 운영, 위원관리, 공통행정 및 기록관리를 담당한다(회칙 제13조의2제1항).",
             badgeColor: "bg-purple-100 text-purple-800 border-purple-200"
         },
         {
@@ -53,7 +53,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "secretary2",
             phone: "",
             email: "",
-            duties: "자체회비 관리, 고유번호증 계좌 운영, 기부금품 관리 및 회의록 공시",
+            duties: "총회·운영위원회 운영, 위원관리, 공통행정 및 기록관리를 담당한다(회칙 제13조의2제1항).",
             badgeColor: "bg-violet-100 text-violet-800 border-violet-200"
         },
         {
@@ -65,7 +65,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "dongtanJobLeader",
             phone: "",
             email: "",
-            duties: "동탄 테크밸리 및 첨단산업 연계 청년 취·창업 지원 정책 발굴",
+            duties: "",
             badgeColor: "bg-blue-50 text-blue-700 border-blue-200"
         },
         {
@@ -77,7 +77,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "dongtanHousingLeader",
             phone: "",
             email: "",
-            duties: "동탄 신도시 청년 주거비 부담 완화 및 공공임대·청년주택 정책 발굴",
+            duties: "",
             badgeColor: "bg-blue-50 text-blue-700 border-blue-200"
         },
         {
@@ -89,7 +89,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "dongtanBranchLeader",
             phone: "",
             email: "",
-            duties: "12명 위원 교육 취합, 정책제안서 작성 주관, 월 1회 오프라인 분과회의 소집",
+            duties: "",
             badgeColor: "bg-amber-100 text-amber-800 border-amber-300 font-bold"
         },
         {
@@ -101,7 +101,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "dongtanWelfareLeader",
             phone: "",
             email: "",
-            duties: "동탄 청년 문화예술 향유권 신장 및 마음건강·청년 복지망 구축",
+            duties: "",
             badgeColor: "bg-blue-50 text-blue-700 border-blue-200"
         },
 
@@ -117,7 +117,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "manseLeader",
             phone: "",
             email: "",
-            duties: "만세구 소속 위원 의견수렴, 서남부권(향남·우정 등) 청년 정책수요 취합",
+            duties: "구위원회를 소집·주관하고 구 단위 청년의견 수렴, 지역현안 발굴, 분과 간 조정 및 운영위원회 제출안건의 취합을 담당한다(회칙 제13조제3항).",
             badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200"
         },
         {
@@ -129,7 +129,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "manseJobEduLeader",
             phone: "",
             email: "",
-            duties: "만세구 산업단지 연계 일자리 및 청년 자치 권리보장 정책 발굴",
+            duties: "",
             badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200"
         },
 
@@ -145,7 +145,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "vicePresident",
             phone: "",
             email: "",
-            duties: "회장 보좌, 회장 유고 시 직무대행, 병점구위원회 총괄 및 4개 구 안건 조정",
+            duties: "회장을 보좌하고 회장 유고 시 그 직무를 대행한다(회칙 제13조제2항). 구위원회를 소집·주관하고 구 단위 청년의견 수렴, 지역현안 발굴, 분과 간 조정 및 운영위원회 제출안건의 취합을 담당한다(제13조제3항).",
             badgeColor: "bg-sky-100 text-sky-800 border-sky-200"
         },
         {
@@ -157,7 +157,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "byeongjeomJobLeader",
             phone: "",
             email: "",
-            duties: "병점역 역세권 상권 및 구도심 청년 스타트업·일자리 정책 발굴",
+            duties: "",
             badgeColor: "bg-sky-50 text-sky-700 border-sky-200"
         },
         {
@@ -169,7 +169,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "byeongjeomHousingWelfareLeader",
             phone: "",
             email: "",
-            duties: "병점 구도심 1인 가구 주거안정 및 청년 문화예술 플랫폼 구축 제안",
+            duties: "",
             badgeColor: "bg-sky-50 text-sky-700 border-sky-200"
         },
 
@@ -185,7 +185,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "hyohengLeader",
             phone: "",
             email: "",
-            duties: "효행구 소속 위원 의견수렴, 대학 밀집지(봉담·화산) 청년 현안 발굴",
+            duties: "구위원회를 소집·주관하고 구 단위 청년의견 수렴, 지역현안 발굴, 분과 간 조정 및 운영위원회 제출안건의 취합을 담당한다(회칙 제13조제3항).",
             badgeColor: "bg-cyan-100 text-cyan-800 border-cyan-200"
         },
         {
@@ -197,7 +197,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "hyohengJobEduLeader",
             phone: "",
             email: "",
-            duties: "대학가 연계 청년 취·창업 교육 및 권익 증진 프로젝트 주관",
+            duties: "",
             badgeColor: "bg-cyan-50 text-cyan-700 border-cyan-200"
         },
         {
@@ -209,7 +209,7 @@ const COUNCIL_FLOW_DATA = {
             roleKey: "hyohengHousingWelfareLeader",
             phone: "",
             email: "",
-            duties: "대학생·사회초년생 원룸촌 주거권 보장 및 청년 심리상담 복지망 강화",
+            duties: "",
             badgeColor: "bg-cyan-50 text-cyan-700 border-cyan-200"
         }
     ],

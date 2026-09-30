@@ -91,7 +91,7 @@ const App = {
             this.uploadedBylawsFiles = [];
         }
 
-        // 운영위원회 명단 불러오기 (공식 명단 자동 마이그레이션, 배수경 제외, 전화번호/이메일 공란 처리)
+        // 운영위원회 명단 불러오기 (공식 명단 자동 마이그레이션, 배수경 제외, 회칙 기준 직무만 반영 및 전화번호/이메일 공란 처리)
         try {
             const savedSteering = localStorage.getItem("dongtan_steering_members");
             if (savedSteering && typeof COUNCIL_FLOW_DATA !== "undefined") {
@@ -105,10 +105,19 @@ const App = {
             } else if (typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
             }
-            // 사용자 요청: 배수경 분과장 명단 제외 및 연락처/이메일 공란 처리
-            if (this.steeringMembers && this.steeringMembers.length) {
+            // 사용자 요청: 배수경 분과장 제외, 회칙에 기록된 직무만 반영(그 외 공란), 연락처/이메일 공란 처리
+            if (this.steeringMembers && this.steeringMembers.length && typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = this.steeringMembers.filter(m => m.name !== "배수경" && !(m.role && m.role.includes("배수경")));
+                const initMap = {};
+                COUNCIL_FLOW_DATA.initialSteeringMembers.forEach(im => {
+                    initMap[im.id] = im.duties || "";
+                });
                 this.steeringMembers.forEach(m => {
+                    if (initMap[m.id] !== undefined) {
+                        m.duties = initMap[m.id];
+                    } else if (m.role && !m.role.includes("회장") && !m.role.includes("사무국장") && !m.role.includes("구위원장")) {
+                        m.duties = "";
+                    }
                     m.phone = "";
                     m.email = "";
                 });
@@ -1397,9 +1406,21 @@ ${data.effects}
                         </div>
                     </div>
 
-                    <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed mb-2" title="${escapeHtml(m.duties)}">
-                        ${escapeHtml(m.duties)}
-                    </p>
+                    ${m.duties ? `
+                        <div class="bg-slate-100/80 p-2 rounded-lg border border-slate-200/60 mb-2">
+                            <p class="text-[10px] font-bold text-slate-700 flex items-center gap-1 mb-0.5">
+                                <i data-lucide="scroll-text" class="w-3 h-3 text-blue-600 shrink-0"></i>
+                                <span>회칙상 직무</span>
+                            </p>
+                            <p class="text-[11px] text-slate-600 line-clamp-3 leading-relaxed" title="${escapeHtml(m.duties)}">
+                                ${escapeHtml(m.duties)}
+                            </p>
+                        </div>
+                    ` : `
+                        <div class="py-2.5 px-2 bg-slate-50/70 rounded-lg border border-dashed border-slate-200 mb-2 text-center">
+                            <span class="text-[10px] text-slate-400 italic">회칙상 별도 고유활동 규정 없음 (공란)</span>
+                        </div>
+                    `}
                 </div>
 
                 <div class="pt-2 border-t border-slate-200/80 space-y-1">
@@ -1568,7 +1589,7 @@ ${data.effects}
                 roleKey: "member_" + Date.now(),
                 phone: phone,
                 email: email,
-                duties: duties || (district + " 청년 정책 발굴 및 운영 참여"),
+                duties: duties || "",
                 badgeColor: badgeColorMap[district] || "bg-slate-100 text-slate-700 border-slate-200"
             };
             this.steeringMembers.push(newMember);
