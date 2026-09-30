@@ -12,9 +12,9 @@ def run_serveo_loop():
     log("Starting permanent Serveo tunnel daemon...")
     while True:
         try:
-            log("Connecting to serveo.net on port 8080...")
+            log("Connecting to serveo.net on 127.0.0.1:8080...")
             proc = subprocess.Popen(
-                ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R", "80:localhost:8080", "serveo.net"],
+                ["ssh", "-o", "StrictHostKeyChecking=no", "-o", "ServerAliveInterval=30", "-R", "80:127.0.0.1:8080", "serveo.net"],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
