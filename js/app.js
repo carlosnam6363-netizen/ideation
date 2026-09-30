@@ -90,6 +90,18 @@ const App = {
             const savedSteering = localStorage.getItem("dongtan_steering_members");
             if (savedSteering && typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(savedSteering);
+                // 당성구 -> 병점구 자동 마이그레이션
+                this.steeringMembers.forEach(m => {
+                    if (m.roleKey === "dangseongLeader" || (m.role && m.role.includes("당성구"))) {
+                        m.roleKey = "byeongjeomLeader";
+                        m.role = "병점구 구위원장";
+                        m.subrole = "병점권역 총괄 운영위원";
+                        m.district = "병점구 (병점1·2동, 진안동, 반월동 등)";
+                        m.duties = "병점구 구도심 및 역세권 청년 현안 발굴 및 구위원회 운영";
+                        m.email = m.email ? m.email.replace("dangseong", "byeongjeom") : "byeongjeom@hsyouth.kr";
+                    }
+                });
+                this.saveSteeringMembers();
             } else if (typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
             }
@@ -140,15 +152,30 @@ const App = {
         }
     },
 
-    // 1. 상단 내비게이션 탭 설정
+    // 1. 사이드바 내비게이션 탭 설정
     setupNavigation() {
         const tabBtns = document.querySelectorAll(".nav-tab-btn");
         tabBtns.forEach(btn => {
             btn.addEventListener("click", () => {
                 const targetTab = btn.getAttribute("data-tab");
-                if (targetTab) this.switchTab(targetTab);
+                if (targetTab) {
+                    this.switchTab(targetTab);
+                    if (window.innerWidth < 1024) {
+                        const nav = document.getElementById("sidebar-nav-container");
+                        if (nav) nav.classList.add("hidden");
+                    }
+                }
             });
         });
+
+        // 모바일 사이드바 토글 버튼
+        const mobileToggleBtn = document.getElementById("mobile-sidebar-toggle-btn");
+        const sidebarNav = document.getElementById("sidebar-nav-container");
+        if (mobileToggleBtn && sidebarNav) {
+            mobileToggleBtn.addEventListener("click", () => {
+                sidebarNav.classList.toggle("hidden");
+            });
+        }
     },
 
     switchTab(tabId) {
@@ -158,6 +185,18 @@ const App = {
         document.querySelectorAll(".nav-tab-btn").forEach(btn => {
             btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
         });
+
+        // 상단 바 활성 탭 이름 갱신
+        const tabTitles = {
+            "tab-1": "1. 2027년 교육 프로그램 취합 (패들렛 보드)",
+            "tab-2": "2. 2027년 정책제안서 작성 아이디에이션 (5단계 워크플로우)",
+            "tab-3": "3. 회칙 정리 (신·구 조문 대비표 & 파일 보관함)",
+            "tab-4": "4. 협의체 전체 플로우 (2026~2027 연간 로드맵 & 운영위원회)"
+        };
+        const titleEl = document.getElementById("header-active-tab-title");
+        if (titleEl && tabTitles[tabId]) {
+            titleEl.textContent = tabTitles[tabId];
+        }
 
         document.querySelectorAll(".tab-content-panel").forEach(panel => {
             const isTarget = panel.id === tabId;

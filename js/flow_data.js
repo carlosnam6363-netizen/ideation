@@ -79,14 +79,14 @@ const COUNCIL_FLOW_DATA = {
         },
         {
             id: "sm-6",
-            roleKey: "dangseongLeader",
-            role: "당성구 구위원장",
-            subrole: "당성권역 총괄 운영위원",
-            district: "당성구 (남양·마도·송산)",
+            roleKey: "byeongjeomLeader",
+            role: "병점구 구위원장",
+            subrole: "병점권역 총괄 운영위원",
+            district: "병점구 (병점1·2동, 진안동, 반월동 등)",
             name: "정민서",
             phone: "010-6192-4820",
-            email: "dangseong@hsyouth.kr",
-            duties: "당성구 신성장권역 청년 현안 발굴 및 구위원회 운영",
+            email: "byeongjeom@hsyouth.kr",
+            duties: "병점구 구도심 및 역세권 청년 현안 발굴 및 구위원회 운영",
             badgeColor: "bg-sky-100 text-sky-800 border-sky-200"
         },
         {
@@ -155,7 +155,7 @@ const COUNCIL_FLOW_DATA = {
             summary: "만 19~39세 관내 청년 대상 위원 공개모집 공고 및 4개 구·분과 배치 기준 수립",
             tasks: [
                 "「화성시 청년 기본 조례」 제18조에 따른 공개모집 공고 및 신청서 접수",
-                "동탄구, 만세구, 효행구, 당성구 등 4개 권역별 균형 배정 계획 수립",
+                "동탄구, 만세구, 효행구, 병점구 등 4개 권역별 균형 배정 계획 수립",
                 "동탄구 교육·참여·권리 분과 등 정책 분야별 분과 정원 배정"
             ]
         },
