@@ -302,7 +302,7 @@
                     </button>
 
                     <!-- 신규 교육 등록 버튼 -->
-                    <button id="open-program-modal-btn" class="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm flex items-center space-x-1 transition">
+                    <button id="open-program-modal-btn" type="button" onclick="App.openProgramModal()" class="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-lg shadow-sm flex items-center space-x-1 transition cursor-pointer">
                         <i data-lucide="plus" class="w-4 h-4"></i>
                         <span>교육 제안</span>
                     </button>
@@ -1525,7 +1525,7 @@
                     </div>
                     <h3 class="font-bold text-slate-900 text-lg">2027년 필요 교육 프로그램 제안</h3>
                 </div>
-                <button id="close-program-modal-btn" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                <button id="close-program-modal-btn" type="button" onclick="App.closeProgramModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg cursor-pointer">
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
@@ -1586,7 +1586,7 @@
                 </div>
 
                 <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
-                    <button type="button" onclick="document.getElementById('program-modal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">취소</button>
+                    <button type="button" onclick="App.closeProgramModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition cursor-pointer">취소</button>
                     <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition">패들렛에 등록하기</button>
                 </div>
             </form>

@@ -285,6 +285,19 @@ const App = {
         });
     },
 
+    openProgramModal() {
+        const modal = document.getElementById("program-modal");
+        if (!modal) return;
+        this.populateMemberSelect();
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        this.updateIcons();
+        setTimeout(() => {
+            const titleInput = modal.querySelector('input[name="title"]');
+            if (titleInput) titleInput.focus();
+        }, 100);
+    },
+
     closeProgramModal() {
         const modal = document.getElementById("program-modal");
         if (modal) {
@@ -389,22 +402,14 @@ const App = {
 
         const openModalBtn = document.getElementById("open-program-modal-btn");
         const closeModalBtn = document.getElementById("close-program-modal-btn");
-        const modal = document.getElementById("program-modal");
         const form = document.getElementById("new-program-form");
 
-        if (openModalBtn && modal) {
-            openModalBtn.addEventListener("click", () => {
-                this.populateMemberSelect();
-                modal.classList.remove("hidden");
-                modal.classList.add("flex");
-            });
+        if (openModalBtn) {
+            openModalBtn.addEventListener("click", () => this.openProgramModal());
         }
 
-        if (closeModalBtn && modal) {
-            closeModalBtn.addEventListener("click", () => {
-                modal.classList.add("hidden");
-                modal.classList.remove("flex");
-            });
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener("click", () => this.closeProgramModal());
         }
 
         if (form) {
@@ -422,9 +427,13 @@ const App = {
 
     populateMemberSelect() {
         const select = document.getElementById("program-member-select");
-        if (!select || select.children.length > 0) return;
-        select.innerHTML = DONGTAN_DATA.members.map(m => 
-            `<option value="${m.id}">${escapeHtml(m.name)} (${escapeHtml(m.role)} - ${escapeHtml(m.field)})</option>`
+        if (!select) return;
+        const membersList = (this.divisionMembers && this.divisionMembers.length)
+            ? this.divisionMembers
+            : (typeof DONGTAN_DATA !== "undefined" ? DONGTAN_DATA.members : []);
+        if (!membersList || !membersList.length) return;
+        select.innerHTML = membersList.map(m => 
+            `<option value="${m.id}">${escapeHtml(m.name)} (${escapeHtml(m.role || '위원')} - ${escapeHtml(m.field || m.department || '교육·참여·권리')})</option>`
         ).join("");
     },
 
