@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 2027년 정책 아이디에이션 및 교육 프로그램 취합 플랫폼">
     <title>화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 플랫폼</title>
+    <!-- Resource Preconnects -->
+    <link rel="preconnect" href="https://cdn.tailwindcss.com" crossorigin>
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons CDN -->
@@ -1057,20 +1062,20 @@
                 <!-- 챕터 & 유형 필터 칩 -->
                 <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
                     <span class="font-bold text-slate-400 mr-1 uppercase text-[11px]">필터:</span>
-                    <button onclick="App.filterBylaws('all')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-slate-900 text-white transition">전체</button>
-                    <button onclick="App.filterBylaws('important')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
+                    <button data-bylaw-filter="all" onclick="App.filterBylaws('all', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-slate-900 text-white transition">전체</button>
+                    <button data-bylaw-filter="important" onclick="App.filterBylaws('important', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
                         <span>⭐ 핵심 개정</span>
                     </button>
-                    <button onclick="App.filterBylaws('new')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
+                    <button data-bylaw-filter="new" onclick="App.filterBylaws('new', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
                         <span>✨ 조항 신설</span>
                     </button>
-                    <button onclick="App.filterBylaws('제1장 총칙')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제1장 총칙</button>
-                    <button onclick="App.filterBylaws('제2장 위원')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제2장 위원</button>
-                    <button onclick="App.filterBylaws('제3장 임원 및 운영직')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제3장 임원</button>
-                    <button onclick="App.filterBylaws('제5장 운영위원회')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제5장 운영위</button>
-                    <button onclick="App.filterBylaws('제6장 위원회 운영')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제6장 분과·구위</button>
-                    <button onclick="App.filterBylaws('제8장 재정 및 회계')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제8장 재정·회계</button>
-                    <button onclick="App.filterBylaws('부칙')" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">부칙</button>
+                    <button data-bylaw-filter="제1장 총칙" onclick="App.filterBylaws('제1장 총칙', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제1장 총칙</button>
+                    <button data-bylaw-filter="제2장 위원" onclick="App.filterBylaws('제2장 위원', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제2장 위원</button>
+                    <button data-bylaw-filter="제3장 임원 및 운영직" onclick="App.filterBylaws('제3장 임원 및 운영직', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제3장 임원</button>
+                    <button data-bylaw-filter="제5장 운영위원회" onclick="App.filterBylaws('제5장 운영위원회', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제5장 운영위</button>
+                    <button data-bylaw-filter="제6장 위원회 운영" onclick="App.filterBylaws('제6장 위원회 운영', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제6장 분과·구위</button>
+                    <button data-bylaw-filter="제8장 재정 및 회계" onclick="App.filterBylaws('제8장 재정 및 회계', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제8장 재정·회계</button>
+                    <button data-bylaw-filter="부칙" onclick="App.filterBylaws('부칙', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">부칙</button>
                 </div>
             </div>
 

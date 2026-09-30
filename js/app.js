@@ -1,10 +1,27 @@
 /**
  * 화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 메인 애플리케이션 로직
+ * (성능 최적화, 디바운스 검색, XSS 방지, 메모리 누수 방지 적용)
  */
 
-document.addEventListener("DOMContentLoaded", () => {
-    App.init();
-});
+// 유틸리티 함수: HTML 이스케이프 (XSS 방지)
+const escapeHtml = (str) => {
+    if (str == null) return "";
+    return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+};
+
+// 유틸리티 함수: 디바운스
+const debounce = (func, wait = 150) => {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+};
 
 const App = {
     currentTab: "tab-1",
@@ -21,6 +38,8 @@ const App = {
     bylawViewMode: "diff", // "diff", "revised", "current"
     bylawFilter: "all",
     bylawSearch: "",
+    chartInstance: null,
+    iconDebounceTimer: null,
 
     init() {
         this.loadStorage();
@@ -29,39 +48,50 @@ const App = {
         this.setupIdeation();
         this.setupBylaws();
         this.renderAll();
-        lucide.createIcons();
+        this.updateIcons();
+    },
+
+    // Lucide 아이콘 렌더링 최적화 (배치 처리)
+    updateIcons() {
+        if (typeof lucide === "undefined") return;
+        if (this.iconDebounceTimer) cancelAnimationFrame(this.iconDebounceTimer);
+        this.iconDebounceTimer = requestAnimationFrame(() => {
+            lucide.createIcons();
+            this.iconDebounceTimer = null;
+        });
     },
 
     // 로컬스토리지 불러오기 및 초기화
     loadStorage() {
-        const savedPrograms = localStorage.getItem("dongtan_padlet_programs");
-        if (savedPrograms) {
-            try {
-                this.programs = JSON.parse(savedPrograms);
-            } catch (e) {
-                this.programs = [...DONGTAN_DATA.initialPrograms];
-            }
-        } else {
+        try {
+            const savedPrograms = localStorage.getItem("dongtan_padlet_programs");
+            this.programs = savedPrograms ? JSON.parse(savedPrograms) : [...DONGTAN_DATA.initialPrograms];
+        } catch {
             this.programs = [...DONGTAN_DATA.initialPrograms];
-            this.savePrograms();
         }
 
-        const savedFiles = localStorage.getItem("dongtan_bylaws_files");
-        if (savedFiles) {
-            try {
-                this.uploadedBylawsFiles = JSON.parse(savedFiles);
-            } catch (e) {
-                this.uploadedBylawsFiles = [];
-            }
+        try {
+            const savedFiles = localStorage.getItem("dongtan_bylaws_files");
+            this.uploadedBylawsFiles = savedFiles ? JSON.parse(savedFiles) : [];
+        } catch {
+            this.uploadedBylawsFiles = [];
         }
     },
 
     savePrograms() {
-        localStorage.setItem("dongtan_padlet_programs", JSON.stringify(this.programs));
+        try {
+            localStorage.setItem("dongtan_padlet_programs", JSON.stringify(this.programs));
+        } catch (e) {
+            console.warn("로컬스토리지 저장 용량 초과 또는 권한 문제:", e);
+        }
     },
 
     saveFiles() {
-        localStorage.setItem("dongtan_bylaws_files", JSON.stringify(this.uploadedBylawsFiles));
+        try {
+            localStorage.setItem("dongtan_bylaws_files", JSON.stringify(this.uploadedBylawsFiles));
+        } catch (e) {
+            console.warn("로컬스토리지 파일 목록 저장 실패:", e);
+        }
     },
 
     // 1. 상단 내비게이션 탭 설정
@@ -70,56 +100,62 @@ const App = {
         tabBtns.forEach(btn => {
             btn.addEventListener("click", () => {
                 const targetTab = btn.getAttribute("data-tab");
-                this.switchTab(targetTab);
+                if (targetTab) this.switchTab(targetTab);
             });
         });
     },
 
     switchTab(tabId) {
+        if (this.currentTab === tabId) return;
         this.currentTab = tabId;
+
         document.querySelectorAll(".nav-tab-btn").forEach(btn => {
             btn.classList.toggle("active", btn.getAttribute("data-tab") === tabId);
         });
 
         document.querySelectorAll(".tab-content-panel").forEach(panel => {
-            if (panel.id === tabId) {
-                panel.classList.remove("hidden");
-                panel.classList.add("fade-in-scale");
-            } else {
-                panel.classList.add("hidden");
+            const isTarget = panel.id === tabId;
+            panel.classList.toggle("hidden", !isTarget);
+            if (isTarget) {
                 panel.classList.remove("fade-in-scale");
+                void panel.offsetWidth; // trigger reflow
+                panel.classList.add("fade-in-scale");
             }
         });
 
         if (tabId === "tab-2" && this.currentStep === 1) {
-            setTimeout(() => this.renderSurveyChart(), 100);
+            this.renderSurveyChart();
+        } else if (tabId === "tab-3") {
+            this.renderBylawsDiff();
         }
-        lucide.createIcons();
+        this.updateIcons();
     },
 
     // ==========================================
     // 2. 탭 1: 패들렛 (2027 교육 프로그램 취합)
     // ==========================================
     setupPadlet() {
-        // 뷰 모드 토글 (컬럼별 vs 통합 그리드)
         const viewColsBtn = document.getElementById("view-columns-btn");
         const viewGridBtn = document.getElementById("view-grid-btn");
+
         if (viewColsBtn && viewGridBtn) {
             viewColsBtn.addEventListener("click", () => {
+                if (this.padletViewMode === "columns") return;
                 this.padletViewMode = "columns";
-                viewColsBtn.classList.add("bg-blue-600", "text-white");
-                viewColsBtn.classList.remove("bg-white", "text-slate-700");
-                viewGridBtn.classList.remove("bg-blue-600", "text-white");
-                viewGridBtn.classList.add("bg-white", "text-slate-700");
+                viewColsBtn.classList.replace("bg-white", "bg-blue-600");
+                viewColsBtn.classList.replace("text-slate-700", "text-white");
+                viewGridBtn.classList.replace("bg-blue-600", "bg-white");
+                viewGridBtn.classList.replace("text-white", "text-slate-700");
                 this.renderPadletBoard();
             });
 
             viewGridBtn.addEventListener("click", () => {
+                if (this.padletViewMode === "grid") return;
                 this.padletViewMode = "grid";
-                viewGridBtn.classList.add("bg-blue-600", "text-white");
-                viewGridBtn.classList.remove("bg-white", "text-slate-700");
-                viewColsBtn.classList.remove("bg-blue-600", "text-white");
-                viewColsBtn.classList.add("bg-white", "text-slate-700");
+                viewGridBtn.classList.replace("bg-white", "bg-blue-600");
+                viewGridBtn.classList.replace("text-slate-700", "text-white");
+                viewColsBtn.classList.replace("bg-blue-600", "bg-white");
+                viewColsBtn.classList.replace("text-white", "text-slate-700");
                 this.renderPadletBoard();
             });
         }
@@ -128,22 +164,24 @@ const App = {
         const filterBtns = document.querySelectorAll(".padlet-cat-filter");
         filterBtns.forEach(btn => {
             btn.addEventListener("click", () => {
-                filterBtns.forEach(b => b.classList.remove("bg-slate-900", "text-white"));
-                filterBtns.forEach(b => b.classList.add("bg-white", "text-slate-600"));
+                filterBtns.forEach(b => {
+                    b.classList.remove("bg-slate-900", "text-white");
+                    b.classList.add("bg-white", "text-slate-600");
+                });
                 btn.classList.add("bg-slate-900", "text-white");
                 btn.classList.remove("bg-white", "text-slate-600");
-                this.filterCategory = btn.getAttribute("data-cat");
+                this.filterCategory = btn.getAttribute("data-cat") || "all";
                 this.renderPadletBoard();
             });
         });
 
-        // 검색어 입력
+        // 검색어 입력 (디바운스 적용)
         const searchInput = document.getElementById("padlet-search-input");
         if (searchInput) {
-            searchInput.addEventListener("input", (e) => {
+            searchInput.addEventListener("input", debounce((e) => {
                 this.searchKeyword = e.target.value.trim().toLowerCase();
                 this.renderPadletBoard();
-            });
+            }, 120));
         }
 
         // 프로그램 신규 등록 모달
@@ -183,15 +221,15 @@ const App = {
 
     populateMemberSelect() {
         const select = document.getElementById("program-member-select");
-        if (!select) return;
+        if (!select || select.children.length > 0) return;
         select.innerHTML = DONGTAN_DATA.members.map(m => 
-            `<option value="${m.id}">${m.name} (${m.role} - ${m.field})</option>`
+            `<option value="${m.id}">${escapeHtml(m.name)} (${escapeHtml(m.role)} - ${escapeHtml(m.field)})</option>`
         ).join("");
     },
 
     handleCreateProgram(form) {
         const memberId = parseInt(form.elements["memberId"].value, 10);
-        const member = DONGTAN_DATA.members.find(m => m.id === memberId);
+        const member = DONGTAN_DATA.members.find(m => m.id === memberId) || DONGTAN_DATA.members[0];
         const title = form.elements["title"].value.trim();
         const category = form.elements["category"].value;
         const format = form.elements["format"].value.trim();
@@ -229,8 +267,10 @@ const App = {
         this.renderPadletBoard();
 
         const modal = document.getElementById("program-modal");
-        modal.classList.add("hidden");
-        modal.classList.remove("flex");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
         form.reset();
 
         alert("2027년 교육 프로그램 제안이 패들렛에 성공적으로 등록되었습니다!");
@@ -240,18 +280,22 @@ const App = {
         const container = document.getElementById("padlet-board-container");
         if (!container) return;
 
-        // 필터링 적용
-        let filtered = this.programs.filter(p => {
-            const matchesCat = this.filterCategory === "all" || p.category === this.filterCategory;
-            const matchesSearch = !this.searchKeyword || 
-                p.title.toLowerCase().includes(this.searchKeyword) ||
-                p.author.toLowerCase().includes(this.searchKeyword) ||
-                p.purpose.toLowerCase().includes(this.searchKeyword) ||
-                p.tags.some(t => t.toLowerCase().includes(this.searchKeyword));
-            return matchesCat && matchesSearch;
+        const kw = this.searchKeyword;
+        const cat = this.filterCategory;
+
+        const filtered = this.programs.filter(p => {
+            const matchesCat = cat === "all" || p.category === cat;
+            if (!matchesCat) return false;
+            if (!kw) return true;
+            return (
+                p.title.toLowerCase().includes(kw) ||
+                p.author.toLowerCase().includes(kw) ||
+                p.purpose.toLowerCase().includes(kw) ||
+                p.tags.some(t => t.toLowerCase().includes(kw))
+            );
         });
 
-        // 1. 컬럼별 뷰 (12명 위원 컬럼)
+        // 1. 컬럼별 뷰
         if (this.padletViewMode === "columns") {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 overflow-x-auto";
             
@@ -259,26 +303,24 @@ const App = {
                 const memberPrograms = filtered.filter(p => p.memberId === member.id);
                 return `
                     <div class="padlet-column p-4 flex flex-col">
-                        <!-- 위원 헤더 카드 -->
                         <div class="flex items-center space-x-3 mb-4 p-3 bg-white rounded-xl shadow-sm border border-slate-200">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr ${member.color} text-white flex items-center justify-center font-bold text-sm shadow-inner">
-                                ${member.name.slice(0, 2)}
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr ${member.color} text-white flex items-center justify-center font-bold text-sm shadow-inner shrink-0">
+                                ${escapeHtml(member.name.slice(0, 2))}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center space-x-2">
-                                    <h4 class="font-bold text-slate-800 text-sm truncate">${member.name}</h4>
+                                    <h4 class="font-bold text-slate-800 text-sm truncate">${escapeHtml(member.name)}</h4>
                                     <span class="text-[11px] px-2 py-0.5 rounded-full font-medium ${member.role.includes('분과장') ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}">
-                                        ${member.role}
+                                        ${escapeHtml(member.role)}
                                     </span>
                                 </div>
-                                <p class="text-xs text-slate-500 truncate" title="${member.field}">${member.field}</p>
+                                <p class="text-xs text-slate-500 truncate" title="${escapeHtml(member.field)}">${escapeHtml(member.field)}</p>
                             </div>
-                            <span class="text-xs font-semibold px-2 py-1 bg-blue-50 text-blue-600 rounded-lg">
+                            <span class="text-xs font-semibold px-2 py-1 bg-blue-50 text-blue-600 rounded-lg shrink-0">
                                 ${memberPrograms.length}건
                             </span>
                         </div>
 
-                        <!-- 위원별 제안 카드 리스트 -->
                         <div class="space-y-3.5 flex-1 overflow-y-auto pr-1">
                             ${memberPrograms.length === 0 ? `
                                 <div class="h-40 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 p-4 text-center">
@@ -294,7 +336,7 @@ const App = {
                 `;
             }).join("");
         } 
-        // 2. 통합 그리드 뷰 (인기순/최신순 카드 덱)
+        // 2. 통합 그리드 뷰
         else {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6";
             if (filtered.length === 0) {
@@ -309,7 +351,7 @@ const App = {
             }
         }
 
-        lucide.createIcons();
+        this.updateIcons();
     },
 
     renderPadletCardHTML(prog) {
@@ -325,62 +367,57 @@ const App = {
         };
 
         return `
-            <div class="padlet-card p-4 flex flex-col justify-between" id="${prog.id}">
+            <div class="padlet-card p-4 flex flex-col justify-between" id="${escapeHtml(prog.id)}">
                 <div>
                     <div class="flex items-start justify-between gap-2 mb-2">
                         <span class="text-[11px] px-2 py-0.5 font-bold rounded border ${catBadgeColors[prog.category] || 'bg-slate-100 text-slate-700'}">
-                            ${prog.category}
+                            ${escapeHtml(prog.category)}
                         </span>
-                        <div class="flex items-center space-x-1">
-                            <span class="text-[10px] px-2 py-0.5 rounded-full border font-semibold ${statusBadge[prog.status] || ''}">
-                                ${prog.status}
-                            </span>
-                        </div>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full border font-semibold ${statusBadge[prog.status] || ''}">
+                            ${escapeHtml(prog.status)}
+                        </span>
                     </div>
 
                     <h4 class="font-bold text-slate-900 text-sm leading-snug mb-2 hover:text-blue-600 cursor-pointer">
-                        ${prog.title}
+                        ${escapeHtml(prog.title)}
                     </h4>
 
                     <p class="text-xs text-slate-600 line-clamp-3 mb-3 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">
-                        ${prog.purpose}
+                        ${escapeHtml(prog.purpose)}
                     </p>
 
-                    <!-- 세부 메타 정보 -->
                     <div class="space-y-1 text-[11px] text-slate-500 mb-3">
-                        <div class="flex items-center space-x-1">
-                            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
-                            <span class="truncate">일정: ${prog.schedule}</span>
+                        <div class="flex items-center space-x-1 truncate">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                            <span class="truncate">일정: ${escapeHtml(prog.schedule)}</span>
                         </div>
-                        <div class="flex items-center space-x-1">
-                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400"></i>
-                            <span class="truncate">방식: ${prog.format} | ${prog.target}</span>
+                        <div class="flex items-center space-x-1 truncate">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                            <span class="truncate">방식: ${escapeHtml(prog.format)} | ${escapeHtml(prog.target)}</span>
                         </div>
-                        <div class="flex items-center space-x-1">
-                            <i data-lucide="building" class="w-3.5 h-3.5 text-slate-400"></i>
-                            <span class="truncate">추천기관: ${prog.institution}</span>
+                        <div class="flex items-center space-x-1 truncate">
+                            <i data-lucide="building" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                            <span class="truncate">추천기관: ${escapeHtml(prog.institution)}</span>
                         </div>
                     </div>
 
-                    <!-- 태그 목록 -->
                     <div class="flex flex-wrap gap-1 mb-3">
-                        ${prog.tags.map(t => `<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">#${t}</span>`).join("")}
+                        ${(prog.tags || []).map(t => `<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded">#${escapeHtml(t)}</span>`).join("")}
                     </div>
                 </div>
 
-                <!-- 푸터: 제안자 & 투표 & 댓글 -->
                 <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
                     <span class="text-slate-500 font-medium truncate max-w-[120px]">
-                        ✍️ ${prog.author}
+                        ✍️ ${escapeHtml(prog.author)}
                     </span>
                     <div class="flex items-center space-x-2">
-                        <button onclick="App.handleVote('${prog.id}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition">
+                        <button onclick="App.handleVote('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition">
                             <i data-lucide="heart" class="w-3.5 h-3.5 fill-rose-500"></i>
-                            <span>${prog.likes}</span>
+                            <span>${prog.likes || 0}</span>
                         </button>
-                        <button onclick="App.openCommentModal('${prog.id}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+                        <button onclick="App.openCommentModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
                             <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
-                            <span>${prog.comments.length}</span>
+                            <span>${(prog.comments || []).length}</span>
                         </button>
                     </div>
                 </div>
@@ -393,14 +430,16 @@ const App = {
         const select = document.getElementById("program-member-select");
         if (select) select.value = memberId;
         const modal = document.getElementById("program-modal");
-        modal.classList.remove("hidden");
-        modal.classList.add("flex");
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
     },
 
     handleVote(progId) {
         const prog = this.programs.find(p => p.id === progId);
         if (prog) {
-            prog.likes += 1;
+            prog.likes = (prog.likes || 0) + 1;
             this.savePrograms();
             this.renderPadletBoard();
         }
@@ -410,16 +449,8 @@ const App = {
         const prog = this.programs.find(p => p.id === progId);
         if (!prog) return;
 
-        const commentListHtml = prog.comments.length === 0 ? 
-            `<p class="text-xs text-slate-400 py-4 text-center">아직 등록된 의견이 없습니다. 첫 의견을 남겨보세요!</p>` :
-            prog.comments.map(c => `
-                <div class="p-2.5 bg-slate-50 rounded-lg text-xs border border-slate-200">
-                    <span class="font-bold text-slate-800">${c.user}</span>
-                    <p class="text-slate-600 mt-1">${c.text}</p>
-                </div>
-            `).join("");
-
-        const newComment = prompt(`[${prog.title}]\n\n* 현재 등록된 의견 (${prog.comments.length}개):\n${prog.comments.map(c => `• ${c.user}: ${c.text}`).join("\n") || "없음"}\n\n새로운 의견이나 보완점을 작성해주세요:\n(예: 위원이름: 의견내용)`);
+        const commentsSummary = (prog.comments || []).map(c => `• ${c.user}: ${c.text}`).join("\n") || "등록된 의견 없음";
+        const newComment = prompt(`[${prog.title}]\n\n현재 등록된 의견:\n${commentsSummary}\n\n새로운 의견이나 보완점을 작성해주세요:\n(예: 이름: 의견내용)`);
         
         if (newComment && newComment.trim()) {
             const parts = newComment.split(":");
@@ -429,6 +460,7 @@ const App = {
                 author = parts[0].trim();
                 text = parts.slice(1).join(":").trim();
             }
+            if (!prog.comments) prog.comments = [];
             prog.comments.push({ user: author, text: text });
             this.savePrograms();
             this.renderPadletBoard();
@@ -439,16 +471,16 @@ const App = {
         const headers = ["번호", "제안자", "분야", "프로그램명", "교육방식", "교육대상", "예상일정", "추천기관", "추진목적", "상태", "추천수"];
         const rows = this.programs.map((p, idx) => [
             idx + 1,
-            `"${p.author}"`,
-            `"${p.category}"`,
-            `"${p.title.replace(/"/g, '""')}"`,
-            `"${p.format}"`,
-            `"${p.target}"`,
-            `"${p.schedule}"`,
-            `"${p.institution}"`,
-            `"${p.purpose.replace(/"/g, '""')}"`,
-            `"${p.status}"`,
-            p.likes
+            `"${(p.author || '').replace(/"/g, '""')}"`,
+            `"${(p.category || '').replace(/"/g, '""')}"`,
+            `"${(p.title || '').replace(/"/g, '""')}"`,
+            `"${(p.format || '').replace(/"/g, '""')}"`,
+            `"${(p.target || '').replace(/"/g, '""')}"`,
+            `"${(p.schedule || '').replace(/"/g, '""')}"`,
+            `"${(p.institution || '').replace(/"/g, '""')}"`,
+            `"${(p.purpose || '').replace(/"/g, '""')}"`,
+            `"${(p.status || '').replace(/"/g, '""')}"`,
+            p.likes || 0
         ]);
 
         const csvContent = "\uFEFF" + [headers.join(","), ...rows.map(r => r.join(","))].join("\r\n");
@@ -457,6 +489,7 @@ const App = {
         link.href = URL.createObjectURL(blob);
         link.download = `화성시_동탄구_2027교육프로그램취합목록_${new Date().toISOString().slice(0, 10)}.csv`;
         link.click();
+        URL.revokeObjectURL(link.href);
     },
 
     // ==========================================
@@ -474,18 +507,18 @@ const App = {
                 card.classList.add("border-blue-600", "ring-2", "ring-blue-500", "bg-blue-50/50");
                 card.classList.remove("border-slate-200");
 
-                this.selectedTrack = card.getAttribute("data-track");
+                this.selectedTrack = card.getAttribute("data-track") || "track-1";
                 this.renderMcpPolicyList();
             });
         });
 
-        // 온통청년 MCP 정책 검색 & 필터
+        // 온통청년 MCP 정책 검색 & 필터 (디바운스 적용)
         const mcpSearch = document.getElementById("mcp-search-input");
         if (mcpSearch) {
-            mcpSearch.addEventListener("input", (e) => {
+            mcpSearch.addEventListener("input", debounce((e) => {
                 this.mcpSearchKeyword = e.target.value.trim().toLowerCase();
                 this.renderMcpPolicyList();
-            });
+            }, 120));
         }
 
         const mcpFilters = document.querySelectorAll(".mcp-cat-filter");
@@ -497,7 +530,7 @@ const App = {
                 });
                 btn.classList.add("bg-blue-600", "text-white");
                 btn.classList.remove("bg-slate-100", "text-slate-700");
-                this.mcpCategoryFilter = btn.getAttribute("data-cat");
+                this.mcpCategoryFilter = btn.getAttribute("data-cat") || "all";
                 this.renderMcpPolicyList();
             });
         });
@@ -526,7 +559,7 @@ const App = {
             }
         }
 
-        // 스텝 패널 전환 및 애니메이션
+        // 스텝 패널 전환
         const animClass = stepNumber > prevStep ? "step-anim-next" : "step-anim-prev";
         for (let i = 1; i <= 5; i++) {
             const panel = document.getElementById(`ideation-step-${i}`);
@@ -544,7 +577,7 @@ const App = {
 
         // 스텝별 특정 로직
         if (stepNumber === 1) {
-            setTimeout(() => this.renderSurveyChart(), 100);
+            this.renderSurveyChart();
         } else if (stepNumber === 3) {
             this.renderMcpPolicyList();
         } else if (stepNumber === 5) {
@@ -552,22 +585,22 @@ const App = {
             this.loadProposal(this.selectedProposalIndex);
         }
 
-        // 화면 상단으로 부드럽게 스크롤
         document.getElementById("tab-2")?.scrollIntoView({ behavior: "smooth" });
-        lucide.createIcons();
+        this.updateIcons();
     },
 
-    // Step 1: 설문조사 차트 렌더링
+    // Step 1: 설문조사 차트 렌더링 (메모리 누수 방지 및 파괴 후 재생성)
     renderSurveyChart() {
         const canvas = document.getElementById("surveyChart");
         if (!canvas) return;
 
-        if (window.mySurveyChart) {
-            window.mySurveyChart.destroy();
+        if (this.chartInstance) {
+            this.chartInstance.destroy();
+            this.chartInstance = null;
         }
 
         const ctx = canvas.getContext("2d");
-        window.mySurveyChart = new Chart(ctx, {
+        this.chartInstance = new Chart(ctx, {
             type: "bar",
             data: {
                 labels: DONGTAN_DATA.surveyData.chartLabels,
@@ -625,17 +658,21 @@ const App = {
             trackTitleBadge.textContent = `선택된 전문 분야: ${currentTrack.title}`;
         }
 
-        let filtered = DONGTAN_DATA.ontongPolicies.filter(p => {
-            const matchesCategory = this.mcpCategoryFilter === "all" || p.category.includes(this.mcpCategoryFilter);
-            const matchesSearch = !this.mcpSearchKeyword || 
-                p.title.toLowerCase().includes(this.mcpSearchKeyword) ||
-                p.agency.toLowerCase().includes(this.mcpSearchKeyword) ||
-                p.region.toLowerCase().includes(this.mcpSearchKeyword) ||
-                p.content.toLowerCase().includes(this.mcpSearchKeyword);
-            return matchesCategory && matchesSearch;
+        const kw = this.mcpSearchKeyword;
+        const cat = this.mcpCategoryFilter;
+
+        const filtered = DONGTAN_DATA.ontongPolicies.filter(p => {
+            const matchesCategory = cat === "all" || p.category.includes(cat);
+            if (!matchesCategory) return false;
+            if (!kw) return true;
+            return (
+                p.title.toLowerCase().includes(kw) ||
+                p.agency.toLowerCase().includes(kw) ||
+                p.region.toLowerCase().includes(kw) ||
+                p.content.toLowerCase().includes(kw)
+            );
         });
 
-        // 선택된 트랙과 연계도 우선순위 정렬
         filtered.sort((a, b) => (b.track === this.selectedTrack ? 1 : 0) - (a.track === this.selectedTrack ? 1 : 0));
 
         if (filtered.length === 0) {
@@ -649,46 +686,45 @@ const App = {
 
         container.innerHTML = filtered.map(p => {
             const isTrackMatch = p.track === this.selectedTrack;
+            const hasValidUrl = p.url && !p.url.includes("URL 없음");
+
             return `
                 <div class="bg-white p-5 rounded-xl border ${isTrackMatch ? 'border-blue-400 ring-2 ring-blue-100 shadow-md' : 'border-slate-200 shadow-sm'} flex flex-col justify-between hover:shadow-md transition">
                     <div>
                         <div class="flex items-center justify-between gap-2 mb-2">
                             <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                                ${p.category}
+                                ${escapeHtml(p.category)}
                             </span>
                             <span class="text-[11px] font-semibold px-2 py-0.5 rounded ${p.region.includes('화성') ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}">
-                                ${p.region}
+                                ${escapeHtml(p.region)}
                             </span>
                         </div>
 
-                        <div class="flex items-baseline space-x-1.5 mb-1.5">
-                            <h4 class="font-bold text-slate-900 text-sm leading-snug hover:text-blue-600">
-                                ${p.title}
-                            </h4>
-                        </div>
+                        <h4 class="font-bold text-slate-900 text-sm leading-snug hover:text-blue-600 mb-1.5">
+                            ${escapeHtml(p.title)}
+                        </h4>
 
                         <p class="text-[11px] text-slate-500 mb-2">
-                            주관: <span class="text-slate-700 font-medium">${p.agency}</span> | 대상: ${p.target}
+                            주관: <span class="text-slate-700 font-medium">${escapeHtml(p.agency)}</span> | 대상: ${escapeHtml(p.target)}
                         </p>
 
                         <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-lg mb-3 border border-slate-100">
-                            ${p.content}
+                            ${escapeHtml(p.content)}
                         </p>
 
-                        <!-- MCP 연계 착안점 -->
                         <div class="bg-blue-50/70 border border-blue-100 rounded-lg p-2.5 text-xs text-blue-900 mb-3">
                             <span class="font-bold flex items-center gap-1 text-[11px] text-blue-700 mb-0.5">
                                 <i data-lucide="sparkles" class="w-3.5 h-3.5 text-blue-600"></i>
                                 우리 분과 MCP 연계 착안점
                             </span>
-                            <p class="text-[11px] text-slate-700 leading-normal">${p.mcpMatch}</p>
+                            <p class="text-[11px] text-slate-700 leading-normal">${escapeHtml(p.mcpMatch)}</p>
                         </div>
                     </div>
 
                     <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                        <span class="text-[10px] text-slate-400 font-mono">ID: ${p.id}</span>
-                        ${p.url && !p.url.includes("URL 없음") ? `
-                            <a href="${p.url}" target="_blank" class="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 font-semibold text-xs">
+                        <span class="text-[10px] text-slate-400 font-mono">ID: ${escapeHtml(p.id)}</span>
+                        ${hasValidUrl ? `
+                            <a href="${escapeHtml(p.url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-blue-600 hover:text-blue-800 font-semibold text-xs">
                                 <span>원문 정책 보기</span>
                                 <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                             </a>
@@ -700,10 +736,9 @@ const App = {
             `;
         }).join("");
 
-        lucide.createIcons();
+        this.updateIcons();
     },
 
-    // Step 3: 세부 정책 목록 열기/닫기 토글
     toggleMcpListDetails() {
         const content = document.getElementById("mcp-details-content");
         const icon = document.getElementById("mcp-toggle-icon");
@@ -723,7 +758,6 @@ const App = {
         }
     },
 
-    // Step 5: 정책 제안서 5선 렌더링 및 서식 로드
     renderProposalSelector() {
         const listContainer = document.getElementById("proposal-cards-list");
         if (!listContainer) return;
@@ -734,12 +768,12 @@ const App = {
                 <div onclick="App.loadProposal(${idx})" class="cursor-pointer p-4 rounded-xl border transition-all ${isSelected ? 'border-blue-600 bg-blue-50/70 shadow-md ring-2 ring-blue-200' : 'border-slate-200 bg-white hover:border-blue-300 shadow-sm'}">
                     <div class="flex items-center justify-between mb-1.5">
                         <span class="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700">
-                            추천 제안 ${p.num}
+                            추천 제안 ${escapeHtml(p.num)}
                         </span>
-                        <span class="text-xs text-slate-500 font-medium truncate max-w-[140px]">${p.field}</span>
+                        <span class="text-xs text-slate-500 font-medium truncate max-w-[140px]">${escapeHtml(p.field)}</span>
                     </div>
-                    <h4 class="font-bold text-slate-900 text-sm mb-1">${p.title}</h4>
-                    <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${p.summary}</p>
+                    <h4 class="font-bold text-slate-900 text-sm mb-1">${escapeHtml(p.title)}</h4>
+                    <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">${escapeHtml(p.summary)}</p>
                 </div>
             `;
         }).join("");
@@ -780,24 +814,24 @@ const App = {
         };
     },
 
-    // 한글(HWP) 파일로 추출 및 다운로드
-    exportToHWP() {
-        const data = this.getProposalFormData();
-        const safeTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
+    // 한글(HWP) 및 워드(DOCX) 파일 생성 공통 테이블 빌더
+    generateDocumentHTML(data, isWord = false) {
+        const safeTitle = escapeHtml(data.title);
+        const fontStack = isWord ? `'Malgun Gothic', '맑은 고딕', Arial, sans-serif` : `'맑은 고딕', 'Malgun Gothic', '한컴바탕', Batang, sans-serif`;
 
-        const hwpHTML = `<!DOCTYPE html>
+        return `<!DOCTYPE html>
 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
 <head>
 <meta charset="utf-8">
-<title>${data.title}</title>
+<title>${safeTitle}</title>
+${isWord ? `<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom><w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->` : ''}
 <style>
-  body { font-family: '맑은 고딕', 'Malgun Gothic', '한컴바탕', Batang, sans-serif; font-size: 11pt; line-height: 1.6; }
+  @page { size: 21.0cm 29.7cm; margin: 2.5cm 2.0cm 2.0cm 2.0cm; }
+  body { font-family: ${fontStack}; font-size: 11pt; line-height: 1.6; color: #000; }
   h1 { text-align: center; font-size: 20pt; font-weight: bold; margin-bottom: 25px; }
   table { width: 100%; border-collapse: collapse; margin-top: 10px; }
   th, td { border: 1pt solid #000000; padding: 8pt 10pt; font-size: 11pt; vertical-align: middle; }
   th { background-color: #F1F5F9; font-weight: bold; text-align: center; width: 130px; }
-  .section-hdr { background-color: #F8FAFC; font-weight: bold; text-align: center; vertical-align: middle; }
-  .sub-hdr { font-weight: bold; color: #1E3A8A; margin-bottom: 4pt; }
   .content-text { white-space: pre-wrap; font-size: 10.5pt; color: #1E293B; }
   .footer { text-align: right; margin-top: 25px; font-size: 11pt; font-weight: bold; }
 </style>
@@ -807,36 +841,36 @@ const App = {
   <table>
     <tr>
       <th>분 과 명</th>
-      <td colspan="2"><div class="content-text">${data.division}</div></td>
+      <td colspan="2"><div class="content-text">${escapeHtml(data.division)}</div></td>
     </tr>
     <tr>
       <th>제 안 명</th>
-      <td colspan="2"><div class="content-text" style="font-weight: bold; font-size: 13pt; color: #1E40AF;">${data.title}</div></td>
+      <td colspan="2"><div class="content-text" style="font-weight: bold; font-size: 13pt; color: #1E40AF;">${safeTitle}</div></td>
     </tr>
     <tr>
       <th>추진근거</th>
-      <td colspan="2"><div class="content-text">${data.basis}</div></td>
+      <td colspan="2"><div class="content-text">${escapeHtml(data.basis)}</div></td>
     </tr>
     <tr>
       <th>참고정책</th>
-      <td colspan="2"><div class="content-text">${data.refPolicy}</div></td>
+      <td colspan="2"><div class="content-text">${escapeHtml(data.refPolicy)}</div></td>
     </tr>
     <tr>
       <th rowspan="2">제안배경<br>및<br>필요성</th>
       <th style="width: 120px; background-color: #FFF1F2; color: #9F1239;">현황과 문제점</th>
-      <td><div class="content-text">${data.problems}</div></td>
+      <td><div class="content-text">${escapeHtml(data.problems)}</div></td>
     </tr>
     <tr>
       <th style="width: 120px; background-color: #EFF6FF; color: #1E40AF;">개선방안</th>
-      <td><div class="content-text">${data.solutions}</div></td>
+      <td><div class="content-text">${escapeHtml(data.solutions)}</div></td>
     </tr>
     <tr>
       <th>제안내용</th>
-      <td colspan="2"><div class="content-text">${data.details}</div></td>
+      <td colspan="2"><div class="content-text">${escapeHtml(data.details)}</div></td>
     </tr>
     <tr>
       <th>기대효과</th>
-      <td colspan="2"><div class="content-text">${data.effects}</div></td>
+      <td colspan="2"><div class="content-text">${escapeHtml(data.effects)}</div></td>
     </tr>
   </table>
   <div class="footer">
@@ -844,92 +878,31 @@ const App = {
   </div>
 </body>
 </html>`;
+    },
 
-        const blob = new Blob(["\ufeff" + hwpHTML], { type: "application/x-hwp;charset=utf-8" });
+    exportToHWP() {
+        const data = this.getProposalFormData();
+        const safeFileTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
+        const html = this.generateDocumentHTML(data, false);
+        const blob = new Blob(["\ufeff" + html], { type: "application/x-hwp;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `[화성시_정책제안서]_${safeTitle}.hwp`;
+        link.download = `[화성시_정책제안서]_${safeFileTitle}.hwp`;
         link.click();
+        URL.revokeObjectURL(link.href);
         alert(`한글(HWP) 파일이 성공적으로 다운로드되었습니다!\n한컴오피스 한글에서 완벽한 표 서식으로 열립니다.`);
     },
 
-    // 워드(DOCX) 파일로 추출 및 다운로드
     exportToDOCX() {
         const data = this.getProposalFormData();
-        const safeTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
-
-        const docxHTML = `<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-<meta charset='utf-8'>
-<title>${data.title}</title>
-<!--[if gte mso 9]>
-<xml>
-<w:WordDocument>
-<w:View>Print</w:View>
-<w:Zoom>100</w:Zoom>
-<w:DoNotOptimizeForBrowser/>
-</w:WordDocument>
-</xml>
-<![endif]-->
-<style>
-  @page { size: 21.0cm 29.7cm; margin: 2.5cm 2.0cm 2.0cm 2.0cm; }
-  body { font-family: 'Malgun Gothic', '맑은 고딕', Arial, sans-serif; font-size: 11pt; line-height: 1.6; }
-  h1 { text-align: center; font-size: 21pt; font-weight: bold; margin-bottom: 25pt; letter-spacing: -0.5pt; }
-  table { width: 100%; border-collapse: collapse; margin-top: 15pt; }
-  th, td { border: 1.5pt solid #000000; padding: 10pt; font-size: 11pt; vertical-align: middle; }
-  th { background-color: #F1F5F9; font-weight: bold; text-align: center; width: 130px; }
-  .content-box { white-space: pre-wrap; font-size: 10.5pt; }
-  .footer { text-align: right; margin-top: 30pt; font-size: 12pt; font-weight: bold; }
-</style>
-</head>
-<body>
-  <h1>화성시 청년정책협의체 정책 제안서</h1>
-  <table>
-    <tr>
-      <th>분 과 명</th>
-      <td colspan="2"><div class="content-box">${data.division}</div></td>
-    </tr>
-    <tr>
-      <th>제 안 명</th>
-      <td colspan="2"><div class="content-box" style="font-weight: bold; font-size: 13pt; color: #1E40AF;">${data.title}</div></td>
-    </tr>
-    <tr>
-      <th>추진근거</th>
-      <td colspan="2"><div class="content-box">${data.basis}</div></td>
-    </tr>
-    <tr>
-      <th>참고정책</th>
-      <td colspan="2"><div class="content-box">${data.refPolicy}</div></td>
-    </tr>
-    <tr>
-      <th rowspan="2">제안배경<br>및<br>필요성</th>
-      <th style="width: 120px; background-color: #FFF1F2; color: #9F1239;">현황과 문제점</th>
-      <td><div class="content-box">${data.problems}</div></td>
-    </tr>
-    <tr>
-      <th style="width: 120px; background-color: #EFF6FF; color: #1E40AF;">개선방안</th>
-      <td><div class="content-box">${data.solutions}</div></td>
-    </tr>
-    <tr>
-      <th>제안내용</th>
-      <td colspan="2"><div class="content-box">${data.details}</div></td>
-    </tr>
-    <tr>
-      <th>기대효과</th>
-      <td colspan="2"><div class="content-box">${data.effects}</div></td>
-    </tr>
-  </table>
-  <div class="footer">
-    화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 위원 일동
-  </div>
-</body>
-</html>`;
-
-        const blob = new Blob(["\ufeff" + docxHTML], { type: "application/msword;charset=utf-8" });
+        const safeFileTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
+        const html = this.generateDocumentHTML(data, true);
+        const blob = new Blob(["\ufeff" + html], { type: "application/msword;charset=utf-8" });
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `[화성시_정책제안서]_${safeTitle}.doc`;
+        link.download = `[화성시_정책제안서]_${safeFileTitle}.doc`;
         link.click();
+        URL.revokeObjectURL(link.href);
         alert(`워드(DOCX) 호환 문서가 성공적으로 다운로드되었습니다!\nMS Word 및 한글 오피스에서 완벽하게 표 양식이 유지됩니다.`);
     },
 
@@ -965,56 +938,22 @@ ${data.effects}
         });
     },
 
-    downloadProposalTxt() {
-        const data = this.getProposalFormData();
-        const safeTitle = data.title.replace(/[\/\\:*?"<>|]/g, "_");
-        const text = `[제5기 화성시 청년정책협의체 정책 제안서]
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-■ 분 과 명 : ${data.division}
-■ 제 안 명 : ${data.title}
-■ 추진근거 : ${data.basis}
-■ 참고정책 : ${data.refPolicy}
-─────────────────────────────────────────────────────────
-[제안배경 및 필요성]
-● 현황과 문제점:
-${data.problems}
-
-● 개선방안:
-${data.solutions}
-─────────────────────────────────────────────────────────
-[제안내용]
-${data.details}
-─────────────────────────────────────────────────────────
-[기대효과]
-${data.effects}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 위원 일동
-`;
-        const blob = new Blob(["\ufeff" + text], { type: "text/plain;charset=utf-8" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `[화성시_정책제안서]_${safeTitle}.txt`;
-        link.click();
-    },
-
     printProposal() {
         window.print();
     },
 
-        // ==========================================
+    // ==========================================
     // 4. 탭 3: 회칙 정리 (신구조문대비표)
     // ==========================================
     setupBylaws() {
-        // 검색어 입력 이벤트
         const searchInput = document.getElementById("bylaw-search-input");
         if (searchInput) {
-            searchInput.addEventListener("input", (e) => {
+            searchInput.addEventListener("input", debounce((e) => {
                 this.bylawSearch = e.target.value.trim().toLowerCase();
                 this.renderBylawsDiff();
-            });
+            }, 120));
         }
 
-        // 파일 업로드 설정
         const dropZone = document.getElementById("bylaws-dropzone");
         const fileInput = document.getElementById("bylaws-file-input");
 
@@ -1033,13 +972,13 @@ ${data.effects}
             dropZone.addEventListener("drop", (e) => {
                 e.preventDefault();
                 dropZone.classList.remove("border-blue-500", "bg-blue-50/50");
-                if (e.dataTransfer.files.length) {
+                if (e.dataTransfer?.files.length) {
                     this.handleFiles(e.dataTransfer.files);
                 }
             });
 
             fileInput.addEventListener("change", (e) => {
-                if (e.target.files.length) {
+                if (e.target.files?.length) {
                     this.handleFiles(e.target.files);
                 }
             });
@@ -1047,38 +986,43 @@ ${data.effects}
     },
 
     setBylawViewMode(mode) {
+        if (this.bylawViewMode === mode) return;
         this.bylawViewMode = mode;
-        const diffBtn = document.getElementById("bylaw-view-diff-btn");
-        const revBtn = document.getElementById("bylaw-view-revised-btn");
-        const curBtn = document.getElementById("bylaw-view-current-btn");
 
-        [diffBtn, revBtn, curBtn].forEach(btn => {
-            if (btn) {
-                btn.className = "px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5";
+        const modes = {
+            diff: { id: "bylaw-view-diff-btn", activeClass: "bg-blue-600 text-white font-bold shadow-sm" },
+            revised: { id: "bylaw-view-revised-btn", activeClass: "bg-indigo-600 text-white font-bold shadow-sm" },
+            current: { id: "bylaw-view-current-btn", activeClass: "bg-slate-800 text-white font-bold shadow-sm" }
+        };
+
+        const defaultClass = "px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5";
+
+        Object.keys(modes).forEach(k => {
+            const btn = document.getElementById(modes[k].id);
+            if (!btn) return;
+            if (k === mode) {
+                btn.className = `${defaultClass} ${modes[k].activeClass}`;
+            } else {
+                btn.className = defaultClass;
             }
         });
-
-        if (mode === "diff" && diffBtn) {
-            diffBtn.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white transition flex items-center space-x-1.5 shadow-sm";
-        } else if (mode === "revised" && revBtn) {
-            revBtn.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white transition flex items-center space-x-1.5 shadow-sm";
-        } else if (mode === "current" && curBtn) {
-            curBtn.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-slate-800 text-white transition flex items-center space-x-1.5 shadow-sm";
-        }
 
         this.renderBylawsDiff();
     },
 
-    filterBylaws(filterType) {
+    filterBylaws(filterType, element) {
         this.bylawFilter = filterType;
         const chips = document.querySelectorAll(".bylaw-filter-chip");
         chips.forEach(chip => {
             chip.classList.remove("bg-slate-900", "text-white");
             chip.classList.add("bg-white", "text-slate-600");
         });
-        // Highlight active chip
-        event.target.closest("button").classList.add("bg-slate-900", "text-white");
-        event.target.closest("button").classList.remove("bg-white", "text-slate-600");
+
+        const activeChip = element || Array.from(chips).find(c => c.getAttribute("data-bylaw-filter") === filterType);
+        if (activeChip) {
+            activeChip.classList.add("bg-slate-900", "text-white");
+            activeChip.classList.remove("bg-white", "text-slate-600");
+        }
 
         this.renderBylawsDiff();
     },
@@ -1088,24 +1032,24 @@ ${data.effects}
         if (!container || typeof BYLAWS_COMPILATION === "undefined") return;
 
         let articles = BYLAWS_COMPILATION.articles;
+        const filter = this.bylawFilter;
+        const search = this.bylawSearch;
 
-        // 필터링 적용
-        if (this.bylawFilter === "important") {
+        if (filter === "important") {
             articles = articles.filter(a => a.isImportant);
-        } else if (this.bylawFilter === "new") {
+        } else if (filter === "new") {
             articles = articles.filter(a => a.changeType.includes("신설"));
-        } else if (this.bylawFilter !== "all") {
-            articles = articles.filter(a => a.chapter === this.bylawFilter);
+        } else if (filter !== "all") {
+            articles = articles.filter(a => a.chapter === filter);
         }
 
-        // 검색어 필터링
-        if (this.bylawSearch) {
+        if (search) {
             articles = articles.filter(a => 
-                a.title.toLowerCase().includes(this.bylawSearch) ||
-                a.summary.toLowerCase().includes(this.bylawSearch) ||
-                a.current.toLowerCase().includes(this.bylawSearch) ||
-                a.revised.toLowerCase().includes(this.bylawSearch) ||
-                a.reason.toLowerCase().includes(this.bylawSearch)
+                a.title.toLowerCase().includes(search) ||
+                a.summary.toLowerCase().includes(search) ||
+                a.current.toLowerCase().includes(search) ||
+                a.revised.toLowerCase().includes(search) ||
+                a.reason.toLowerCase().includes(search)
             );
         }
 
@@ -1121,119 +1065,95 @@ ${data.effects}
                     <p class="text-sm font-semibold">검색 조건에 일치하는 조항이 없습니다.</p>
                 </div>
             `;
-            lucide.createIcons();
+            this.updateIcons();
             return;
         }
 
-        container.innerHTML = articles.map((art, idx) => {
-            const isDiff = this.bylawViewMode === "diff";
-            const isRevisedOnly = this.bylawViewMode === "revised";
-            const isCurrentOnly = this.bylawViewMode === "current";
+        const isDiff = this.bylawViewMode === "diff";
+        const isRevisedOnly = this.bylawViewMode === "revised";
 
-            return `
-                <div class="diff-card bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
-                    <!-- 헤더: 장/조 및 핵심 변경 요약 배지 -->
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-                        <div class="flex items-center space-x-2.5">
-                            <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
-                                ${art.chapter}
-                            </span>
-                            <h4 class="font-black text-slate-900 text-base sm:text-lg">
-                                ${art.title}
-                            </h4>
-                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full border ${art.badgeColor}">
-                                ${art.changeType}
-                            </span>
-                        </div>
-                        <div class="text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
-                            💡 핵심: ${art.summary}
-                        </div>
+        container.innerHTML = articles.map(art => `
+            <div class="diff-card bg-white p-5 sm:p-6 rounded-2xl shadow-sm border border-slate-200 space-y-4">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                    <div class="flex items-center space-x-2.5">
+                        <span class="text-xs font-extrabold px-2.5 py-1 rounded-lg bg-slate-100 text-slate-700">
+                            ${escapeHtml(art.chapter)}
+                        </span>
+                        <h4 class="font-black text-slate-900 text-base sm:text-lg">
+                            ${escapeHtml(art.title)}
+                        </h4>
+                        <span class="text-[11px] font-bold px-2 py-0.5 rounded-full border ${art.badgeColor}">
+                            ${escapeHtml(art.changeType)}
+                        </span>
                     </div>
-
-                    <!-- 본문: 신구 대비표 or 단일 뷰 -->
-                    ${isDiff ? `
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <!-- 좌측: 기존 내용 (현행) -->
-                            <div class="diff-box-current p-4 space-y-2">
-                                <div class="flex items-center justify-between pb-1.5 border-b border-rose-200">
-                                    <span class="text-xs font-extrabold text-rose-800 flex items-center gap-1">
-                                        <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-rose-500"></i>
-                                        종전 내용 (현행 조문)
-                                    </span>
-                                    <span class="text-[10px] text-rose-600 font-semibold">개정 전</span>
-                                </div>
-                                <div class="text-xs leading-relaxed text-slate-700 whitespace-pre-line font-normal">
-                                    ${art.current}
-                                </div>
-                            </div>
-
-                            <!-- 우측: 변경 내용 (개정안) -->
-                            <div class="diff-box-revised p-4 space-y-2">
-                                <div class="flex items-center justify-between pb-1.5 border-b border-blue-200">
-                                    <span class="text-xs font-extrabold text-blue-800 flex items-center gap-1">
-                                        <i data-lucide="check-circle" class="w-3.5 h-3.5 text-blue-600"></i>
-                                        변경 내용 (제6기 개정안)
-                                    </span>
-                                    <span class="text-[10px] text-blue-600 font-semibold">개정안</span>
-                                </div>
-                                <div class="text-xs leading-relaxed text-slate-900 whitespace-pre-line font-medium">
-                                    ${art.revised}
-                                </div>
-                            </div>
-                        </div>
-                    ` : isRevisedOnly ? `
-                        <!-- 개정안 전문 모드 -->
-                        <div class="diff-box-revised p-5 space-y-2">
-                            <span class="text-xs font-extrabold text-blue-800 block pb-1 border-b border-blue-200">
-                                제6기 개정안 조문
-                            </span>
-                            <div class="text-xs leading-relaxed text-slate-900 whitespace-pre-line font-medium">
-                                ${art.revised}
-                            </div>
-                        </div>
-                    ` : `
-                        <!-- 현행 전문 모드 -->
-                        <div class="diff-box-current p-5 space-y-2">
-                            <span class="text-xs font-extrabold text-rose-800 block pb-1 border-b border-rose-200">
-                                종전 현행 조문
-                            </span>
-                            <div class="text-xs leading-relaxed text-slate-700 whitespace-pre-line">
-                                ${art.current}
-                            </div>
-                        </div>
-                    `}
-
-                    <!-- 하단: 개정 사유 및 법령 검토 근거 -->
-                    <div class="pt-3 border-t border-slate-100">
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600">
-                            <div class="font-bold text-slate-800 mb-1 flex items-center gap-1.5 text-[11px]">
-                                <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-600"></i>
-                                <span>개정 사유 및 법령 근거 (검토 의견)</span>
-                            </div>
-                            <p class="text-[11px] leading-relaxed text-slate-600 whitespace-pre-line">
-                                ${art.reason}
-                            </p>
-                        </div>
+                    <div class="text-xs font-semibold text-blue-700 bg-blue-50 px-3 py-1 rounded-lg border border-blue-100">
+                        💡 핵심: ${escapeHtml(art.summary)}
                     </div>
                 </div>
-            `;
-        }).join("");
 
-        lucide.createIcons();
-    },
+                ${isDiff ? `
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="diff-box-current p-4 space-y-2">
+                            <div class="flex items-center justify-between pb-1.5 border-b border-rose-200">
+                                <span class="text-xs font-extrabold text-rose-800 flex items-center gap-1">
+                                    <i data-lucide="minus-circle" class="w-3.5 h-3.5 text-rose-500"></i>
+                                    종전 내용 (현행 조문)
+                                </span>
+                                <span class="text-[10px] text-rose-600 font-semibold">개정 전</span>
+                            </div>
+                            <div class="text-xs leading-relaxed text-slate-700 whitespace-pre-line font-normal">
+                                ${escapeHtml(art.current)}
+                            </div>
+                        </div>
 
-    toggleBylawChapter(idx) {
-        const content = document.getElementById(`bylaw-content-${idx}`);
-        const arrow = document.getElementById(`bylaw-arrow-${idx}`);
-        if (!content) return;
-        const isHidden = content.classList.contains("hidden");
-        if (isHidden) {
-            content.classList.remove("hidden");
-            if (arrow) arrow.style.transform = "rotate(0deg)";
-        } else {
-            content.classList.add("hidden");
-            if (arrow) arrow.style.transform = "rotate(-90deg)";
-        }
+                        <div class="diff-box-revised p-4 space-y-2">
+                            <div class="flex items-center justify-between pb-1.5 border-b border-blue-200">
+                                <span class="text-xs font-extrabold text-blue-800 flex items-center gap-1">
+                                    <i data-lucide="check-circle" class="w-3.5 h-3.5 text-blue-600"></i>
+                                    변경 내용 (제6기 개정안)
+                                </span>
+                                <span class="text-[10px] text-blue-600 font-semibold">개정안</span>
+                            </div>
+                            <div class="text-xs leading-relaxed text-slate-900 whitespace-pre-line font-medium">
+                                ${escapeHtml(art.revised)}
+                            </div>
+                        </div>
+                    </div>
+                ` : isRevisedOnly ? `
+                    <div class="diff-box-revised p-5 space-y-2">
+                        <span class="text-xs font-extrabold text-blue-800 block pb-1 border-b border-blue-200">
+                            제6기 개정안 조문
+                        </span>
+                        <div class="text-xs leading-relaxed text-slate-900 whitespace-pre-line font-medium">
+                            ${escapeHtml(art.revised)}
+                        </div>
+                    </div>
+                ` : `
+                    <div class="diff-box-current p-5 space-y-2">
+                        <span class="text-xs font-extrabold text-rose-800 block pb-1 border-b border-rose-200">
+                            종전 현행 조문
+                        </span>
+                        <div class="text-xs leading-relaxed text-slate-700 whitespace-pre-line">
+                            ${escapeHtml(art.current)}
+                        </div>
+                    </div>
+                `}
+
+                <div class="pt-3 border-t border-slate-100">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs text-slate-600">
+                        <div class="font-bold text-slate-800 mb-1 flex items-center gap-1.5 text-[11px]">
+                            <i data-lucide="info" class="w-3.5 h-3.5 text-indigo-600"></i>
+                            <span>개정 사유 및 법령 근거 (검토 의견)</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed text-slate-600 whitespace-pre-line">
+                            ${escapeHtml(art.reason)}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `).join("");
+
+        this.updateIcons();
     },
 
     handleFiles(fileList) {
@@ -1242,7 +1162,7 @@ ${data.effects}
             const newFile = {
                 name: file.name,
                 size: (file.size / 1024).toFixed(1) + " KB",
-                uploadedAt: new Date().toLocaleString("ko-KR"),
+                uploadedAt: new Date().toLocaleDateString("ko-KR"),
                 type: file.type || "문서 파일"
             };
             this.uploadedBylawsFiles.push(newFile);
@@ -1268,23 +1188,23 @@ ${data.effects}
         listContainer.innerHTML = this.uploadedBylawsFiles.map((f, idx) => `
             <div class="flex items-center justify-between p-3.5 bg-white border border-slate-200 rounded-xl shadow-sm text-xs mb-2">
                 <div class="flex items-center space-x-3 min-w-0">
-                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0">
                         <i data-lucide="file-text" class="w-4 h-4"></i>
                     </div>
                     <div class="min-w-0">
-                        <p class="font-bold text-slate-800 truncate">${f.name}</p>
-                        <p class="text-[11px] text-slate-400">${f.size} | 등록일: ${f.uploadedAt}</p>
+                        <p class="font-bold text-slate-800 truncate">${escapeHtml(f.name)}</p>
+                        <p class="text-[11px] text-slate-400">${escapeHtml(f.size)} | 등록일: ${escapeHtml(f.uploadedAt)}</p>
                     </div>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button onclick="App.deleteBylawsFile(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 rounded">
+                <div class="flex items-center space-x-2 shrink-0">
+                    <button onclick="App.deleteBylawsFile(${idx})" class="p-1.5 text-slate-400 hover:text-red-500 rounded" title="파일 삭제">
                         <i data-lucide="trash-2" class="w-4 h-4"></i>
                     </button>
                 </div>
             </div>
         `).join("");
 
-        lucide.createIcons();
+        this.updateIcons();
     },
 
     deleteBylawsFile(index) {
@@ -1302,3 +1222,7 @@ ${data.effects}
         this.renderUploadedFilesList();
     }
 };
+
+document.addEventListener("DOMContentLoaded", () => {
+    App.init();
+});

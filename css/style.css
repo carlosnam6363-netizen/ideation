@@ -70,14 +70,20 @@ body {
 
 .step-anim-next {
     animation: slideInRight 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 .step-anim-prev {
     animation: slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 .fade-in-scale {
     animation: fadeInScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+    backface-visibility: hidden;
 }
 
 /* 패들렛 (Padlet) 스타일 카드 */
