@@ -82,10 +82,14 @@ const App = {
         try {
             const savedPrograms = localStorage.getItem("dongtan_padlet_programs");
             this.programs = savedPrograms ? JSON.parse(savedPrograms) : [...DONGTAN_DATA.initialPrograms];
-            // 동탄구 교육·참여·권리 분과장 김남현으로 자동 동기화
+            // 동탄구 교육·참여·권리 분과장 김남현으로 자동 동기화 및 소제목 보강
             this.programs.forEach(p => {
                 if (p.memberId === 1 && (p.author || '').includes("강현우")) {
                     p.author = "김남현 (분과장)";
+                }
+                if (!p.subtitle && typeof DONGTAN_DATA !== "undefined" && DONGTAN_DATA.initialPrograms) {
+                    const match = DONGTAN_DATA.initialPrograms.find(dp => dp.id === p.id);
+                    if (match && match.subtitle) p.subtitle = match.subtitle;
                 }
             });
         } catch {
@@ -439,8 +443,11 @@ const App = {
 
     handleCreateProgram(form) {
         const memberId = parseInt(form.elements["memberId"].value, 10);
-        const member = DONGTAN_DATA.members.find(m => m.id === memberId) || DONGTAN_DATA.members[0];
+        const member = (this.divisionMembers && this.divisionMembers.find(m => m.id === memberId))
+            || (typeof DONGTAN_DATA !== "undefined" && DONGTAN_DATA.members.find(m => m.id === memberId))
+            || { name: "제안위원", role: "위원" };
         const title = form.elements["title"].value.trim();
+        const subtitle = form.elements["subtitle"] ? form.elements["subtitle"].value.trim() : "";
         const category = form.elements["category"].value;
         const format = form.elements["format"].value.trim();
         const target = form.elements["target"].value.trim();
@@ -458,8 +465,9 @@ const App = {
         const newProg = {
             id: "prog-" + Date.now(),
             memberId: memberId,
-            author: `${member.name} (${member.role})`,
+            author: `${member.name} (${member.role || '위원'})`,
             title: title,
+            subtitle: subtitle,
             category: category,
             format: format || "오프라인 실무",
             target: target || "동탄 청년",
@@ -499,6 +507,7 @@ const App = {
             if (!kw) return true;
             return (
                 p.title.toLowerCase().includes(kw) ||
+                (p.subtitle && p.subtitle.toLowerCase().includes(kw)) ||
                 p.author.toLowerCase().includes(kw) ||
                 p.purpose.toLowerCase().includes(kw) ||
                 p.tags.some(t => t.toLowerCase().includes(kw))
@@ -554,7 +563,7 @@ const App = {
                     </div>
                 `;
             } else {
-                container.innerHTML = filtered.map(prog => this.renderPadletCardHTML(prog)).join("");
+                container.innerHTML = filtered.map(prog => this.renderPadletCardHTML(prog)).join("") ;
             }
         }
 
@@ -565,7 +574,8 @@ const App = {
         const catBadgeColors = {
             "교육": "bg-blue-100 text-blue-800 border-blue-200",
             "참여": "bg-emerald-100 text-emerald-800 border-emerald-200",
-            "권리": "bg-purple-100 text-purple-800 border-purple-200"
+            "권리": "bg-purple-100 text-purple-800 border-purple-200",
+            "기타": "bg-amber-100 text-amber-800 border-amber-200"
         };
         const statusBadge = {
             "2027 확정안": "bg-green-100 text-green-700 border-green-300",
@@ -585,9 +595,16 @@ const App = {
                         </span>
                     </div>
 
-                    <h4 class="font-bold text-slate-900 text-sm leading-snug mb-2 hover:text-blue-600 cursor-pointer">
+                    <h4 class="font-bold text-slate-900 text-sm leading-snug mb-1 hover:text-blue-600 cursor-pointer">
                         ${escapeHtml(prog.title)}
                     </h4>
+
+                    ${prog.subtitle ? `
+                        <p class="text-xs font-semibold text-blue-600 mb-2 truncate flex items-center gap-1.5" title="${escapeHtml(prog.subtitle)}">
+                            <span class="inline-block w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+                            <span class="truncate">${escapeHtml(prog.subtitle)}</span>
+                        </p>
+                    ` : `<div class="mb-2"></div>`}
 
                     <p class="text-xs text-slate-600 line-clamp-3 mb-3 leading-relaxed bg-slate-50 p-2 rounded-lg border border-slate-100">
                         ${escapeHtml(prog.purpose)}
@@ -656,8 +673,9 @@ const App = {
         const prog = this.programs.find(p => p.id === progId);
         if (!prog) return;
 
+        const subTitleText = prog.subtitle ? ` (${prog.subtitle})` : "";
         const commentsSummary = (prog.comments || []).map(c => `• ${c.user}: ${c.text}`).join("\n") || "등록된 의견 없음";
-        const newComment = prompt(`[${prog.title}]\n\n현재 등록된 의견:\n${commentsSummary}\n\n새로운 의견이나 보완점을 작성해주세요:\n(예: 이름: 의견내용)`);
+        const newComment = prompt(`[${prog.title}${subTitleText}]\n\n현재 등록된 의견:\n${commentsSummary}\n\n새로운 의견이나 보완점을 작성해주세요:\n(예: 이름: 의견내용)`);
         
         if (newComment && newComment.trim()) {
             const parts = newComment.split(":");
@@ -675,12 +693,13 @@ const App = {
     },
 
     exportProgramsToCSV() {
-        const headers = ["번호", "제안자", "분야", "프로그램명", "교육방식", "교육대상", "예상일정", "추천기관", "추진목적", "상태", "추천수"];
+        const headers = ["번호", "제안자", "분야", "프로그램명", "소제목", "교육방식", "교육대상", "예상일정", "추천기관", "추진목적", "상태", "추천수"];
         const rows = this.programs.map((p, idx) => [
             idx + 1,
             `"${(p.author || '').replace(/"/g, '""')}"`,
             `"${(p.category || '').replace(/"/g, '""')}"`,
             `"${(p.title || '').replace(/"/g, '""')}"`,
+            `"${(p.subtitle || '').replace(/"/g, '""')}"`,
             `"${(p.format || '').replace(/"/g, '""')}"`,
             `"${(p.target || '').replace(/"/g, '""')}"`,
             `"${(p.schedule || '').replace(/"/g, '""')}"`,
