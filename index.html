@@ -1286,7 +1286,7 @@
                         </div>
                         <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/10 text-white backdrop-blur-sm">
                             <i data-lucide="users" class="w-4 h-4 text-teal-300"></i>
-                            <span>운영위원회 10인 체계 실시간 연동</span>
+                            <span>운영위원회 16인 체계 실시간 연동 (4개 구별 분과장 포함)</span>
                         </div>
                     </div>
                 </div>
@@ -1300,12 +1300,12 @@
                         <div class="flex items-center space-x-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
                             <h3 class="font-black text-slate-900 text-base sm:text-lg">
-                                회칙 기준 운영위원회 임원 명단 관리
+                                공식 임원 이력 기준 운영위원회 명단 관리 (총 16인)
                             </h3>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">회칙 제4조·제10조·제22조</span>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">동탄구·만세구·병점구·효행구</span>
                         </div>
                         <p class="text-xs text-slate-500 mt-1">
-                            직책별 실제 위원 이름을 직접 입력하고 [명단 저장]을 누르면, 아래 2개년(2026~2027) 월별 플로우의 담당 주체에 실시간으로 반영됩니다.
+                            동탄구(7인) · 만세구(3인) · 병점구(3인) · 효행구(3인)의 공식 임원진 명단입니다. 실명 수정 및 저장이 가능하며, 아래 2개년(2026~2027) 월별 플로우의 담당 주체에 실시간으로 연동됩니다.
                         </p>
                     </div>
                     <div class="flex items-center space-x-2">
@@ -1320,8 +1320,31 @@
                     </div>
                 </div>
 
+                <!-- 권역별 빠른 필터 탭 -->
+                <div class="flex flex-wrap items-center gap-2 pt-1 pb-1">
+                    <span class="text-xs font-bold text-slate-500 mr-1 flex items-center gap-1">
+                        <i data-lucide="filter" class="w-3.5 h-3.5"></i>
+                        <span>권역 선택:</span>
+                    </span>
+                    <button onclick="App.filterSteeringDistrict('all', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-xs transition">
+                        전체 (16명)
+                    </button>
+                    <button onclick="App.filterSteeringDistrict('동탄구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                        동탄구 (7명)
+                    </button>
+                    <button onclick="App.filterSteeringDistrict('만세구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                        만세구 (3명)
+                    </button>
+                    <button onclick="App.filterSteeringDistrict('병점구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                        병점구 (3명)
+                    </button>
+                    <button onclick="App.filterSteeringDistrict('효행구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                        효행구 (3명)
+                    </button>
+                </div>
+
                 <!-- 운영위원 카드 그리드 (JS 동적 렌더링) -->
-                <div id="steering-members-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3.5 pt-2">
+                <div id="steering-members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 pt-2">
                     <!-- Injected via App.renderSteeringMembersGrid() -->
                 </div>
             </div>

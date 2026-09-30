@@ -18,7 +18,7 @@ const DONGTAN_DATA = {
 
     // 12명 분과 위원 정보
     members: [
-        { id: 1, name: "강현우", role: "분과장", field: "디지털·AI 미래교육", bio: "동탄 테크밸리 IT 스타트업 개발자, 청년 디지털 역량 강화 주력", color: "from-blue-500 to-indigo-600" },
+        { id: 1, name: "김남현", role: "분과장", field: "디지털·AI 미래교육 & 권익", bio: "동탄구 청년정책협의체 교육·참여·권리 분과장, 청년 미래역량 강화 주력", color: "from-blue-500 to-indigo-600" },
         { id: 2, name: "이지은", role: "부분과장", field: "시정참여·청년자치", bio: "지역 청년활동가, 청년참여예산 및 주민자치회 연계 전문가", color: "from-emerald-500 to-teal-600" },
         { id: 3, name: "박민준", role: "위원", field: "청년 노동인권·권익", bio: "노무사 준비생, 사회초년생 노동법률 사각지대 해소 관심", color: "from-purple-500 to-indigo-600" },
         { id: 4, name: "정다은", role: "위원", field: "문화기획·여가교육", bio: "동탄 로컬 문화예술 크리에이터, 청년 문화예술 향유권 신장", color: "from-rose-500 to-pink-600" },
@@ -37,7 +37,7 @@ const DONGTAN_DATA = {
         {
             id: "prog-1",
             memberId: 1,
-            author: "강현우 (분과장)",
+            author: "김남현 (분과장)",
             title: "2027 화성 생성형 AI & AX 실무 프로젝트 마스터과정",
             category: "교육",
             format: "오프라인/실습형",
@@ -120,7 +120,7 @@ const DONGTAN_DATA = {
             status: "협의중",
             tags: ["반도체", "직무스펙", "취업연계"],
             comments: [
-                { user: "강현우", text: "AI 반도체 트렌드와 결합하면 국비 지원 연계도 수월할 것 같습니다." }
+                { user: "김남현", text: "AI 반도체 트렌드와 결합하면 국비 지원 연계도 수월할 것 같습니다." }
             ]
         },
         {

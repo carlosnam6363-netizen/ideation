@@ -74,6 +74,12 @@ const App = {
         try {
             const savedPrograms = localStorage.getItem("dongtan_padlet_programs");
             this.programs = savedPrograms ? JSON.parse(savedPrograms) : [...DONGTAN_DATA.initialPrograms];
+            // 동탄구 교육·참여·권리 분과장 김남현으로 자동 동기화
+            this.programs.forEach(p => {
+                if (p.memberId === 1 && (p.author || '').includes("강현우")) {
+                    p.author = "김남현 (분과장)";
+                }
+            });
         } catch {
             this.programs = [...DONGTAN_DATA.initialPrograms];
         }
@@ -85,23 +91,18 @@ const App = {
             this.uploadedBylawsFiles = [];
         }
 
-        // 운영위원회 명단 불러오기
+        // 운영위원회 명단 불러오기 (공식 16인 체계 자동 마이그레이션)
         try {
             const savedSteering = localStorage.getItem("dongtan_steering_members");
             if (savedSteering && typeof COUNCIL_FLOW_DATA !== "undefined") {
-                this.steeringMembers = JSON.parse(savedSteering);
-                // 당성구 -> 병점구 자동 마이그레이션
-                this.steeringMembers.forEach(m => {
-                    if (m.roleKey === "dangseongLeader" || (m.role && m.role.includes("당성구"))) {
-                        m.roleKey = "byeongjeomLeader";
-                        m.role = "병점구 구위원장";
-                        m.subrole = "병점권역 총괄 운영위원";
-                        m.district = "병점구 (병점1·2동, 진안동, 반월동 등)";
-                        m.duties = "병점구 구도심 및 역세권 청년 현안 발굴 및 구위원회 운영";
-                        m.email = m.email ? m.email.replace("dangseong", "byeongjeom") : "byeongjeom@hsyouth.kr";
-                    }
-                });
-                this.saveSteeringMembers();
+                const parsed = JSON.parse(savedSteering);
+                // 이전 10인 체계이거나 윤재원 회장 기준 16인이 아닌 경우 공식 16인 명단으로 자동 마이그레이션
+                if (!Array.isArray(parsed) || parsed.length !== 16 || parsed[0].name !== "윤재원") {
+                    this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
+                    this.saveSteeringMembers();
+                } else {
+                    this.steeringMembers = parsed;
+                }
             } else if (typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
             }
@@ -1302,28 +1303,59 @@ ${data.effects}
     },
 
     // 운영위원회 명단 그리드 렌더링 (이름 실시간 수정 가능)
+    // 운영위원회 구별 필터링
+    filterSteeringDistrict(district, btn) {
+        this.steeringDistrictFilter = district;
+        const chips = document.querySelectorAll(".steering-district-chip");
+        chips.forEach(chip => {
+            chip.classList.remove("bg-blue-600", "text-white", "font-bold");
+            chip.classList.add("bg-white", "text-slate-600", "font-semibold");
+        });
+        if (btn) {
+            btn.classList.add("bg-blue-600", "text-white", "font-bold");
+            btn.classList.remove("bg-white", "text-slate-600", "font-semibold");
+        }
+        this.renderSteeringMembersGrid();
+    },
+
+    // 운영위원회 명단 그리드 렌더링 (16인 지원 & 실시간 인풋 동기화)
     renderSteeringMembersGrid() {
         const grid = document.getElementById("steering-members-grid");
         if (!grid || !this.steeringMembers.length) return;
 
-        grid.innerHTML = this.steeringMembers.map(m => `
+        const filter = this.steeringDistrictFilter || "all";
+        const filteredList = filter === "all" 
+            ? this.steeringMembers 
+            : this.steeringMembers.filter(m => m.district.includes(filter));
+
+        const districtColors = {
+            "동탄구": "bg-blue-600 text-white",
+            "만세구": "bg-emerald-600 text-white",
+            "병점구": "bg-sky-600 text-white",
+            "효행구": "bg-cyan-700 text-white"
+        };
+
+        grid.innerHTML = filteredList.map(m => `
             <div class="p-3.5 bg-slate-50 hover:bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all shadow-xs flex flex-col justify-between" id="card-${escapeHtml(m.id)}">
                 <div>
-                    <div class="flex items-center justify-between mb-1.5">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${districtColors[m.district] || 'bg-slate-700 text-white'}">
+                            ${escapeHtml(m.district)}
+                        </span>
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${m.badgeColor}">
                             ${escapeHtml(m.role)}
                         </span>
-                        <span class="text-[10px] text-slate-400 truncate max-w-[70px]">${escapeHtml(m.district)}</span>
                     </div>
 
                     <!-- 실명 입력 필드 -->
                     <div class="mt-1 mb-2">
-                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">위원 성명</label>
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">성명 (클릭하여 수정 가능)</label>
                         <div class="relative">
                             <input 
                                 id="sm-name-${escapeHtml(m.id)}" 
                                 type="text" 
                                 value="${escapeHtml(m.name)}" 
+                                oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'name', this.value)"
                                 class="w-full text-xs font-black text-slate-900 bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded px-2 py-1 transition"
                                 placeholder="이름 입력"
                             >
@@ -1340,6 +1372,7 @@ ${data.effects}
                         id="sm-phone-${escapeHtml(m.id)}" 
                         type="text" 
                         value="${escapeHtml(m.phone || '')}" 
+                        oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'phone', this.value)"
                         class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
                         placeholder="연락처"
                     >
@@ -1347,6 +1380,7 @@ ${data.effects}
                         id="sm-email-${escapeHtml(m.id)}" 
                         type="text" 
                         value="${escapeHtml(m.email || '')}" 
+                        oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'email', this.value)"
                         class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
                         placeholder="이메일"
                     >
@@ -1357,7 +1391,19 @@ ${data.effects}
         this.updateIcons();
     },
 
-    // 사용자가 수정한 운영위원 명단 저장
+    // 인풋 실시간 반영
+    handleSteeringMemberInput(memberId, field, value) {
+        const member = this.steeringMembers.find(m => m.id === memberId);
+        if (member) {
+            member[field] = value.trim();
+            this.saveSteeringMembers();
+            if (field === 'name') {
+                this.renderCouncilFlow();
+            }
+        }
+    },
+
+    // 사용자가 수정한 운영위원 명단 일괄 저장
     saveSteeringMembersFromUI() {
         this.steeringMembers.forEach(m => {
             const nameInput = document.getElementById(`sm-name-${m.id}`);
@@ -1373,12 +1419,12 @@ ${data.effects}
         this.renderSteeringMembersGrid();
         this.renderCouncilFlow();
 
-        alert("운영위원회 위원 명단이 성공적으로 저장되었습니다!\n아래 월별 추진 플로우의 [담당 운영위원] 항목에 실시간 반영되었습니다.");
+        alert("운영위원회 16인 위원 명단이 성공적으로 저장되었습니다!\n아래 월별 추진 플로우의 [담당 운영위원] 항목에 실시간 반영되었습니다.");
     },
 
     // 기본 운영위원 명단으로 초기화
     resetSteeringMembers() {
-        if (confirm("회칙 기준 기본 운영위원회 명단으로 복원하시겠습니까?")) {
+        if (confirm("공식 임원 이력 기준 운영위원회 명단(16인)으로 복원하시겠습니까?")) {
             this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
             this.saveSteeringMembers();
             this.renderSteeringMembersGrid();
@@ -1388,6 +1434,16 @@ ${data.effects}
 
     // 특정 직책 key에 매핑된 운영위원 실명 찾기
     getSteeringMember(roleKey) {
+        if (!this.steeringMembers || !this.steeringMembers.length) return null;
+        if (roleKey === "dongtanLeader") {
+            return this.steeringMembers.find(m => m.roleKey === "dongtanLeader" || m.roleKey === "president") || null;
+        }
+        if (roleKey === "byeongjeomLeader") {
+            return this.steeringMembers.find(m => m.roleKey === "byeongjeomLeader" || m.roleKey === "vicePresident") || null;
+        }
+        if (roleKey === "prLeader") {
+            return this.steeringMembers.find(m => m.roleKey === "secretary1" || m.roleKey === "secretary2") || this.steeringMembers[0];
+        }
         return this.steeringMembers.find(m => m.roleKey === roleKey) || null;
     },
 

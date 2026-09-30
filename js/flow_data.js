@@ -15,127 +15,214 @@ const COUNCIL_FLOW_DATA = {
         basis: "화성시 청년 기본 조례 제18조 및 협의체 회칙 제27조"
     },
 
-    // 회칙에 명시된 운영위원회 구성원 및 주요 직책 기본값
+    // 회칙 및 임원 선출 이력에 따른 운영위원회 구성원 (총 16인)
     initialSteeringMembers: [
+        // ==========================================
+        // 1. 동탄구 (7인)
+        // ==========================================
         {
             id: "sm-1",
+            district: "동탄구",
+            name: "윤재원",
+            role: "회장, 동탄구회장",
+            subrole: "협의체 회장 · 동탄구회장",
             roleKey: "president",
-            role: "회장 (구위원장 겸임)",
-            subrole: "운영위원장 · 총회 의장",
-            district: "화성특례시 전체",
-            name: "강현우",
             phone: "010-3948-2819",
             email: "president@hsyouth.kr",
-            duties: "협의체 대표, 총회·운영위원회 소집 및 회무 총괄, 대외 협력",
+            duties: "협의체 대표, 총회·운영위원회 소집 및 회무 총괄, 동탄구위원회 총괄",
             badgeColor: "bg-blue-100 text-blue-800 border-blue-200"
         },
         {
             id: "sm-2",
-            roleKey: "vicePresident",
-            role: "부회장 (구위원장 겸임)",
-            subrole: "운영위 당연직 · 회장 보좌",
-            district: "화성특례시 전체",
-            name: "이지은",
-            phone: "010-4820-1928",
-            email: "vice@hsyouth.kr",
-            duties: "회장 보좌, 회장 유고 시 직무대행, 4개 구위원회 안건 조정",
-            badgeColor: "bg-indigo-100 text-indigo-800 border-indigo-200"
-        },
-        {
-            id: "sm-3",
-            roleKey: "dongtanLeader",
-            role: "동탄구 구위원장",
-            subrole: "동탄권역 총괄 운영위원",
-            district: "동탄구 (동탄1~9동)",
-            name: "최원석",
-            phone: "010-9182-3847",
-            email: "dongtan@hsyouth.kr",
-            duties: "동탄구 소속 위원 의견수렴, 동탄구위원회 소집, 지역현안 발굴",
-            badgeColor: "bg-teal-100 text-teal-800 border-teal-200"
-        },
-        {
-            id: "sm-4",
-            roleKey: "manseLeader",
-            role: "만세구 구위원장",
-            subrole: "만세권역 총괄 운영위원",
-            district: "만세구 (우정·향남 등)",
-            name: "김태호",
-            phone: "010-5839-2041",
-            email: "manse@hsyouth.kr",
-            duties: "만세구 소속 위원 의견수렴, 서남부권 청년 정책수요 취합",
-            badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200"
-        },
-        {
-            id: "sm-5",
-            roleKey: "hyohengLeader",
-            role: "효행구 구위원장",
-            subrole: "효행권역 총괄 운영위원",
-            district: "효행구 (봉담·기배·화산)",
-            name: "박준영",
-            phone: "010-7294-8172",
-            email: "hyoheng@hsyouth.kr",
-            duties: "효행구 대학가 및 청년 밀집지 의견수렴, 구위원회 주관",
-            badgeColor: "bg-cyan-100 text-cyan-800 border-cyan-200"
-        },
-        {
-            id: "sm-6",
-            roleKey: "byeongjeomLeader",
-            role: "병점구 구위원장",
-            subrole: "병점권역 총괄 운영위원",
-            district: "병점구 (병점1·2동, 진안동, 반월동 등)",
-            name: "정민서",
-            phone: "010-6192-4820",
-            email: "byeongjeom@hsyouth.kr",
-            duties: "병점구 구도심 및 역세권 청년 현안 발굴 및 구위원회 운영",
-            badgeColor: "bg-sky-100 text-sky-800 border-sky-200"
-        },
-        {
-            id: "sm-7",
+            district: "동탄구",
+            name: "최민경",
+            role: "사무국장",
+            subrole: "임명직 임원 · 행정 총괄",
             roleKey: "secretary1",
-            role: "사무국장 (행정·운영)",
-            subrole: "임명직 임원 · 운영위 의결권",
-            district: "사무국",
-            name: "임도현",
             phone: "010-8271-9384",
             email: "admin@hsyouth.kr",
             duties: "총회·운영위원회 실무 운영, 위원 출결관리, 공통 행정서류 취합",
             badgeColor: "bg-purple-100 text-purple-800 border-purple-200"
         },
         {
-            id: "sm-8",
+            id: "sm-3",
+            district: "동탄구",
+            name: "정용준",
+            role: "사무국장",
+            subrole: "임명직 임원 · 재정·기록",
             roleKey: "secretary2",
-            role: "사무국장 (재정·기록)",
-            subrole: "임명직 임원 · 운영위 의결권",
-            district: "사무국",
-            name: "한서윤",
             phone: "010-3849-5102",
             email: "finance@hsyouth.kr",
             duties: "자체회비 관리, 고유번호증 계좌 운영, 기부금품 관리 및 회의록 공시",
             badgeColor: "bg-violet-100 text-violet-800 border-violet-200"
         },
         {
-            id: "sm-9",
+            id: "sm-4",
+            district: "동탄구",
+            name: "최성호",
+            role: "동탄구 일자리 분과장",
+            subrole: "동탄구 분과위원장",
+            roleKey: "dongtanJobLeader",
+            phone: "010-5192-3841",
+            email: "dongtan.job@hsyouth.kr",
+            duties: "동탄 테크밸리 및 첨단산업 연계 청년 취·창업 지원 정책 발굴",
+            badgeColor: "bg-blue-50 text-blue-700 border-blue-200"
+        },
+        {
+            id: "sm-5",
+            district: "동탄구",
+            name: "심덕용",
+            role: "동탄구 주거 분과장",
+            subrole: "동탄구 분과위원장",
+            roleKey: "dongtanHousingLeader",
+            phone: "010-6382-9104",
+            email: "dongtan.housing@hsyouth.kr",
+            duties: "동탄 신도시 청년 주거비 부담 완화 및 공공임대·청년주택 정책 발굴",
+            badgeColor: "bg-blue-50 text-blue-700 border-blue-200"
+        },
+        {
+            id: "sm-6",
+            district: "동탄구",
+            name: "김남현",
+            role: "동탄구 교육, 참여, 권리 분과장",
+            subrole: "동탄구 분과위원장 (본 분과 대표)",
             roleKey: "dongtanBranchLeader",
-            role: "동탄구 교육·참여·권리분과장",
-            subrole: "분과 대표 (회의 주관)",
-            district: "동탄구 교육·참여·권리분과",
-            name: "박민준",
             phone: "010-2948-1829",
             email: "dongtan.edu@hsyouth.kr",
-            duties: "12명 위원 교육 취합, 정책제안서 작성 주관, 월 1회 오프라인 회의 소집",
-            badgeColor: "bg-amber-100 text-amber-800 border-amber-200"
+            duties: "12명 위원 교육 취합, 정책제안서 작성 주관, 월 1회 오프라인 분과회의 소집",
+            badgeColor: "bg-amber-100 text-amber-800 border-amber-300 font-bold"
+        },
+        {
+            id: "sm-7",
+            district: "동탄구",
+            name: "임서영",
+            role: "동탄구 복지, 문화 분과장",
+            subrole: "동탄구 분과위원장",
+            roleKey: "dongtanWelfareLeader",
+            phone: "010-4729-1830",
+            email: "dongtan.welfare@hsyouth.kr",
+            duties: "동탄 청년 문화예술 향유권 신장 및 마음건강·청년 복지망 구축",
+            badgeColor: "bg-blue-50 text-blue-700 border-blue-200"
+        },
+
+        // ==========================================
+        // 2. 만세구 (3인)
+        // ==========================================
+        {
+            id: "sm-8",
+            district: "만세구",
+            name: "이주영",
+            role: "만세구 구회장",
+            subrole: "만세권역 총괄 운영위원",
+            roleKey: "manseLeader",
+            phone: "010-5839-2041",
+            email: "manse@hsyouth.kr",
+            duties: "만세구 소속 위원 의견수렴, 서남부권(향남·우정 등) 청년 정책수요 취합",
+            badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200"
+        },
+        {
+            id: "sm-9",
+            district: "만세구",
+            name: "배수경",
+            role: "만세구 주거, 복지, 문화 분과장",
+            subrole: "만세구 분과위원장",
+            roleKey: "manseHousingWelfareLeader",
+            phone: "010-3819-2048",
+            email: "manse.hw@hsyouth.kr",
+            duties: "만세구 권역 청년 주거 안정 및 문화복지 인프라 격차 해소 정책 제안",
+            badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200"
         },
         {
             id: "sm-10",
-            roleKey: "prLeader",
-            role: "홍보팀장",
-            subrole: "임명직 운영직 (소통 총괄)",
-            district: "홍보팀",
-            name: "송유진",
-            phone: "010-7193-2849",
-            email: "pr@hsyouth.kr",
-            duties: "공식 SNS 및 채널 운영, 카드뉴스/영상 제작, 청년축제 부스 홍보",
-            badgeColor: "bg-rose-100 text-rose-800 border-rose-200"
+            district: "만세구",
+            name: "김안나",
+            role: "만세구 일자리, 교육, 참여, 권리 분과장",
+            subrole: "만세구 분과위원장",
+            roleKey: "manseJobEduLeader",
+            phone: "010-4920-1847",
+            email: "manse.je@hsyouth.kr",
+            duties: "만세구 산업단지 연계 일자리 및 청년 자치 권리보장 정책 발굴",
+            badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200"
+        },
+
+        // ==========================================
+        // 3. 병점구 (3인)
+        // ==========================================
+        {
+            id: "sm-11",
+            district: "병점구",
+            name: "박희창",
+            role: "부회장, 병점구회장",
+            subrole: "협의체 부회장 · 병점구회장",
+            roleKey: "vicePresident",
+            phone: "010-4820-1928",
+            email: "vice@hsyouth.kr",
+            duties: "회장 보좌, 회장 유고 시 직무대행, 병점구위원회 총괄 및 4개 구 안건 조정",
+            badgeColor: "bg-sky-100 text-sky-800 border-sky-200"
+        },
+        {
+            id: "sm-12",
+            district: "병점구",
+            name: "김나연",
+            role: "병점구 일자리 분과장",
+            subrole: "병점구 분과위원장",
+            roleKey: "byeongjeomJobLeader",
+            phone: "010-6192-4820",
+            email: "byeongjeom.job@hsyouth.kr",
+            duties: "병점역 역세권 상권 및 구도심 청년 스타트업·일자리 정책 발굴",
+            badgeColor: "bg-sky-50 text-sky-700 border-sky-200"
+        },
+        {
+            id: "sm-13",
+            district: "병점구",
+            name: "이혜빈",
+            role: "병점구 주거, 복지, 문화 분과장",
+            subrole: "병점구 분과위원장",
+            roleKey: "byeongjeomHousingWelfareLeader",
+            phone: "010-7381-9204",
+            email: "byeongjeom.hw@hsyouth.kr",
+            duties: "병점 구도심 1인 가구 주거안정 및 청년 문화예술 플랫폼 구축 제안",
+            badgeColor: "bg-sky-50 text-sky-700 border-sky-200"
+        },
+
+        // ==========================================
+        // 4. 효행구 (3인)
+        // ==========================================
+        {
+            id: "sm-14",
+            district: "효행구",
+            name: "윤동현",
+            role: "효행구 구회장",
+            subrole: "효행권역 총괄 운영위원",
+            roleKey: "hyohengLeader",
+            phone: "010-7294-8172",
+            email: "hyoheng@hsyouth.kr",
+            duties: "효행구 소속 위원 의견수렴, 대학 밀집지(봉담·화산) 청년 현안 발굴",
+            badgeColor: "bg-cyan-100 text-cyan-800 border-cyan-200"
+        },
+        {
+            id: "sm-15",
+            district: "효행구",
+            name: "박소연",
+            role: "효행구 일자리, 교육, 참여, 권리 분과장",
+            subrole: "효행구 분과위원장",
+            roleKey: "hyohengJobEduLeader",
+            phone: "010-8291-3049",
+            email: "hyoheng.je@hsyouth.kr",
+            duties: "대학가 연계 청년 취·창업 교육 및 권익 증진 프로젝트 주관",
+            badgeColor: "bg-cyan-50 text-cyan-700 border-cyan-200"
+        },
+        {
+            id: "sm-16",
+            district: "효행구",
+            name: "이정수",
+            role: "효행구 주거, 복지, 문화 분과장",
+            subrole: "효행구 분과위원장",
+            roleKey: "hyohengHousingWelfareLeader",
+            phone: "010-5920-1748",
+            email: "hyoheng.hw@hsyouth.kr",
+            duties: "대학생·사회초년생 원룸촌 주거권 보장 및 청년 심리상담 복지망 강화",
+            badgeColor: "bg-cyan-50 text-cyan-700 border-cyan-200"
         }
     ],
 
