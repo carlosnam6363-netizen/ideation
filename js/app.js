@@ -91,7 +91,7 @@ const App = {
             this.uploadedBylawsFiles = [];
         }
 
-        // 운영위원회 명단 불러오기 (공식 16인 체계 자동 마이그레이션)
+        // 운영위원회 명단 불러오기 (공식 16인 체계 자동 마이그레이션 및 전화번호/이메일 공란 처리)
         try {
             const savedSteering = localStorage.getItem("dongtan_steering_members");
             if (savedSteering && typeof COUNCIL_FLOW_DATA !== "undefined") {
@@ -99,16 +99,27 @@ const App = {
                 // 이전 10인 체계이거나 윤재원 회장 기준 16인이 아닌 경우 공식 16인 명단으로 자동 마이그레이션
                 if (!Array.isArray(parsed) || parsed.length !== 16 || parsed[0].name !== "윤재원") {
                     this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
-                    this.saveSteeringMembers();
                 } else {
                     this.steeringMembers = parsed;
                 }
             } else if (typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
             }
+            // 사용자 요청: 전화번호와 이메일은 모두 공란으로 초기화
+            if (this.steeringMembers && this.steeringMembers.length) {
+                this.steeringMembers.forEach(m => {
+                    m.phone = "";
+                    m.email = "";
+                });
+                this.saveSteeringMembers();
+            }
         } catch {
             if (typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
+                this.steeringMembers.forEach(m => {
+                    m.phone = "";
+                    m.email = "";
+                });
             }
         }
 
