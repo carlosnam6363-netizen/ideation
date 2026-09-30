@@ -321,7 +321,7 @@ const App = {
             if (prog && form) {
                 if (titleEl) titleEl.textContent = "2027년 교육 프로그램 사업카드 수정";
                 if (editingInput) editingInput.value = prog.id;
-                if (form.elements["memberId"]) form.elements["memberId"].value = prog.memberId;
+                if (form.elements["memberId"]) form.elements["memberId"].value = String(prog.memberId);
                 if (form.elements["category"]) form.elements["category"].value = prog.category || "교육";
                 if (form.elements["code"]) form.elements["code"].value = prog.code || "";
                 if (form.elements["title"]) form.elements["title"].value = prog.title || "";
@@ -544,25 +544,37 @@ const App = {
     },
 
     handleCreateProgram(form) {
-        const editingId = form.elements["editingId"] ? form.elements["editingId"].value : "";
-        const memberId = parseInt(form.elements["memberId"].value, 10);
-        const member = (this.divisionMembers && this.divisionMembers.find(m => m.id === memberId))
-            || (typeof DONGTAN_DATA !== "undefined" && DONGTAN_DATA.members.find(m => m.id === memberId))
-            || { name: "제안위원", role: "위원" };
+        if (!form) form = document.getElementById("new-program-form");
+        if (!form) return;
 
-        const title = form.elements["title"].value.trim();
+        const editingId = form.elements["editingId"] ? form.elements["editingId"].value : "";
+        const rawMemberId = form.elements["memberId"] ? form.elements["memberId"].value : "";
+        const memberId = (!isNaN(Number(rawMemberId)) && rawMemberId !== "") ? Number(rawMemberId) : rawMemberId;
+
+        const member = (this.divisionMembers && this.divisionMembers.find(m => String(m.id) === String(rawMemberId) || m.name === rawMemberId))
+            || (typeof DONGTAN_DATA !== "undefined" && DONGTAN_DATA.members.find(m => String(m.id) === String(rawMemberId) || m.name === rawMemberId))
+            || { name: "제안위원", role: "위원", phone: "010-3351-6363" };
+
+        const title = form.elements["title"] ? form.elements["title"].value.trim() : "";
         const subtitle = form.elements["subtitle"] ? form.elements["subtitle"].value.trim() : "";
         const targetGoal = form.elements["targetGoal"] ? form.elements["targetGoal"].value.trim() : "";
-        const category = form.elements["category"].value;
+        const category = form.elements["category"] ? form.elements["category"].value : "교육";
         const code = form.elements["code"] && form.elements["code"].value.trim() ? form.elements["code"].value.trim() : `1-${this.programs.length + 1}`;
         const basis = form.elements["basis"] ? form.elements["basis"].value.trim() : "「화성시 청년 기본 조례」 제21조";
         const schedule = form.elements["schedule"] ? form.elements["schedule"].value.trim() : "2027. 1. ~ 12.";
         const institution = form.elements["institution"] ? form.elements["institution"].value.trim() : "화성시 동탄 청년공간";
         const target = form.elements["target"] ? form.elements["target"].value.trim() : "화성시 거주 및 활동 19세 ~ 39세 청년";
-        const purpose = form.elements["purpose"].value.trim();
+        const purpose = form.elements["purpose"] ? form.elements["purpose"].value.trim() : "";
         const agency = form.elements["agency"] ? form.elements["agency"].value.trim() : "화성시 청년청소년과 / 교육·참여·권리 분과 직접사업";
         const format = form.elements["format"] ? form.elements["format"].value.trim() : "오프라인 실무";
         const budgetInfo = form.elements["budgetInfo"] ? form.elements["budgetInfo"].value.trim() : "시비 100%";
+
+        if (!title || !purpose) {
+            alert("사업명과 사업내용(필요이유/추진목적)을 모두 입력해주세요.");
+            if (!title && form.elements["title"]) form.elements["title"].focus();
+            else if (!purpose && form.elements["purpose"]) form.elements["purpose"].focus();
+            return;
+        }
 
         const subText = form.elements["subProgramsText"] ? form.elements["subProgramsText"].value.trim() : "";
         let subPrograms = [];
@@ -598,19 +610,15 @@ const App = {
             `2027. 7. ~ 8. : 성과평가 및 사후지원`
         ];
 
-        const tagsInput = form.elements["tags"].value.trim();
+        const tagsInput = form.elements["tags"] ? form.elements["tags"].value.trim() : "";
         const tags = tagsInput ? tagsInput.split(",").map(t => t.trim()).filter(Boolean) : ["2027교육"];
-
-        if (!title || !purpose) {
-            alert("사업명과 사업내용(필요이유/추진목적)을 입력해주세요.");
-            return;
-        }
 
         if (editingId) {
             const existing = this.programs.find(p => p.id === editingId);
             if (existing) {
                 existing.memberId = memberId;
                 existing.author = `${member.name} (${member.role || '위원'})`;
+                existing.contact = member.phone || member.contact || existing.contact || "010-3351-6363";
                 existing.code = code;
                 existing.title = title;
                 existing.subtitle = subtitle;
@@ -638,7 +646,7 @@ const App = {
                 code: code,
                 memberId: memberId,
                 author: `${member.name} (${member.role || '위원'})`,
-                contact: member.contact || "010-3351-6363",
+                contact: member.phone || member.contact || "010-3351-6363",
                 title: title,
                 subtitle: subtitle,
                 vision: subtitle || "청년 역량 강화 및 실무 연계 지원",
@@ -690,33 +698,52 @@ const App = {
             if (!matchesCat) return false;
             if (!kw) return true;
             return (
-                p.title.toLowerCase().includes(kw) ||
+                (p.title && p.title.toLowerCase().includes(kw)) ||
                 (p.subtitle && p.subtitle.toLowerCase().includes(kw)) ||
-                p.author.toLowerCase().includes(kw) ||
-                p.purpose.toLowerCase().includes(kw) ||
-                p.tags.some(t => t.toLowerCase().includes(kw))
+                (p.author && p.author.toLowerCase().includes(kw)) ||
+                (p.purpose && p.purpose.toLowerCase().includes(kw)) ||
+                ((p.tags || []).some(t => t.toLowerCase().includes(kw)))
             );
         });
 
         if (this.padletViewMode === "columns") {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 overflow-x-auto";
             
-            container.innerHTML = DONGTAN_DATA.members.map(member => {
-                const memberPrograms = filtered.filter(p => p.memberId === member.id);
+            const membersList = (this.divisionMembers && this.divisionMembers.length)
+                ? this.divisionMembers
+                : (typeof DONGTAN_DATA !== "undefined" ? DONGTAN_DATA.members : []);
+
+            const defaultGradients = [
+                "from-blue-600 to-indigo-600", "from-teal-600 to-emerald-600", "from-indigo-600 to-violet-600",
+                "from-sky-600 to-blue-600", "from-violet-600 to-purple-600", "from-amber-600 to-orange-600",
+                "from-emerald-600 to-teal-600", "from-cyan-600 to-blue-600", "from-fuchsia-600 to-pink-600",
+                "from-purple-600 to-indigo-600", "from-rose-600 to-pink-600", "from-blue-700 to-slate-700"
+            ];
+
+            container.innerHTML = membersList.map((member, mIdx) => {
+                const memberPrograms = filtered.filter(p => 
+                    String(p.memberId) === String(member.id) ||
+                    (p.author && (p.author.startsWith(member.name) || p.author.includes(member.name))) ||
+                    (mIdx === 0 && (!p.memberId || p.memberId === "NaN"))
+                );
+                const colorGradient = member.color || defaultGradients[mIdx % defaultGradients.length];
+                const memberRole = member.role || "위원";
+                const isLeader = memberRole.includes("분과장");
+
                 return `
                     <div class="padlet-column p-4 flex flex-col">
                         <div class="flex items-center space-x-3 mb-4 p-3 bg-white rounded-xl shadow-sm border border-slate-200">
-                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr ${member.color} text-white flex items-center justify-center font-bold text-sm shadow-inner shrink-0">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-tr ${colorGradient} text-white flex items-center justify-center font-bold text-sm shadow-inner shrink-0">
                                 ${escapeHtml(member.name.slice(0, 2))}
                             </div>
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center space-x-2">
                                     <h4 class="font-bold text-slate-800 text-sm truncate">${escapeHtml(member.name)}</h4>
-                                    <span class="text-[11px] px-2 py-0.5 rounded-full font-medium ${member.role.includes('분과장') ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}">
-                                        ${escapeHtml(member.role)}
+                                    <span class="text-[11px] px-2 py-0.5 rounded-full font-medium ${isLeader ? 'bg-indigo-100 text-indigo-700' : 'bg-slate-100 text-slate-600'}">
+                                        ${escapeHtml(memberRole)}
                                     </span>
                                 </div>
-                                <p class="text-xs text-slate-500 truncate" title="${escapeHtml(member.field)}">${escapeHtml(member.field)}</p>
+                                <p class="text-xs text-slate-500 truncate" title="${escapeHtml(member.field || member.department || '교육·참여·권리')}">${escapeHtml(member.field || member.department || '교육·참여·권리')}</p>
                             </div>
                             <span class="text-xs font-semibold px-2 py-1 bg-blue-50 text-blue-600 rounded-lg shrink-0">
                                 ${memberPrograms.length}건
@@ -728,7 +755,7 @@ const App = {
                                 <div class="h-40 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 p-4 text-center">
                                     <i data-lucide="book-plus" class="w-6 h-6 mb-1 text-slate-300"></i>
                                     <p class="text-xs">등록된 필요 교육이 없습니다.</p>
-                                    <button onclick="App.openModalForMember(${member.id})" class="mt-2 text-xs font-semibold text-blue-600 hover:underline">
+                                    <button onclick="App.openModalForMember('${escapeHtml(String(member.id))}')" class="mt-2 text-xs font-semibold text-blue-600 hover:underline cursor-pointer">
                                         + 교육 프로그램 제안
                                     </button>
                                 </div>
@@ -1044,13 +1071,10 @@ const App = {
     },
 
     openModalForMember(memberId) {
-        this.populateMemberSelect();
+        this.openProgramModal();
         const select = document.getElementById("program-member-select");
-        if (select) select.value = memberId;
-        const modal = document.getElementById("program-modal");
-        if (modal) {
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
+        if (select && memberId !== undefined && memberId !== null) {
+            select.value = String(memberId);
         }
     },
 
