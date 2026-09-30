@@ -1731,17 +1731,6 @@ ${data.effects}
         alert("운영위원회 위원 명단이 성공적으로 저장되었습니다!\n아래 월별 추진 플로우의 [담당 운영위원] 항목에 실시간 반영되었습니다.");
     },
 
-    // 기본 운영위원 명단으로 초기화
-    resetSteeringMembers() {
-        if (confirm("공식 임원 이력 기준 운영위원회 명단으로 복원하시겠습니까?")) {
-            this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
-            this.saveSteeringMembers();
-            this.renderSteeringMembersGrid();
-            this.renderCouncilFlow();
-            this.updateSteeringCounts();
-        }
-    },
-
     // 특정 직책 key에 매핑된 운영위원 실명 찾기
     getSteeringMember(roleKey) {
         if (!this.steeringMembers || !this.steeringMembers.length) return null;
@@ -2214,15 +2203,6 @@ ${data.effects}
         this.renderDivisionMembersGrid();
 
         alert(id ? "분과 위원 정보가 수정되었습니다." : "신규 분과 위원이 추가되었습니다.");
-    },
-
-    // 분과 위원 명단 기본값 복원
-    resetDivisionMembers() {
-        if (confirm("분과 위원 명단을 초기값(엑셀 원본)으로 복원하시겠습니까?")) {
-            this.divisionMembers = JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
-            this.saveDivisionMembers();
-            this.renderDivisionMembersGrid();
-        }
     },
 
     // ==========================================
