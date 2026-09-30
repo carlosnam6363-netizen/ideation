@@ -41,14 +41,16 @@ const App = {
     chartInstance: null,
     iconDebounceTimer: null,
 
-    // 4번 탭 (협의체 전체 플로우 & 운영위원 명단) 상태
-    steeringMembers: [],
-    divisionMembers: [],   // 분과 위원 명단
-    sub4Tab: "steering",   // 4번 탭의 현재 하위 탭 ("steering" | "division")
+    // 4번 탭 (협의체 전체 플로우) 상태
     flowYear: 2026, // "all", 2026, 2027
     flowQuarter: "all", // "all", "Q1", "Q2", "Q3", "Q4"
     flowSearch: "",
     flowCheckedTasks: {},
+
+    // 5번 탭 (위원 명단 관리: 운영위 & 분과위원) 상태
+    steeringMembers: [],
+    divisionMembers: [],   // 분과 위원 명단
+    tab5Sub: "division",   // 5번 탭의 활성 서브 탭 (기본값: 첨부 이미지와 같은 "division")
 
     // 관리자 권한 상태 (비밀번호: 2232)
     isAdmin: sessionStorage.getItem("dongtan_admin_auth") === "true",
@@ -305,8 +307,7 @@ const App = {
             "tab-2": "2. 2027년 정책제안서 작성 아이디에이션 (5단계 워크플로우)",
             "tab-3": "3. 회칙 정리 (신·구 조문 대비표 & 파일 보관함)",
             "tab-4": "4. 협의체 전체 플로우 (2026~2027 연간 로드맵)",
-            "tab-4-steering": "4. 협의체 공식 운영위원회 명단 관리 (총 15인)",
-            "tab-4-division": "4. 동탄구 교육·참여·권리 분과 위원 명단 관리 (총 12인)"
+            "tab-5": "5. 위원 명단 관리 (운영위원회 & 분과위원)"
         };
         const titleEl = document.getElementById("header-active-tab-title");
         if (titleEl && tabTitles[tabId]) {
@@ -329,10 +330,8 @@ const App = {
             this.renderBylawsDiff();
         } else if (tabId === "tab-4") {
             this.renderCouncilFlow();
-        } else if (tabId === "tab-4-steering") {
-            this.renderSteeringMembersGrid();
-        } else if (tabId === "tab-4-division") {
-            this.renderDivisionMembersGrid();
+        } else if (tabId === "tab-5") {
+            this.switchTab5Sub(this.tab5Sub || "division");
         }
         this.updateIcons();
     },
@@ -1724,8 +1723,12 @@ ${data.effects}
         const btnHyoheng = document.getElementById("steering-chip-hyoheng");
         if (btnHyoheng) btnHyoheng.textContent = `효행구 (${hyoheng}명)`;
 
-        const navSteeringBadge = document.getElementById("nav-steering-count-badge");
-        if (navSteeringBadge) navSteeringBadge.textContent = total;
+        const tab5SteeringBadge = document.getElementById("tab5-steering-badge");
+        if (tab5SteeringBadge) tab5SteeringBadge.textContent = total;
+
+        const totalDiv = this.divisionMembers ? this.divisionMembers.length : 0;
+        const navMembersBadge = document.getElementById("nav-members-count-badge");
+        if (navMembersBadge) navMembersBadge.textContent = `총 ${total + totalDiv}인`;
     },
 
     // 사용자가 수정한 운영위원 명단 일괄 저장
@@ -2021,33 +2024,43 @@ ${data.effects}
     },
 
     // ==========================================
-    // 4번 탭 하위 탭 전환
+    // 5번 탭 상단 서브 탭 전환 (운영위원회 / 분과 위원 명단 관리)
     // ==========================================
-    switchSub4Tab(tab) {
-        this.sub4Tab = tab;
+    switchTab5Sub(subTab) {
+        this.tab5Sub = subTab;
 
-        const steeringBtn = document.getElementById("sub4-tab-steering-btn");
-        const divisionBtn = document.getElementById("sub4-tab-division-btn");
-        const steeringPanel = document.getElementById("sub4-panel-steering");
-        const divisionPanel = document.getElementById("sub4-panel-division");
+        const steeringBtn = document.getElementById("tab5-sub-steering-btn");
+        const divisionBtn = document.getElementById("tab5-sub-division-btn");
+        const steeringPanel = document.getElementById("tab5-panel-steering");
+        const divisionPanel = document.getElementById("tab5-panel-division");
 
-        const activeTabClass = ["text-white", "bg-blue-600", "border-b-2", "border-blue-600"];
-        const inactiveTabClass = ["text-slate-500", "hover:text-slate-800", "hover:bg-slate-100", "border-b-2", "border-transparent"];
-
-        if (tab === "steering") {
-            if (steeringBtn) { steeringBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-bold text-white bg-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-2 transition"; }
-            if (divisionBtn) { divisionBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center justify-center gap-2 transition"; }
+        if (subTab === "steering") {
+            if (steeringBtn) {
+                steeringBtn.className = "px-6 py-3.5 text-sm font-bold text-white bg-blue-600 border-b-2 border-blue-600 flex items-center gap-2 transition shadow-xs";
+            }
+            if (divisionBtn) {
+                divisionBtn.className = "px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition";
+            }
             if (steeringPanel) steeringPanel.classList.remove("hidden");
             if (divisionPanel) divisionPanel.classList.add("hidden");
             this.renderSteeringMembersGrid();
         } else {
-            if (divisionBtn) { divisionBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center justify-center gap-2 transition"; }
-            if (steeringBtn) { steeringBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center justify-center gap-2 transition"; }
+            if (divisionBtn) {
+                divisionBtn.className = "px-6 py-3.5 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center gap-2 transition shadow-xs";
+            }
+            if (steeringBtn) {
+                steeringBtn.className = "px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition";
+            }
             if (divisionPanel) divisionPanel.classList.remove("hidden");
             if (steeringPanel) steeringPanel.classList.add("hidden");
             this.renderDivisionMembersGrid();
         }
         this.updateIcons();
+    },
+
+    // 구버전 호환용
+    switchSub4Tab(tab) {
+        this.switchTab5Sub(tab);
     },
 
     // ==========================================
@@ -2135,8 +2148,12 @@ ${data.effects}
         const el = document.getElementById("division-header-count");
         if (el) el.textContent = `(총 ${total}인)`;
 
-        const navDivBadge = document.getElementById("nav-division-count-badge");
-        if (navDivBadge) navDivBadge.textContent = total;
+        const tab5DivisionBadge = document.getElementById("tab5-division-badge");
+        if (tab5DivisionBadge) tab5DivisionBadge.textContent = total;
+
+        const totalSteering = this.steeringMembers ? this.steeringMembers.length : 0;
+        const navMembersBadge = document.getElementById("nav-members-count-badge");
+        if (navMembersBadge) navMembersBadge.textContent = `총 ${total + totalSteering}인`;
     },
 
     // 분과 위원 삭제
