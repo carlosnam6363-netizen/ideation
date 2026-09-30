@@ -106,7 +106,7 @@ const COUNCIL_FLOW_DATA = {
         },
 
         // ==========================================
-        // 2. 만세구 (3인)
+        // 2. 만세구 (2인)
         // ==========================================
         {
             id: "sm-8",
@@ -119,18 +119,6 @@ const COUNCIL_FLOW_DATA = {
             email: "",
             duties: "만세구 소속 위원 의견수렴, 서남부권(향남·우정 등) 청년 정책수요 취합",
             badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-200"
-        },
-        {
-            id: "sm-9",
-            district: "만세구",
-            name: "배수경",
-            role: "만세구 주거, 복지, 문화 분과장",
-            subrole: "만세구 분과위원장",
-            roleKey: "manseHousingWelfareLeader",
-            phone: "",
-            email: "",
-            duties: "만세구 권역 청년 주거 안정 및 문화복지 인프라 격차 해소 정책 제안",
-            badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200"
         },
         {
             id: "sm-10",

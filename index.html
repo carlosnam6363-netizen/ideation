@@ -1286,7 +1286,7 @@
                         </div>
                         <div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/10 text-white backdrop-blur-sm">
                             <i data-lucide="users" class="w-4 h-4 text-teal-300"></i>
-                            <span>운영위원회 16인 체계 실시간 연동 (4개 구별 분과장 포함)</span>
+                            <span>운영위원회 체계 실시간 연동 (4개 구별 분과장 포함)</span>
                         </div>
                     </div>
                 </div>
@@ -1299,16 +1299,21 @@
                     <div>
                         <div class="flex items-center space-x-2">
                             <span class="w-2.5 h-2.5 rounded-full bg-blue-600"></span>
-                            <h3 class="font-black text-slate-900 text-base sm:text-lg">
-                                공식 임원 이력 기준 운영위원회 명단 관리 (총 16인)
+                            <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-1.5">
+                                <span>공식 운영위원회 명단 관리</span>
+                                <span id="steering-header-count" class="text-teal-600 font-bold text-sm sm:text-base">(총 15인)</span>
                             </h3>
-                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">동탄구·만세구·병점구·효행구</span>
+                            <span class="text-xs font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">실시간 수정·삭제·추가 지원</span>
                         </div>
                         <p class="text-xs text-slate-500 mt-1">
-                            동탄구(7인) · 만세구(3인) · 병점구(3인) · 효행구(3인)의 공식 임원진 명단입니다. 실명 수정 및 저장이 가능하며, 아래 2개년(2026~2027) 월별 플로우의 담당 주체에 실시간으로 연동됩니다.
+                            동탄구(7) · 만세구(2) · 병점구(3) · 효행구(3) 공식 임원진 명단입니다. 각 카드의 <strong>[수정]</strong> 및 <strong>[삭제]</strong> 단추로 직접 편집하거나, <strong>[+ 위원 추가]</strong> 버튼으로 신규 위원을 등록할 수 있습니다.
                         </p>
                     </div>
-                    <div class="flex items-center space-x-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <button onclick="App.openAddSteeringModal()" class="px-3.5 py-1.5 text-xs font-bold text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg shadow-xs transition flex items-center space-x-1">
+                            <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
+                            <span>위원 추가</span>
+                        </button>
                         <button onclick="App.resetSteeringMembers()" class="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition flex items-center space-x-1">
                             <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
                             <span>기본값 복원</span>
@@ -1326,19 +1331,19 @@
                         <i data-lucide="filter" class="w-3.5 h-3.5"></i>
                         <span>권역 선택:</span>
                     </span>
-                    <button onclick="App.filterSteeringDistrict('all', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-xs transition">
-                        전체 (16명)
+                    <button id="steering-chip-all" onclick="App.filterSteeringDistrict('all', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-bold bg-blue-600 text-white shadow-xs transition">
+                        전체 (15명)
                     </button>
-                    <button onclick="App.filterSteeringDistrict('동탄구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                    <button id="steering-chip-dongtan" onclick="App.filterSteeringDistrict('동탄구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
                         동탄구 (7명)
                     </button>
-                    <button onclick="App.filterSteeringDistrict('만세구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
-                        만세구 (3명)
+                    <button id="steering-chip-manse" onclick="App.filterSteeringDistrict('만세구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                        만세구 (2명)
                     </button>
-                    <button onclick="App.filterSteeringDistrict('병점구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                    <button id="steering-chip-byeongjeom" onclick="App.filterSteeringDistrict('병점구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
                         병점구 (3명)
                     </button>
-                    <button onclick="App.filterSteeringDistrict('효행구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
+                    <button id="steering-chip-hyoheng" onclick="App.filterSteeringDistrict('효행구', this)" class="steering-district-chip px-3 py-1 rounded-lg text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 transition">
                         효행구 (3명)
                     </button>
                 </div>
@@ -1473,6 +1478,70 @@
                 <div class="pt-4 border-t border-slate-100 flex items-center justify-end space-x-3">
                     <button type="button" onclick="document.getElementById('program-modal').classList.add('hidden')" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">취소</button>
                     <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition">패들렛에 등록하기</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 운영위원 추가 및 수정 모달 -->
+    <div id="steering-member-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-lg w-full p-6 sm:p-7 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+                        <i data-lucide="user-cog" class="w-4 h-4"></i>
+                    </div>
+                    <h3 id="steering-modal-title" class="font-bold text-slate-900 text-lg">운영위원 정보 수정</h3>
+                </div>
+                <button type="button" onclick="App.closeSteeringModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="steering-member-form" onsubmit="App.saveSteeringMemberFromModal(event)" class="space-y-4">
+                <input type="hidden" id="modal-sm-id">
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">소속 권역 (구) *</label>
+                        <select id="modal-sm-district" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
+                            <option value="동탄구">동탄구</option>
+                            <option value="만세구">만세구</option>
+                            <option value="병점구">병점구</option>
+                            <option value="효행구">효행구</option>
+                            <option value="사무국">사무국</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">위원 성명 *</label>
+                        <input id="modal-sm-name" type="text" placeholder="예: 홍길동" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">공식 직책 명칭 *</label>
+                    <input id="modal-sm-role" type="text" placeholder="예: 동탄구 일자리 분과장 / 사무국장" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">담당 직무 및 주요 업무</label>
+                    <textarea id="modal-sm-duties" rows="2" placeholder="해당 위원의 주요 소관 업무 및 정책 분야를 서술해주세요." class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white leading-relaxed"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">연락처 (선택)</label>
+                        <input id="modal-sm-phone" type="text" placeholder="예: 010-0000-0000" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">이메일 (선택)</label>
+                        <input id="modal-sm-email" type="email" placeholder="예: member@hsyouth.kr" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:bg-white">
+                    </div>
+                </div>
+
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end space-x-2.5">
+                    <button type="button" onclick="App.closeSteeringModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition">취소</button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow transition">저장하기</button>
                 </div>
             </form>
         </div>

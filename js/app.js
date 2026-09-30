@@ -91,13 +91,13 @@ const App = {
             this.uploadedBylawsFiles = [];
         }
 
-        // 운영위원회 명단 불러오기 (공식 16인 체계 자동 마이그레이션 및 전화번호/이메일 공란 처리)
+        // 운영위원회 명단 불러오기 (공식 명단 자동 마이그레이션, 배수경 제외, 전화번호/이메일 공란 처리)
         try {
             const savedSteering = localStorage.getItem("dongtan_steering_members");
             if (savedSteering && typeof COUNCIL_FLOW_DATA !== "undefined") {
                 const parsed = JSON.parse(savedSteering);
-                // 이전 10인 체계이거나 윤재원 회장 기준 16인이 아닌 경우 공식 16인 명단으로 자동 마이그레이션
-                if (!Array.isArray(parsed) || parsed.length !== 16 || parsed[0].name !== "윤재원") {
+                // 이전 10인 체계이거나 윤재원 회장 기준이 아닌 경우 공식 명단으로 자동 마이그레이션
+                if (!Array.isArray(parsed) || parsed.length < 14 || parsed[0].name !== "윤재원") {
                     this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
                 } else {
                     this.steeringMembers = parsed;
@@ -105,8 +105,9 @@ const App = {
             } else if (typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
             }
-            // 사용자 요청: 전화번호와 이메일은 모두 공란으로 초기화
+            // 사용자 요청: 배수경 분과장 명단 제외 및 연락처/이메일 공란 처리
             if (this.steeringMembers && this.steeringMembers.length) {
+                this.steeringMembers = this.steeringMembers.filter(m => m.name !== "배수경" && !(m.role && m.role.includes("배수경")));
                 this.steeringMembers.forEach(m => {
                     m.phone = "";
                     m.email = "";
@@ -116,6 +117,7 @@ const App = {
         } catch {
             if (typeof COUNCIL_FLOW_DATA !== "undefined") {
                 this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
+                this.steeringMembers = this.steeringMembers.filter(m => m.name !== "배수경");
                 this.steeringMembers.forEach(m => {
                     m.phone = "";
                     m.email = "";
@@ -1330,6 +1332,7 @@ ${data.effects}
     },
 
     // 운영위원회 명단 그리드 렌더링 (16인 지원 & 실시간 인풋 동기화)
+    // 운영위원회 명단 그리드 렌더링 (수정/삭제 단추 지원 & 실시간 인풋 동기화)
     renderSteeringMembersGrid() {
         const grid = document.getElementById("steering-members-grid");
         if (!grid || !this.steeringMembers.length) return;
@@ -1350,12 +1353,33 @@ ${data.effects}
             <div class="p-3.5 bg-slate-50 hover:bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all shadow-xs flex flex-col justify-between" id="card-${escapeHtml(m.id)}">
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${districtColors[m.district] || 'bg-slate-700 text-white'}">
-                            ${escapeHtml(m.district)}
-                        </span>
-                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${m.badgeColor}">
-                            ${escapeHtml(m.role)}
-                        </span>
+                        <div class="flex items-center space-x-1.5 flex-1 min-w-0 mr-1">
+                            <span class="text-[10px] font-extrabold px-2 py-0.5 rounded shrink-0 ${districtColors[m.district] || 'bg-slate-700 text-white'}">
+                                ${escapeHtml(m.district)}
+                            </span>
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border truncate ${m.badgeColor}" title="${escapeHtml(m.role)}">
+                                ${escapeHtml(m.role)}
+                            </span>
+                        </div>
+                        <!-- 수정 및 삭제 기능 단추 -->
+                        <div class="flex items-center space-x-1 shrink-0">
+                            <button 
+                                type="button" 
+                                onclick="App.openEditSteeringModal('${escapeHtml(m.id)}')" 
+                                title="위원 정보 상세 수정"
+                                class="p-1 rounded text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                            >
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button 
+                                type="button" 
+                                onclick="App.deleteSteeringMember('${escapeHtml(m.id)}')" 
+                                title="명단에서 제외/삭제"
+                                class="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                            >
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 실명 입력 필드 -->
@@ -1385,7 +1409,7 @@ ${data.effects}
                         value="${escapeHtml(m.phone || '')}" 
                         oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'phone', this.value)"
                         class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
-                        placeholder="연락처"
+                        placeholder="연락처 (선택)"
                     >
                     <input 
                         id="sm-email-${escapeHtml(m.id)}" 
@@ -1393,12 +1417,13 @@ ${data.effects}
                         value="${escapeHtml(m.email || '')}" 
                         oninput="App.handleSteeringMemberInput('${escapeHtml(m.id)}', 'email', this.value)"
                         class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
-                        placeholder="이메일"
+                        placeholder="이메일 (선택)"
                     >
                 </div>
             </div>
         `).join("");
 
+        this.updateSteeringCounts();
         this.updateIcons();
     },
 
@@ -1412,6 +1437,176 @@ ${data.effects}
                 this.renderCouncilFlow();
             }
         }
+    },
+
+    // 운영위원 삭제 기능 단추
+    deleteSteeringMember(memberId) {
+        const member = this.steeringMembers.find(m => m.id === memberId);
+        if (!member) return;
+        if (confirm(`'${member.name}' (${member.district} · ${member.role}) 위원을 운영위원회 명단에서 삭제하시겠습니까?`)) {
+            this.steeringMembers = this.steeringMembers.filter(m => m.id !== memberId);
+            this.saveSteeringMembers();
+            this.renderSteeringMembersGrid();
+            this.renderCouncilFlow();
+            this.updateSteeringCounts();
+        }
+    },
+
+    // 운영위원 수정 모달 열기
+    openEditSteeringModal(memberId) {
+        const member = this.steeringMembers.find(m => m.id === memberId);
+        if (!member) return;
+
+        const title = document.getElementById("steering-modal-title");
+        if (title) title.textContent = "운영위원 정보 수정";
+
+        const idInput = document.getElementById("modal-sm-id");
+        const distInput = document.getElementById("modal-sm-district");
+        const roleInput = document.getElementById("modal-sm-role");
+        const nameInput = document.getElementById("modal-sm-name");
+        const dutiesInput = document.getElementById("modal-sm-duties");
+        const phoneInput = document.getElementById("modal-sm-phone");
+        const emailInput = document.getElementById("modal-sm-email");
+
+        if (idInput) idInput.value = member.id;
+        if (distInput) distInput.value = member.district || "동탄구";
+        if (roleInput) roleInput.value = member.role || "";
+        if (nameInput) nameInput.value = member.name || "";
+        if (dutiesInput) dutiesInput.value = member.duties || "";
+        if (phoneInput) phoneInput.value = member.phone || "";
+        if (emailInput) emailInput.value = member.email || "";
+
+        const modal = document.getElementById("steering-member-modal");
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        this.updateIcons();
+    },
+
+    // 신규 운영위원 추가 모달 열기
+    openAddSteeringModal() {
+        const title = document.getElementById("steering-modal-title");
+        if (title) title.textContent = "신규 운영위원 추가";
+
+        const idInput = document.getElementById("modal-sm-id");
+        const distInput = document.getElementById("modal-sm-district");
+        const roleInput = document.getElementById("modal-sm-role");
+        const nameInput = document.getElementById("modal-sm-name");
+        const dutiesInput = document.getElementById("modal-sm-duties");
+        const phoneInput = document.getElementById("modal-sm-phone");
+        const emailInput = document.getElementById("modal-sm-email");
+
+        if (idInput) idInput.value = "";
+        if (distInput) distInput.value = "동탄구";
+        if (roleInput) roleInput.value = "";
+        if (nameInput) nameInput.value = "";
+        if (dutiesInput) dutiesInput.value = "";
+        if (phoneInput) phoneInput.value = "";
+        if (emailInput) emailInput.value = "";
+
+        const modal = document.getElementById("steering-member-modal");
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        this.updateIcons();
+    },
+
+    // 모달 닫기
+    closeSteeringModal() {
+        const modal = document.getElementById("steering-member-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    // 모달 폼 저장 (신규 등록 또는 기존 수정)
+    saveSteeringMemberFromModal(e) {
+        if (e) e.preventDefault();
+
+        const id = document.getElementById("modal-sm-id").value;
+        const district = document.getElementById("modal-sm-district").value;
+        const role = document.getElementById("modal-sm-role").value.trim();
+        const name = document.getElementById("modal-sm-name").value.trim();
+        const duties = document.getElementById("modal-sm-duties").value.trim();
+        const phone = document.getElementById("modal-sm-phone").value.trim();
+        const email = document.getElementById("modal-sm-email").value.trim();
+
+        if (!name || !role) {
+            alert("성명과 직책은 필수 입력 항목입니다.");
+            return;
+        }
+
+        const badgeColorMap = {
+            "동탄구": "bg-blue-50 text-blue-700 border-blue-200",
+            "만세구": "bg-emerald-50 text-emerald-700 border-emerald-200",
+            "병점구": "bg-sky-50 text-sky-700 border-sky-200",
+            "효행구": "bg-cyan-50 text-cyan-700 border-cyan-200"
+        };
+
+        if (id) {
+            // 기존 위원 정보 수정
+            const member = this.steeringMembers.find(m => m.id === id);
+            if (member) {
+                member.district = district;
+                member.role = role;
+                member.name = name;
+                member.duties = duties;
+                member.phone = phone;
+                member.email = email;
+            }
+        } else {
+            // 신규 위원 추가
+            const newMember = {
+                id: "sm-" + Date.now(),
+                district: district,
+                name: name,
+                role: role,
+                subrole: district + " 운영위원",
+                roleKey: "member_" + Date.now(),
+                phone: phone,
+                email: email,
+                duties: duties || (district + " 청년 정책 발굴 및 운영 참여"),
+                badgeColor: badgeColorMap[district] || "bg-slate-100 text-slate-700 border-slate-200"
+            };
+            this.steeringMembers.push(newMember);
+        }
+
+        this.saveSteeringMembers();
+        this.closeSteeringModal();
+        this.renderSteeringMembersGrid();
+        this.renderCouncilFlow();
+        this.updateSteeringCounts();
+
+        alert(id ? "위원 정보가 성공적으로 수정되었습니다." : "신규 위원이 운영위원회 명단에 추가되었습니다.");
+    },
+
+    // 인원수 UI 카운트 갱신
+    updateSteeringCounts() {
+        const total = this.steeringMembers.length;
+        const dongtan = this.steeringMembers.filter(m => m.district.includes("동탄구")).length;
+        const manse = this.steeringMembers.filter(m => m.district.includes("만세구")).length;
+        const byeongjeom = this.steeringMembers.filter(m => m.district.includes("병점구")).length;
+        const hyoheng = this.steeringMembers.filter(m => m.district.includes("효행구")).length;
+
+        const totalSpan = document.getElementById("steering-total-count");
+        if (totalSpan) totalSpan.textContent = total;
+
+        const countHeader = document.getElementById("steering-header-count");
+        if (countHeader) countHeader.textContent = `(총 ${total}인)`;
+
+        const btnAll = document.getElementById("steering-chip-all");
+        if (btnAll) btnAll.textContent = `전체 (${total}명)`;
+        const btnDongtan = document.getElementById("steering-chip-dongtan");
+        if (btnDongtan) btnDongtan.textContent = `동탄구 (${dongtan}명)`;
+        const btnManse = document.getElementById("steering-chip-manse");
+        if (btnManse) btnManse.textContent = `만세구 (${manse}명)`;
+        const btnByeongjeom = document.getElementById("steering-chip-byeongjeom");
+        if (btnByeongjeom) btnByeongjeom.textContent = `병점구 (${byeongjeom}명)`;
+        const btnHyoheng = document.getElementById("steering-chip-hyoheng");
+        if (btnHyoheng) btnHyoheng.textContent = `효행구 (${hyoheng}명)`;
     },
 
     // 사용자가 수정한 운영위원 명단 일괄 저장
@@ -1430,16 +1625,17 @@ ${data.effects}
         this.renderSteeringMembersGrid();
         this.renderCouncilFlow();
 
-        alert("운영위원회 16인 위원 명단이 성공적으로 저장되었습니다!\n아래 월별 추진 플로우의 [담당 운영위원] 항목에 실시간 반영되었습니다.");
+        alert("운영위원회 위원 명단이 성공적으로 저장되었습니다!\n아래 월별 추진 플로우의 [담당 운영위원] 항목에 실시간 반영되었습니다.");
     },
 
     // 기본 운영위원 명단으로 초기화
     resetSteeringMembers() {
-        if (confirm("공식 임원 이력 기준 운영위원회 명단(16인)으로 복원하시겠습니까?")) {
+        if (confirm("공식 임원 이력 기준 운영위원회 명단으로 복원하시겠습니까?")) {
             this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
             this.saveSteeringMembers();
             this.renderSteeringMembersGrid();
             this.renderCouncilFlow();
+            this.updateSteeringCounts();
         }
     },
 
