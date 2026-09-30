@@ -1,3 +1,7 @@
-https://a0abadb4051f7945-211-114-121-187.serveousercontent.com/index.html
-상태: 상시 자동 유지 중 (24시간 Keep-Alive)
-최종 갱신: 2026-09-30 11:15:28
+# 화성시 청년정책협의체 동탄구 플랫폼 공식 웹사이트
+공식 영구 접속 주소 (GitHub Pages - 영구 고정):
+https://carlosnam6363-netizen.github.io/ideation/
+
+실시간 터널 주소 (로컬 디버깅용):
+https://57eecafabe41c22b-211-114-121-187.serveousercontent.com/index.html
+최종 갱신: 2026-09-30 11:31:00
