@@ -43,6 +43,8 @@ const App = {
 
     // 4번 탭 (협의체 전체 플로우 & 운영위원 명단) 상태
     steeringMembers: [],
+    divisionMembers: [],   // 분과 위원 명단
+    sub4Tab: "steering",   // 4번 탭의 현재 하위 탭 ("steering" | "division")
     flowYear: 2026, // "all", 2026, 2027
     flowQuarter: "all", // "all", "Q1", "Q2", "Q3", "Q4"
     flowSearch: "",
@@ -141,6 +143,26 @@ const App = {
         } catch {
             this.flowCheckedTasks = {};
         }
+
+        // 분과 위원 명단 불러오기
+        try {
+            const savedDivision = localStorage.getItem("dongtan_division_members");
+            if (savedDivision) {
+                const parsed = JSON.parse(savedDivision);
+                this.divisionMembers = Array.isArray(parsed) && parsed.length > 0 ? parsed : JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
+            } else if (typeof DIVISION_MEMBERS_INITIAL !== "undefined") {
+                this.divisionMembers = JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
+            }
+            // 항상 전화번호/이메일 공란 처리
+            if (this.divisionMembers) {
+                this.divisionMembers.forEach(m => { m.phone = ""; m.email = ""; });
+                this.saveDivisionMembers();
+            }
+        } catch {
+            if (typeof DIVISION_MEMBERS_INITIAL !== "undefined") {
+                this.divisionMembers = JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
+            }
+        }
     },
 
     savePrograms() {
@@ -164,6 +186,14 @@ const App = {
             localStorage.setItem("dongtan_steering_members", JSON.stringify(this.steeringMembers));
         } catch (e) {
             console.warn("운영위원회 명단 저장 실패:", e);
+        }
+    },
+
+    saveDivisionMembers() {
+        try {
+            localStorage.setItem("dongtan_division_members", JSON.stringify(this.divisionMembers));
+        } catch (e) {
+            console.warn("분과 위원 명단 저장 실패:", e);
         }
     },
 
@@ -1922,12 +1952,216 @@ ${data.effects}
         `;
     },
 
+    // ==========================================
+    // 4번 탭 하위 탭 전환
+    // ==========================================
+    switchSub4Tab(tab) {
+        this.sub4Tab = tab;
+
+        const steeringBtn = document.getElementById("sub4-tab-steering-btn");
+        const divisionBtn = document.getElementById("sub4-tab-division-btn");
+        const steeringPanel = document.getElementById("sub4-panel-steering");
+        const divisionPanel = document.getElementById("sub4-panel-division");
+
+        const activeTabClass = ["text-white", "bg-blue-600", "border-b-2", "border-blue-600"];
+        const inactiveTabClass = ["text-slate-500", "hover:text-slate-800", "hover:bg-slate-100", "border-b-2", "border-transparent"];
+
+        if (tab === "steering") {
+            if (steeringBtn) { steeringBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-bold text-white bg-blue-600 border-b-2 border-blue-600 flex items-center justify-center gap-2 transition"; }
+            if (divisionBtn) { divisionBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center justify-center gap-2 transition"; }
+            if (steeringPanel) steeringPanel.classList.remove("hidden");
+            if (divisionPanel) divisionPanel.classList.add("hidden");
+            this.renderSteeringMembersGrid();
+        } else {
+            if (divisionBtn) { divisionBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center justify-center gap-2 transition"; }
+            if (steeringBtn) { steeringBtn.className = "flex-1 sm:flex-none px-5 py-3 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center justify-center gap-2 transition"; }
+            if (divisionPanel) divisionPanel.classList.remove("hidden");
+            if (steeringPanel) steeringPanel.classList.add("hidden");
+            this.renderDivisionMembersGrid();
+        }
+        this.updateIcons();
+    },
+
+    // ==========================================
+    // 분과 위원 명단 그리드 렌더링
+    // ==========================================
+    renderDivisionMembersGrid() {
+        const grid = document.getElementById("division-members-grid");
+        if (!grid) return;
+
+        if (!this.divisionMembers || !this.divisionMembers.length) {
+            grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400 text-sm">등록된 분과 위원이 없습니다. [위원 추가] 버튼으로 추가하세요.</div>`;
+            return;
+        }
+
+        grid.innerHTML = this.divisionMembers.map(m => `
+            <div class="p-3.5 bg-slate-50 hover:bg-white rounded-xl border border-slate-200 hover:border-violet-400 transition-all shadow-xs flex flex-col justify-between" id="div-card-${escapeHtml(m.id)}">
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-[10px] font-extrabold px-2 py-0.5 rounded ${m.role === '분과장' ? 'bg-violet-600 text-white' : 'bg-violet-50 text-violet-700 border border-violet-200'}">
+                            ${escapeHtml(m.role)}
+                        </span>
+                        <!-- 수정 및 삭제 기능 단추 -->
+                        <div class="flex items-center space-x-1 shrink-0">
+                            <button
+                                type="button"
+                                onclick="App.openEditDivisionModal('${escapeHtml(m.id)}')"
+                                title="위원 정보 수정"
+                                class="p-1 rounded text-slate-400 hover:text-violet-600 hover:bg-violet-50 transition"
+                            >
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                            <button
+                                type="button"
+                                onclick="App.deleteDivisionMember('${escapeHtml(m.id)}')"
+                                title="명단에서 제외/삭제"
+                                class="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
+                            >
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 성명 -->
+                    <div class="mt-1 mb-2">
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">성명</label>
+                        <p class="text-sm font-black text-slate-900 px-2 py-1 bg-white border border-slate-200 rounded">${escapeHtml(m.name)}</p>
+                    </div>
+                </div>
+            </div>
+        `).join("");
+
+        this.updateDivisionCounts();
+        this.updateIcons();
+    },
+
+    // 분과 위원 인원수 갱신
+    updateDivisionCounts() {
+        const total = this.divisionMembers ? this.divisionMembers.length : 0;
+        const el = document.getElementById("division-header-count");
+        if (el) el.textContent = `(총 ${total}인)`;
+    },
+
+    // 분과 위원 삭제
+    deleteDivisionMember(memberId) {
+        const member = this.divisionMembers.find(m => m.id === memberId);
+        if (!member) return;
+        if (confirm(`'${member.name}' (${member.role}) 위원을 분과 위원 명단에서 삭제하시겠습니까?`)) {
+            this.divisionMembers = this.divisionMembers.filter(m => m.id !== memberId);
+            this.saveDivisionMembers();
+            this.renderDivisionMembersGrid();
+        }
+    },
+
+    // 분과 위원 수정 모달 열기
+    openEditDivisionModal(memberId) {
+        const member = this.divisionMembers.find(m => m.id === memberId);
+        if (!member) return;
+
+        const title = document.getElementById("division-modal-title");
+        if (title) title.textContent = "분과 위원 정보 수정";
+
+        const idInput = document.getElementById("modal-dm-id");
+        const nameInput = document.getElementById("modal-dm-name");
+        const roleInput = document.getElementById("modal-dm-role");
+        const phoneInput = document.getElementById("modal-dm-phone");
+        const emailInput = document.getElementById("modal-dm-email");
+
+        if (idInput) idInput.value = member.id;
+        if (nameInput) nameInput.value = member.name || "";
+        if (roleInput) roleInput.value = member.role || "";
+        if (phoneInput) phoneInput.value = member.phone || "";
+        if (emailInput) emailInput.value = member.email || "";
+
+        const modal = document.getElementById("division-member-modal");
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        this.updateIcons();
+    },
+
+    // 신규 분과 위원 추가 모달 열기
+    openAddDivisionModal() {
+        const title = document.getElementById("division-modal-title");
+        if (title) title.textContent = "신규 분과 위원 추가";
+
+        const idInput = document.getElementById("modal-dm-id");
+        const nameInput = document.getElementById("modal-dm-name");
+        const roleInput = document.getElementById("modal-dm-role");
+        const phoneInput = document.getElementById("modal-dm-phone");
+        const emailInput = document.getElementById("modal-dm-email");
+
+        if (idInput) idInput.value = "";
+        if (nameInput) nameInput.value = "";
+        if (roleInput) roleInput.value = "위원";
+        if (phoneInput) phoneInput.value = "";
+        if (emailInput) emailInput.value = "";
+
+        const modal = document.getElementById("division-member-modal");
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        this.updateIcons();
+    },
+
+    // 분과 위원 모달 닫기
+    closeDivisionModal() {
+        const modal = document.getElementById("division-member-modal");
+        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+    },
+
+    // 분과 위원 모달 저장 (신규/수정)
+    saveDivisionMemberFromModal(e) {
+        if (e) e.preventDefault();
+
+        const id = document.getElementById("modal-dm-id").value;
+        const name = document.getElementById("modal-dm-name").value.trim();
+        const role = document.getElementById("modal-dm-role").value.trim();
+        const phone = ""; // 항상 공란
+        const email = ""; // 항상 공란
+
+        if (!name || !role) {
+            alert("성명과 직책은 필수 입력 항목입니다.");
+            return;
+        }
+
+        if (id) {
+            const member = this.divisionMembers.find(m => m.id === id);
+            if (member) {
+                member.name = name;
+                member.role = role;
+                member.phone = phone;
+                member.email = email;
+            }
+        } else {
+            this.divisionMembers.push({
+                id: "dm-" + Date.now(),
+                name,
+                role,
+                phone,
+                email
+            });
+        }
+
+        this.saveDivisionMembers();
+        this.closeDivisionModal();
+        this.renderDivisionMembersGrid();
+
+        alert(id ? "분과 위원 정보가 수정되었습니다." : "신규 분과 위원이 추가되었습니다.");
+    },
+
+    // 분과 위원 명단 기본값 복원
+    resetDivisionMembers() {
+        if (confirm("분과 위원 명단을 초기값(엑셀 원본)으로 복원하시겠습니까?")) {
+            this.divisionMembers = JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
+            this.saveDivisionMembers();
+            this.renderDivisionMembersGrid();
+        }
+    },
+
     renderAll() {
         this.renderPadletBoard();
         this.renderMcpPolicyList();
         this.renderProposalSelector();
         this.renderUploadedFilesList();
         this.renderSteeringMembersGrid();
+        this.renderDivisionMembersGrid();
         this.renderCouncilFlow();
     }
 };

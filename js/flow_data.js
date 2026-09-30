@@ -654,3 +654,95 @@ const COUNCIL_FLOW_DATA = {
         }
     ]
 };
+
+/**
+ * 동탄구 교육·참여·권리 분과 위원 초기 명단 (엑셀 원본 기준)
+ * 전화번호 및 이메일은 공란으로 관리 (사용자 요청)
+ */
+const DIVISION_MEMBERS_INITIAL = [
+    {
+        id: "dm-1",
+        name: "김남현",
+        role: "분과장",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-2",
+        name: "박고은",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-3",
+        name: "채윤규",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-4",
+        name: "음시연",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-5",
+        name: "유소연",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-6",
+        name: "조찬우",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-7",
+        name: "정선화",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-8",
+        name: "김주연",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-9",
+        name: "정용준",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-10",
+        name: "곽보배",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-11",
+        name: "윤솔아",
+        role: "위원",
+        phone: "",
+        email: ""
+    },
+    {
+        id: "dm-12",
+        name: "박대호",
+        role: "위원",
+        phone: "",
+        email: ""
+    }
+];
+
