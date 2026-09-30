@@ -1,6 +1,6 @@
 /**
  * 화성시 청년정책협의체 동탄구 교육, 참여, 권리 분과 메인 애플리케이션 로직
- * (성능 최적화, 디바운스 검색, XSS 방지, 메모리 누수 방지 적용)
+ * (성능 최적화, 디바운스 검색, XSS 방지, 협의체 전체 플로우 및 운영위원 관리 탑재)
  */
 
 // 유틸리티 함수: HTML 이스케이프 (XSS 방지)
@@ -41,12 +41,20 @@ const App = {
     chartInstance: null,
     iconDebounceTimer: null,
 
+    // 4번 탭 (협의체 전체 플로우 & 운영위원 명단) 상태
+    steeringMembers: [],
+    flowYear: 2026, // "all", 2026, 2027
+    flowQuarter: "all", // "all", "Q1", "Q2", "Q3", "Q4"
+    flowSearch: "",
+    flowCheckedTasks: {},
+
     init() {
         this.loadStorage();
         this.setupNavigation();
         this.setupPadlet();
         this.setupIdeation();
         this.setupBylaws();
+        this.setupCouncilFlow();
         this.renderAll();
         this.updateIcons();
     },
@@ -76,6 +84,28 @@ const App = {
         } catch {
             this.uploadedBylawsFiles = [];
         }
+
+        // 운영위원회 명단 불러오기
+        try {
+            const savedSteering = localStorage.getItem("dongtan_steering_members");
+            if (savedSteering && typeof COUNCIL_FLOW_DATA !== "undefined") {
+                this.steeringMembers = JSON.parse(savedSteering);
+            } else if (typeof COUNCIL_FLOW_DATA !== "undefined") {
+                this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
+            }
+        } catch {
+            if (typeof COUNCIL_FLOW_DATA !== "undefined") {
+                this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
+            }
+        }
+
+        // 월별 체크리스트 완료 상태 불러오기
+        try {
+            const savedChecks = localStorage.getItem("dongtan_flow_checked_tasks");
+            this.flowCheckedTasks = savedChecks ? JSON.parse(savedChecks) : {};
+        } catch {
+            this.flowCheckedTasks = {};
+        }
     },
 
     savePrograms() {
@@ -91,6 +121,22 @@ const App = {
             localStorage.setItem("dongtan_bylaws_files", JSON.stringify(this.uploadedBylawsFiles));
         } catch (e) {
             console.warn("로컬스토리지 파일 목록 저장 실패:", e);
+        }
+    },
+
+    saveSteeringMembers() {
+        try {
+            localStorage.setItem("dongtan_steering_members", JSON.stringify(this.steeringMembers));
+        } catch (e) {
+            console.warn("운영위원회 명단 저장 실패:", e);
+        }
+    },
+
+    saveFlowCheckedTasks() {
+        try {
+            localStorage.setItem("dongtan_flow_checked_tasks", JSON.stringify(this.flowCheckedTasks));
+        } catch (e) {
+            console.warn("체크리스트 상태 저장 실패:", e);
         }
     },
 
@@ -127,6 +173,9 @@ const App = {
             this.renderSurveyChart();
         } else if (tabId === "tab-3") {
             this.renderBylawsDiff();
+        } else if (tabId === "tab-4") {
+            this.renderSteeringMembersGrid();
+            this.renderCouncilFlow();
         }
         this.updateIcons();
     },
@@ -160,7 +209,6 @@ const App = {
             });
         }
 
-        // 카테고리 필터
         const filterBtns = document.querySelectorAll(".padlet-cat-filter");
         filterBtns.forEach(btn => {
             btn.addEventListener("click", () => {
@@ -175,7 +223,6 @@ const App = {
             });
         });
 
-        // 검색어 입력 (디바운스 적용)
         const searchInput = document.getElementById("padlet-search-input");
         if (searchInput) {
             searchInput.addEventListener("input", debounce((e) => {
@@ -184,7 +231,6 @@ const App = {
             }, 120));
         }
 
-        // 프로그램 신규 등록 모달
         const openModalBtn = document.getElementById("open-program-modal-btn");
         const closeModalBtn = document.getElementById("close-program-modal-btn");
         const modal = document.getElementById("program-modal");
@@ -212,7 +258,6 @@ const App = {
             });
         }
 
-        // 엑셀(CSV) 내보내기 버튼
         const exportBtn = document.getElementById("export-programs-csv-btn");
         if (exportBtn) {
             exportBtn.addEventListener("click", () => this.exportProgramsToCSV());
@@ -295,7 +340,6 @@ const App = {
             );
         });
 
-        // 1. 컬럼별 뷰
         if (this.padletViewMode === "columns") {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-6 overflow-x-auto";
             
@@ -335,9 +379,7 @@ const App = {
                     </div>
                 `;
             }).join("");
-        } 
-        // 2. 통합 그리드 뷰
-        else {
+        } else {
             container.className = "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-6";
             if (filtered.length === 0) {
                 container.innerHTML = `
@@ -496,7 +538,6 @@ const App = {
     // 3. 탭 2: 아이디에이션 5단계 워크플로우
     // ==========================================
     setupIdeation() {
-        // 스텝 2 트랙 선택 이벤트
         const trackCards = document.querySelectorAll(".specialty-track-card");
         trackCards.forEach(card => {
             card.addEventListener("click", () => {
@@ -512,7 +553,6 @@ const App = {
             });
         });
 
-        // 온통청년 MCP 정책 검색 & 필터 (디바운스 적용)
         const mcpSearch = document.getElementById("mcp-search-input");
         if (mcpSearch) {
             mcpSearch.addEventListener("input", debounce((e) => {
@@ -541,7 +581,6 @@ const App = {
         const prevStep = this.currentStep;
         this.currentStep = stepNumber;
 
-        // 인디케이터 업데이트
         for (let i = 1; i <= 5; i++) {
             const stepBtn = document.getElementById(`step-indicator-${i}`);
             const line = document.getElementById(`step-line-${i}`);
@@ -559,7 +598,6 @@ const App = {
             }
         }
 
-        // 스텝 패널 전환
         const animClass = stepNumber > prevStep ? "step-anim-next" : "step-anim-prev";
         for (let i = 1; i <= 5; i++) {
             const panel = document.getElementById(`ideation-step-${i}`);
@@ -567,7 +605,7 @@ const App = {
                 if (i === stepNumber) {
                     panel.classList.remove("hidden");
                     panel.classList.remove("step-anim-next", "step-anim-prev");
-                    void panel.offsetWidth; // trigger reflow
+                    void panel.offsetWidth;
                     panel.classList.add(animClass);
                 } else {
                     panel.classList.add("hidden");
@@ -575,7 +613,6 @@ const App = {
             }
         }
 
-        // 스텝별 특정 로직
         if (stepNumber === 1) {
             this.renderSurveyChart();
         } else if (stepNumber === 3) {
@@ -589,7 +626,6 @@ const App = {
         this.updateIcons();
     },
 
-    // Step 1: 설문조사 차트 렌더링 (메모리 누수 방지 및 파괴 후 재생성)
     renderSurveyChart() {
         const canvas = document.getElementById("surveyChart");
         if (!canvas) return;
@@ -647,7 +683,6 @@ const App = {
         });
     },
 
-    // Step 3: 온통청년 MCP 정책 목록 렌더링
     renderMcpPolicyList() {
         const container = document.getElementById("mcp-policy-list");
         if (!container) return;
@@ -814,7 +849,6 @@ const App = {
         };
     },
 
-    // 한글(HWP) 및 워드(DOCX) 파일 생성 공통 테이블 빌더
     generateDocumentHTML(data, isWord = false) {
         const safeTitle = escapeHtml(data.title);
         const fontStack = isWord ? `'Malgun Gothic', '맑은 고딕', Arial, sans-serif` : `'맑은 고딕', 'Malgun Gothic', '한컴바탕', Batang, sans-serif`;
@@ -1215,11 +1249,363 @@ ${data.effects}
         }
     },
 
+    // ==========================================
+    // 5. 탭 4: 협의체 전체 플로우 & 운영위원 명단 관리
+    // ==========================================
+    setupCouncilFlow() {
+        const searchInput = document.getElementById("flow-search-input");
+        if (searchInput) {
+            searchInput.addEventListener("input", debounce((e) => {
+                this.flowSearch = e.target.value.trim().toLowerCase();
+                this.renderCouncilFlow();
+            }, 120));
+        }
+    },
+
+    // 운영위원회 명단 그리드 렌더링 (이름 실시간 수정 가능)
+    renderSteeringMembersGrid() {
+        const grid = document.getElementById("steering-members-grid");
+        if (!grid || !this.steeringMembers.length) return;
+
+        grid.innerHTML = this.steeringMembers.map(m => `
+            <div class="p-3.5 bg-slate-50 hover:bg-white rounded-xl border border-slate-200 hover:border-blue-400 transition-all shadow-xs flex flex-col justify-between" id="card-${escapeHtml(m.id)}">
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full border ${m.badgeColor}">
+                            ${escapeHtml(m.role)}
+                        </span>
+                        <span class="text-[10px] text-slate-400 truncate max-w-[70px]">${escapeHtml(m.district)}</span>
+                    </div>
+
+                    <!-- 실명 입력 필드 -->
+                    <div class="mt-1 mb-2">
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">위원 성명</label>
+                        <div class="relative">
+                            <input 
+                                id="sm-name-${escapeHtml(m.id)}" 
+                                type="text" 
+                                value="${escapeHtml(m.name)}" 
+                                class="w-full text-xs font-black text-slate-900 bg-white border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded px-2 py-1 transition"
+                                placeholder="이름 입력"
+                            >
+                        </div>
+                    </div>
+
+                    <p class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed mb-2" title="${escapeHtml(m.duties)}">
+                        ${escapeHtml(m.duties)}
+                    </p>
+                </div>
+
+                <div class="pt-2 border-t border-slate-200/80 space-y-1">
+                    <input 
+                        id="sm-phone-${escapeHtml(m.id)}" 
+                        type="text" 
+                        value="${escapeHtml(m.phone || '')}" 
+                        class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
+                        placeholder="연락처"
+                    >
+                    <input 
+                        id="sm-email-${escapeHtml(m.id)}" 
+                        type="text" 
+                        value="${escapeHtml(m.email || '')}" 
+                        class="w-full text-[10px] text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5"
+                        placeholder="이메일"
+                    >
+                </div>
+            </div>
+        `).join("");
+
+        this.updateIcons();
+    },
+
+    // 사용자가 수정한 운영위원 명단 저장
+    saveSteeringMembersFromUI() {
+        this.steeringMembers.forEach(m => {
+            const nameInput = document.getElementById(`sm-name-${m.id}`);
+            const phoneInput = document.getElementById(`sm-phone-${m.id}`);
+            const emailInput = document.getElementById(`sm-email-${m.id}`);
+
+            if (nameInput) m.name = nameInput.value.trim() || m.name;
+            if (phoneInput) m.phone = phoneInput.value.trim();
+            if (emailInput) m.email = emailInput.value.trim();
+        });
+
+        this.saveSteeringMembers();
+        this.renderSteeringMembersGrid();
+        this.renderCouncilFlow();
+
+        alert("운영위원회 위원 명단이 성공적으로 저장되었습니다!\n아래 월별 추진 플로우의 [담당 운영위원] 항목에 실시간 반영되었습니다.");
+    },
+
+    // 기본 운영위원 명단으로 초기화
+    resetSteeringMembers() {
+        if (confirm("회칙 기준 기본 운영위원회 명단으로 복원하시겠습니까?")) {
+            this.steeringMembers = JSON.parse(JSON.stringify(COUNCIL_FLOW_DATA.initialSteeringMembers));
+            this.saveSteeringMembers();
+            this.renderSteeringMembersGrid();
+            this.renderCouncilFlow();
+        }
+    },
+
+    // 특정 직책 key에 매핑된 운영위원 실명 찾기
+    getSteeringMember(roleKey) {
+        return this.steeringMembers.find(m => m.roleKey === roleKey) || null;
+    },
+
+    // 연도 선택 전환 (all, 2026, 2027)
+    setFlowYear(year) {
+        this.flowYear = year;
+
+        const allBtn = document.getElementById("flow-year-all-btn");
+        const btn2026 = document.getElementById("flow-year-2026-btn");
+        const btn2027 = document.getElementById("flow-year-2027-btn");
+
+        const defaultClass = "px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5";
+        const activeClass = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-teal-600 text-white transition flex items-center space-x-1.5 shadow-sm";
+
+        if (allBtn) allBtn.className = year === "all" ? activeClass : defaultClass;
+        if (btn2026) btn2026.className = year === 2026 ? activeClass : defaultClass;
+        if (btn2027) btn2027.className = year === 2027 ? activeClass : defaultClass;
+
+        this.renderCouncilFlow();
+    },
+
+    // 분기 필터링 (all, Q1, Q2, Q3, Q4)
+    filterFlowQuarter(quarter, element) {
+        this.flowQuarter = quarter;
+        const chips = document.querySelectorAll(".flow-quarter-chip");
+        chips.forEach(chip => {
+            chip.classList.remove("bg-slate-900", "text-white");
+            chip.classList.add("bg-white", "text-slate-600");
+        });
+
+        if (element) {
+            element.classList.add("bg-slate-900", "text-white");
+            element.classList.remove("bg-white", "text-slate-600");
+        }
+
+        this.renderCouncilFlow();
+    },
+
+    // 월별 할 일 체크박스 토글
+    toggleFlowTask(taskId) {
+        this.flowCheckedTasks[taskId] = !this.flowCheckedTasks[taskId];
+        this.saveFlowCheckedTasks();
+        this.renderCouncilFlow();
+    },
+
+    // 전체 협의체 2개년 월별 플로우 렌더링
+    renderCouncilFlow() {
+        const container = document.getElementById("flow-timeline-container");
+        if (!container || typeof COUNCIL_FLOW_DATA === "undefined") return;
+
+        const show2026 = this.flowYear === "all" || this.flowYear === 2026;
+        const show2027 = this.flowYear === "all" || this.flowYear === 2027;
+        const quarter = this.flowQuarter;
+        const search = this.flowSearch;
+
+        const filterMonths = (list) => {
+            return list.filter(item => {
+                const matchesQuarter = quarter === "all" || item.quarter === quarter;
+                if (!matchesQuarter) return false;
+                if (!search) return true;
+                const assignedMember = this.getSteeringMember(item.inChargeKey);
+                const assignedName = assignedMember ? assignedMember.name.toLowerCase() : "";
+                return (
+                    item.title.toLowerCase().includes(search) ||
+                    item.summary.toLowerCase().includes(search) ||
+                    item.category.toLowerCase().includes(search) ||
+                    item.bylawsRef.toLowerCase().includes(search) ||
+                    assignedName.includes(search) ||
+                    item.tasks.some(t => t.toLowerCase().includes(search))
+                );
+            });
+        };
+
+        const months2026 = show2026 ? filterMonths(COUNCIL_FLOW_DATA.flow2026) : [];
+        const months2027 = show2027 ? filterMonths(COUNCIL_FLOW_DATA.flow2027) : [];
+
+        if (months2026.length === 0 && months2027.length === 0) {
+            container.innerHTML = `
+                <div class="p-12 text-center text-slate-400 bg-white rounded-2xl border border-slate-200">
+                    <i data-lucide="calendar-x" class="w-10 h-10 mx-auto mb-2 text-slate-300"></i>
+                    <p class="text-sm font-semibold">선택하신 조건에 일치하는 월별 추진 과업이 없습니다.</p>
+                </div>
+            `;
+            this.updateIcons();
+            return;
+        }
+
+        let html = "";
+
+        // 1차년도 (2026년) 렌더링
+        if (show2026 && months2026.length > 0) {
+            html += `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-blue-700 to-indigo-700 text-white rounded-2xl shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-black text-sm">
+                                1차
+                            </span>
+                            <div>
+                                <h3 class="font-black text-base sm:text-lg">
+                                    1차년도 : 2026년 추진 로드맵 (조직구성 · 정책발굴 · 예산의견)
+                                </h3>
+                                <p class="text-xs text-blue-100">회칙 제27조제2항: 조직구성, 기존 정책 검토, 청년의견 수렴, 차년도(2027) 예산수요 제출 중심</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 bg-white/10 rounded-lg">
+                            ${months2026.length}개 월 계획
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${months2026.map(m => this.renderMonthCardHTML(m, 2026)).join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        // 2차년도 (2027년) 렌더링
+        if (show2027 && months2027.length > 0) {
+            html += `
+                <div class="space-y-4 pt-6">
+                    <div class="flex items-center justify-between p-4 bg-gradient-to-r from-teal-700 to-slate-800 text-white rounded-2xl shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center font-black text-sm">
+                                2차
+                            </span>
+                            <div>
+                                <h3 class="font-black text-base sm:text-lg">
+                                    2차년도 : 2027년 추진 로드맵 (정책제안 심화 · 모니터링 · 본예산반영)
+                                </h3>
+                                <p class="text-xs text-teal-100">회칙 제27조제3항: 정책제안 완성(6월), 청년정책 모니터링 보고서(7월) 및 시 본예산 정책반영</p>
+                            </div>
+                        </div>
+                        <span class="text-xs font-bold px-3 py-1 bg-white/10 rounded-lg">
+                            ${months2027.length}개 월 계획
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        ${months2027.map(m => this.renderMonthCardHTML(m, 2027)).join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        container.innerHTML = html;
+        this.updateIcons();
+    },
+
+    // 월별 카드 HTML 빌더
+    renderMonthCardHTML(item, year) {
+        const assignedMember = this.getSteeringMember(item.inChargeKey);
+        const assignedName = assignedMember ? assignedMember.name : "운영위원회";
+        const assignedRole = assignedMember ? assignedMember.role : item.inChargeRole;
+
+        const categoryBadges = {
+            "조직구성": "bg-slate-100 text-slate-700 border-slate-200",
+            "임원선출": "bg-blue-100 text-blue-800 border-blue-200",
+            "총회·운영위": "bg-indigo-100 text-indigo-800 border-indigo-200",
+            "정책스터디": "bg-teal-100 text-teal-800 border-teal-200",
+            "의견수렴": "bg-emerald-100 text-emerald-800 border-emerald-200",
+            "예산수요": "bg-amber-100 text-amber-800 border-amber-300 font-extrabold",
+            "시정제출": "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+            "아이디에이션": "bg-purple-100 text-purple-800 border-purple-200",
+            "행사·축제": "bg-pink-100 text-pink-800 border-pink-200",
+            "정책발굴": "bg-cyan-100 text-cyan-800 border-cyan-200",
+            "제안서보고": "bg-blue-100 text-blue-900 border-blue-300 font-extrabold",
+            "성과결산": "bg-slate-100 text-slate-800 border-slate-300",
+            "피드백분석": "bg-amber-100 text-amber-800 border-amber-200",
+            "제안서보완": "bg-teal-100 text-teal-800 border-teal-200",
+            "정기총회": "bg-indigo-100 text-indigo-800 border-indigo-200",
+            "현장모니터링": "bg-emerald-100 text-emerald-800 border-emerald-200",
+            "제안서완성": "bg-blue-100 text-blue-800 border-blue-200",
+            "최종보고": "bg-rose-100 text-rose-800 border-rose-300 font-extrabold",
+            "최종심의": "bg-purple-100 text-purple-800 border-purple-300 font-extrabold",
+            "예산반영": "bg-teal-100 text-teal-800 border-teal-200",
+            "성과발표": "bg-pink-100 text-pink-800 border-pink-200",
+            "사후점검": "bg-slate-100 text-slate-700 border-slate-200",
+            "백서제작": "bg-cyan-100 text-cyan-800 border-cyan-200",
+            "임기만료": "bg-slate-200 text-slate-800 border-slate-300"
+        };
+
+        const isDeadlineSpecial = item.deadline.includes("마감") || item.deadline.includes("법정");
+
+        return `
+            <div class="diff-card bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-teal-400 transition flex flex-col justify-between">
+                <div>
+                    <!-- 카드 헤더 (월, 분기, 카테고리) -->
+                    <div class="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-100">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-8 h-8 rounded-lg bg-teal-600 text-white flex items-center justify-center font-black text-xs shadow-xs">
+                                ${escapeHtml(item.monthName)}
+                            </span>
+                            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full border ${categoryBadges[item.category] || 'bg-slate-100 text-slate-700'}">
+                                ${escapeHtml(item.category)}
+                            </span>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">
+                            ${year}년 ${escapeHtml(item.quarter)}
+                        </span>
+                    </div>
+
+                    <!-- 제목 및 요약 -->
+                    <h4 class="font-extrabold text-slate-900 text-sm leading-snug mb-1.5 hover:text-teal-600">
+                        ${escapeHtml(item.title)}
+                    </h4>
+                    <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100 mb-3">
+                        ${escapeHtml(item.summary)}
+                    </p>
+
+                    <!-- 월별 할 일 체크리스트 -->
+                    <div class="space-y-1.5 mb-3">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">월간 필수 과업 (Checklist):</span>
+                        ${item.tasks.map((task, idx) => {
+                            const taskId = `task-${year}-${item.month}-${idx}`;
+                            const isChecked = !!this.flowCheckedTasks[taskId];
+                            return `
+                                <div onclick="App.toggleFlowTask('${taskId}')" class="flex items-start space-x-2 p-1.5 rounded-lg hover:bg-slate-100/70 cursor-pointer transition text-xs">
+                                    <input type="checkbox" ${isChecked ? "checked" : ""} class="mt-0.5 rounded text-teal-600 focus:ring-teal-500 cursor-pointer" onclick="event.stopPropagation(); App.toggleFlowTask('${taskId}')">
+                                    <span class="leading-tight ${isChecked ? 'line-through text-slate-400' : 'text-slate-700'}">${escapeHtml(task)}</span>
+                                </div>
+                            `;
+                        }).join("")}
+                    </div>
+
+                    <!-- 회칙 근거 및 마감일 배지 -->
+                    <div class="flex flex-wrap items-center gap-1.5 mb-3 text-[11px]">
+                        <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-semibold border border-blue-100" title="근거 조항">
+                            ⚖️ ${escapeHtml(item.bylawsRef)}
+                        </span>
+                        <span class="px-2 py-0.5 rounded ${isDeadlineSpecial ? 'bg-rose-50 text-rose-700 border border-rose-200 font-bold' : 'bg-slate-100 text-slate-600'}">
+                            ⏰ 기한: ${escapeHtml(item.deadline)}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 담당 운영위원 실명 연동 배지 -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+                    <div class="flex items-center space-x-1.5 min-w-0">
+                        <span class="text-[10px] font-bold text-slate-400 uppercase">담당:</span>
+                        <div class="px-2 py-1 rounded-lg bg-teal-50 border border-teal-200 text-teal-900 font-bold flex items-center space-x-1 truncate">
+                            <i data-lucide="user-check" class="w-3.5 h-3.5 text-teal-600 shrink-0"></i>
+                            <span class="truncate">${escapeHtml(assignedName)} <span class="font-normal text-[11px] text-teal-700">(${escapeHtml(assignedRole)})</span></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
     renderAll() {
         this.renderPadletBoard();
         this.renderMcpPolicyList();
         this.renderProposalSelector();
         this.renderUploadedFilesList();
+        this.renderSteeringMembersGrid();
+        this.renderCouncilFlow();
     }
 };
 
