@@ -244,7 +244,9 @@ const App = {
             "tab-1": "1. 2027년 교육 프로그램 취합 (패들렛 보드)",
             "tab-2": "2. 2027년 정책제안서 작성 아이디에이션 (5단계 워크플로우)",
             "tab-3": "3. 회칙 정리 (신·구 조문 대비표 & 파일 보관함)",
-            "tab-4": "4. 협의체 전체 플로우 (2026~2027 연간 로드맵 & 운영위원회)"
+            "tab-4": "4. 협의체 전체 플로우 (2026~2027 연간 로드맵)",
+            "tab-4-steering": "4. 협의체 공식 운영위원회 명단 관리 (총 15인)",
+            "tab-4-division": "4. 동탄구 교육·참여·권리 분과 위원 명단 관리 (총 12인)"
         };
         const titleEl = document.getElementById("header-active-tab-title");
         if (titleEl && tabTitles[tabId]) {
@@ -266,8 +268,11 @@ const App = {
         } else if (tabId === "tab-3") {
             this.renderBylawsDiff();
         } else if (tabId === "tab-4") {
-            this.renderSteeringMembersGrid();
             this.renderCouncilFlow();
+        } else if (tabId === "tab-4-steering") {
+            this.renderSteeringMembersGrid();
+        } else if (tabId === "tab-4-division") {
+            this.renderDivisionMembersGrid();
         }
         this.updateIcons();
     },
@@ -1658,6 +1663,9 @@ ${data.effects}
         if (btnByeongjeom) btnByeongjeom.textContent = `병점구 (${byeongjeom}명)`;
         const btnHyoheng = document.getElementById("steering-chip-hyoheng");
         if (btnHyoheng) btnHyoheng.textContent = `효행구 (${hyoheng}명)`;
+
+        const navSteeringBadge = document.getElementById("nav-steering-count-badge");
+        if (navSteeringBadge) navSteeringBadge.textContent = total;
     },
 
     // 사용자가 수정한 운영위원 명단 일괄 저장
@@ -2040,6 +2048,9 @@ ${data.effects}
         const total = this.divisionMembers ? this.divisionMembers.length : 0;
         const el = document.getElementById("division-header-count");
         if (el) el.textContent = `(총 ${total}인)`;
+
+        const navDivBadge = document.getElementById("nav-division-count-badge");
+        if (navDivBadge) navDivBadge.textContent = total;
     },
 
     // 분과 위원 삭제

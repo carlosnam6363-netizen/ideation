@@ -163,6 +163,38 @@ body {
     border-radius: 0 4px 4px 0;
 }
 
+/* 사이드바 하위 탭 전용 스타일 */
+.nav-sub-tab-btn {
+    padding: 0.5rem 0.65rem;
+    font-size: 0.75rem;
+    border-radius: 0.65rem;
+    color: #64748B;
+    background: transparent;
+    border: 1px solid transparent;
+}
+
+.nav-sub-tab-btn:hover {
+    background-color: #F8FAFC;
+    color: #0F172A;
+    border-color: #E2E8F0;
+}
+
+.nav-sub-tab-btn.active {
+    background: #EFF6FF;
+    color: #1D4ED8;
+    font-weight: 700;
+    border-color: #BFDBFE;
+    box-shadow: 0 1px 2px rgba(37, 99, 235, 0.06);
+}
+
+.nav-sub-tab-btn.active::after {
+    left: 1px;
+    top: 20%;
+    bottom: 20%;
+    width: 3px;
+    background: #2563EB;
+}
+
 /* 신구조문대비표 전용 스타일 */
 .diff-card {
     transition: all 0.2s ease;
