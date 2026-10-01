@@ -1860,22 +1860,134 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
         const prog = this.programs.find(p => p.id === progId);
         if (!prog) return;
 
-        const subTitleText = prog.subtitle ? ` (${prog.subtitle})` : "";
-        const commentsSummary = (prog.comments || []).map(c => `• ${c.user}: ${c.text}`).join("\n") || "등록된 의견 없음";
-        const newComment = prompt(`[${prog.title}${subTitleText}]\n\n현재 등록된 의견:\n${commentsSummary}\n\n새로운 의견이나 보완점을 작성해주세요:\n(예: 이름: 의견내용)`);
-        
-        if (newComment && newComment.trim()) {
-            const parts = newComment.split(":");
-            let author = "익명 위원";
-            let text = newComment.trim();
-            if (parts.length > 1) {
-                author = parts[0].trim();
-                text = parts.slice(1).join(":").trim();
+        const modal = document.getElementById("comment-modal");
+        const listEl = document.getElementById("comment-modal-list");
+        const progIdInput = document.getElementById("comment-modal-prog-id");
+        const subtitleEl = document.getElementById("comment-modal-subtitle");
+        const authorSelect = document.getElementById("comment-modal-author-select");
+        const textInput = document.getElementById("comment-modal-text-input");
+        const customAuthorInput = document.getElementById("comment-modal-author-custom");
+
+        if (progIdInput) progIdInput.value = prog.id;
+        if (subtitleEl) subtitleEl.textContent = `[${prog.code || '1-1'}] ${prog.title}`;
+        if (textInput) textInput.value = "";
+        if (customAuthorInput) customAuthorInput.value = "";
+
+        // 작성자 셀렉트 채우기 (12명 분과위원)
+        this.populateCommentAuthorSelect();
+
+        // 등록된 댓글 렌더링
+        if (listEl) {
+            const comments = Array.isArray(prog.comments) ? prog.comments : [];
+            if (comments.length === 0) {
+                listEl.innerHTML = `
+                    <div class="h-28 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center text-slate-400 p-4 text-center">
+                        <i data-lucide="message-circle" class="w-6 h-6 mb-1 text-slate-300"></i>
+                        <p class="text-xs">아직 등록된 의견이 없습니다.</p>
+                        <p class="text-[11px] text-slate-400 mt-0.5">아래 입력창을 통해 첫 보완 의견을 남겨보세요.</p>
+                    </div>
+                `;
+            } else {
+                listEl.innerHTML = comments.map((c, cIdx) => `
+                    <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-1 text-xs">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-slate-800 flex items-center gap-1.5">
+                                <span class="w-5 h-5 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-[10px]">
+                                    ${escapeHtml((c.user || '위원').slice(0, 1))}
+                                </span>
+                                <span>${escapeHtml(c.user || '동탄 위원')}</span>
+                            </span>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[10px] text-slate-400 font-mono">${escapeHtml(c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '')}</span>
+                                <button type="button" onclick="App.deleteComment('${escapeHtml(prog.id)}', ${cIdx})" class="text-slate-300 hover:text-rose-600 transition cursor-pointer" title="의견 삭제">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <p class="text-slate-700 text-xs leading-relaxed whitespace-pre-wrap pl-6.5">
+                            ${escapeHtml(c.text || '')}
+                        </p>
+                    </div>
+                `).join("");
             }
-            if (!prog.comments) prog.comments = [];
-            prog.comments.push({ user: author, text: text });
+        }
+
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        this.updateIcons();
+        if (textInput) setTimeout(() => textInput.focus(), 100);
+    },
+
+    closeCommentModal() {
+        const modal = document.getElementById("comment-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    populateCommentAuthorSelect() {
+        const authorSelect = document.getElementById("comment-modal-author-select");
+        if (!authorSelect) return;
+        authorSelect.innerHTML = '<option value="">-- 작성자 위원 선택 --</option>';
+        const members = (this.divisionMembers && this.divisionMembers.length)
+            ? this.divisionMembers
+            : (typeof DONGTAN_DATA !== "undefined" ? DONGTAN_DATA.members : []);
+        members.forEach(m => {
+            const opt = document.createElement("option");
+            opt.value = `${m.name} (${m.role || '위원'})`;
+            opt.textContent = `${m.name} (${m.role || '위원'})`;
+            authorSelect.appendChild(opt);
+        });
+    },
+
+    submitCommentModal(e) {
+        if (e) e.preventDefault();
+        const progIdInput = document.getElementById("comment-modal-prog-id");
+        const authorSelect = document.getElementById("comment-modal-author-select");
+        const customAuthorInput = document.getElementById("comment-modal-author-custom");
+        const textInput = document.getElementById("comment-modal-text-input");
+
+        const progId = progIdInput ? progIdInput.value : "";
+        const prog = this.programs.find(p => p.id === progId);
+        if (!prog) return;
+
+        const author = (customAuthorInput && customAuthorInput.value.trim())
+            || (authorSelect && authorSelect.value)
+            || (this.currentUser ? this.currentUser.name || this.currentUser.email.split("@")[0] : "동탄구 위원");
+        const text = textInput ? textInput.value.trim() : "";
+
+        if (!text) {
+            this.showToast("의견 내용을 작성해주세요.", "warning");
+            return;
+        }
+
+        if (!Array.isArray(prog.comments)) prog.comments = [];
+        prog.comments.push({
+            id: `cmt-${Date.now()}`,
+            user: author,
+            text: text,
+            createdAt: new Date().toISOString()
+        });
+
+        this.savePrograms();
+        this.renderPadletBoard();
+        this.openCommentModal(progId);
+        this.showToast("의견이 성공적으로 등록되었습니다!", "success");
+    },
+
+    deleteComment(progId, commentIndex) {
+        const prog = this.programs.find(p => p.id === progId);
+        if (!prog || !Array.isArray(prog.comments)) return;
+
+        if (confirm("해당 의견을 삭제하시겠습니까?")) {
+            prog.comments.splice(commentIndex, 1);
             this.savePrograms();
             this.renderPadletBoard();
+            this.openCommentModal(progId);
+            this.showToast("의견이 삭제되었습니다.", "info");
         }
     },
 
@@ -3836,15 +3948,20 @@ ${data.effects}
             if (saved) {
                 const parsed = JSON.parse(saved);
                 if (parsed && parsed.email) {
-                    this.currentUser = parsed;
+                    const cleanEmail = parsed.email.trim().toLowerCase();
+                    if (this.AUTHORIZED_GOOGLE_EMAILS.includes(cleanEmail)) {
+                        this.currentUser = parsed;
+                        this.isAdmin = true;
+                    } else {
+                        localStorage.removeItem("dongtan_auth_user");
+                        sessionStorage.removeItem("dongtan_auth_user");
+                        this.currentUser = null;
+                        this.isAdmin = false;
+                    }
                 }
             }
         } catch (e) {
             console.warn("Auth user parse error:", e);
-        }
-
-        if (this.hasEditPermission()) {
-            this.isAdmin = true;
         }
 
         this.updateAuthUI();
@@ -3852,19 +3969,97 @@ ${data.effects}
     },
 
     initGsiClient() {
-        if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
-            const clientId = localStorage.getItem("dongtan_google_client_id") || "";
-            if (clientId) {
+        if (typeof google === "undefined" || !google.accounts) return;
+        try {
+            // Google OAuth Client ID (환경별 설정 지원)
+            const clientId = localStorage.getItem("dongtan_google_client_id") || "1056581457814-default.apps.googleusercontent.com";
+            
+            if (google.accounts.id) {
+                google.accounts.id.initialize({
+                    client_id: clientId,
+                    callback: (res) => this.handleGoogleCredentialResponse(res),
+                    auto_select: false,
+                    cancel_on_tap_outside: true
+                });
+                
+                const renderTarget = document.getElementById("gsi-render-target");
+                if (renderTarget) {
+                    renderTarget.innerHTML = "";
+                    try {
+                        google.accounts.id.renderButton(renderTarget, {
+                            theme: "outline",
+                            size: "large",
+                            text: "signin_with",
+                            shape: "rectangular",
+                            logo_alignment: "left",
+                            width: 280
+                        });
+                    } catch (renderErr) {
+                        console.warn("GSI render button note:", renderErr);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn("GIS init error:", e);
+        }
+    },
+
+    // 공식 Google Identity Services 팝업 호출
+    triggerRealGoogleSignIn() {
+        const errorMsg = document.getElementById("google-auth-error-msg");
+        if (errorMsg) errorMsg.classList.add("hidden");
+
+        if (typeof google !== "undefined" && google.accounts) {
+            const clientId = localStorage.getItem("dongtan_google_client_id") || "1056581457814-default.apps.googleusercontent.com";
+
+            // 1. OAuth 2.0 Token Client 방식 (가장 안정적인 팝업 및 계정 정보 fetch)
+            if (google.accounts.oauth2) {
                 try {
-                    google.accounts.id.initialize({
+                    const tokenClient = google.accounts.oauth2.initTokenClient({
                         client_id: clientId,
-                        callback: (res) => this.handleGoogleCredentialResponse(res)
+                        scope: "email profile openid",
+                        prompt: "select_account",
+                        callback: async (tokenResponse) => {
+                            if (tokenResponse && tokenResponse.access_token) {
+                                try {
+                                    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                                        headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                                    });
+                                    const userInfo = await res.json();
+                                    if (userInfo && userInfo.email) {
+                                        this.verifyAndAuthenticateGoogleUser(userInfo.email, userInfo.name, userInfo.picture, true);
+                                        return;
+                                    }
+                                } catch (fetchErr) {
+                                    console.error("UserInfo fetch error:", fetchErr);
+                                }
+                            }
+                            this.showToast("구글 계정 인증 정보를 불러오지 못했습니다.", "error");
+                        }
                     });
-                } catch(e) {
-                    console.warn("GIS init error:", e);
+                    tokenClient.requestAccessToken({ prompt: "select_account" });
+                    return;
+                } catch (oauthErr) {
+                    console.warn("OAuth2 token client error, fallback to GIS prompt:", oauthErr);
+                }
+            }
+
+            // 2. Google ID Prompt 방식
+            if (google.accounts.id) {
+                try {
+                    google.accounts.id.prompt((notification) => {
+                        if (notification.isNotDisplayed()) {
+                            console.log("GIS prompt not displayed:", notification.getNotDisplayedReason());
+                        }
+                    });
+                    return;
+                } catch (idErr) {
+                    console.warn("GIS prompt error:", idErr);
                 }
             }
         }
+
+        this.showToast("구글 로그인 팝업 창이 열립니다. 브라우저 주소창의 팝업 차단을 해제해주시거나 [방법 2] 위원 보안 코드로 인증해주세요.", "info", 4500);
     },
 
     handleGoogleCredentialResponse(response) {
@@ -3877,7 +4072,7 @@ ${data.effects}
             }).join(''));
             const profile = JSON.parse(jsonPayload);
             if (profile && profile.email) {
-                this.authenticateGoogleEmail(profile.email, profile.name, profile.picture);
+                this.verifyAndAuthenticateGoogleUser(profile.email, profile.name, profile.picture, true);
             }
         } catch(e) {
             console.error("JWT decode error:", e);
@@ -3901,19 +4096,20 @@ ${data.effects}
     openGoogleAuthModal() {
         const modal = document.getElementById("google-auth-modal");
         const input = document.getElementById("google-email-input");
+        const pinInput = document.getElementById("google-pin-input");
         const errorMsg = document.getElementById("google-auth-error-msg");
 
         if (input) {
             input.value = this.currentUser ? this.currentUser.email : "";
         }
+        if (pinInput) pinInput.value = "";
         if (errorMsg) errorMsg.classList.add("hidden");
-
-        this.renderGoogleAuthChips();
 
         if (modal) {
             modal.classList.remove("hidden");
             modal.classList.add("flex");
             setTimeout(() => {
+                this.initGsiClient();
                 if (input) input.focus();
             }, 100);
         }
@@ -3928,11 +4124,60 @@ ${data.effects}
         }
     },
 
-    renderGoogleAuthChips() {
-        const container = document.getElementById("google-auth-chips-container");
-        if (!container) return;
+    submitGoogleAuthWithPin(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById("google-email-input");
+        const pinInput = document.getElementById("google-pin-input");
+        const email = (input ? input.value : "").trim().toLowerCase();
+        const pin = (pinInput ? pinInput.value : "").trim();
+        const errorMsg = document.getElementById("google-auth-error-msg");
+        const errorText = document.getElementById("google-auth-error-text");
 
-        const emailLabels = {
+        if (!email) {
+            if (errorMsg && errorText) {
+                errorText.textContent = "구글 계정 이메일을 입력해주세요.";
+                errorMsg.classList.remove("hidden");
+            }
+            return;
+        }
+
+        if (!this.AUTHORIZED_GOOGLE_EMAILS.includes(email)) {
+            if (errorMsg && errorText) {
+                errorText.textContent = `❌ [${email}]은(는) 승인된 위원 구글 계정이 아닙니다. 지정된 7개 인가 계정만 권한이 부여됩니다.`;
+                errorMsg.classList.remove("hidden");
+            }
+            this.showToast("대시보드 수정 권한이 부여되지 않은 구글 계정입니다.", "error", 3500);
+            return;
+        }
+
+        // 위원 전용 보안 인증 코드(PIN: 2232) 엄격 검증
+        if (pin !== "2232") {
+            if (errorMsg && errorText) {
+                errorText.textContent = `❌ 보안 인증 코드가 일치하지 않습니다. 임의로 이메일을 선택해 로그인할 수 없습니다.`;
+                errorMsg.classList.remove("hidden");
+            }
+            this.showToast("보안 코드가 일치하지 않습니다. 위원 본인만 로그인 가능합니다.", "error", 3500);
+            return;
+        }
+
+        this.verifyAndAuthenticateGoogleUser(email, null, null, false);
+    },
+
+    verifyAndAuthenticateGoogleUser(email, name = null, picture = null, isReal = false) {
+        const cleanEmail = (email || "").trim().toLowerCase();
+        const errorMsg = document.getElementById("google-auth-error-msg");
+        const errorText = document.getElementById("google-auth-error-text");
+
+        if (!this.AUTHORIZED_GOOGLE_EMAILS.includes(cleanEmail)) {
+            if (errorMsg && errorText) {
+                errorText.textContent = `❌ 접근 거부: [${cleanEmail}] 계정으로 구글 로그인이 확인되었으나, 대시보드 수정 권한이 부여된 7개 위원 계정이 아닙니다. (읽기 전용 상태 유지)`;
+                errorMsg.classList.remove("hidden");
+            }
+            this.showToast(`[${cleanEmail}]은(는) 승인된 구글 계정이 아닙니다. 읽기 전용 상태입니다.`, "error", 4500);
+            return false;
+        }
+
+        const emailNames = {
             "carlosnam6363@gmail.com": "김남현 분과장",
             "skysbule@gmail.com": "동탄구 위원",
             "jyjune0313@gmail.com": "동탄구 위원",
@@ -3942,77 +4187,25 @@ ${data.effects}
             "skswlrndl@gmail.com": "동탄구 위원"
         };
 
-        container.innerHTML = this.AUTHORIZED_GOOGLE_EMAILS.map(email => {
-            const isCurrent = this.currentUser && this.currentUser.email === email;
-            const label = emailLabels[email] || "승인 위원";
-            return `
-                <button type="button" onclick="App.selectQuickGoogleEmail('${email}')" 
-                    class="p-2 text-left rounded-lg text-xs transition border flex items-center justify-between cursor-pointer ${
-                        isCurrent 
-                            ? 'bg-blue-50 border-blue-400 text-blue-900 font-extrabold shadow-2xs' 
-                            : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700'
-                    }">
-                    <div class="truncate mr-1 min-w-0">
-                        <span class="font-bold text-[11px] block truncate">${email}</span>
-                        <span class="text-[10px] text-slate-400 font-medium">${label}</span>
-                    </div>
-                    <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full ${isCurrent ? 'bg-blue-600 text-white font-black' : 'bg-slate-100 text-slate-600 font-bold'}">
-                        ${isCurrent ? '로그인됨' : '선택 로그인'}
-                    </span>
-                </button>
-            `;
-        }).join("");
-    },
+        this.currentUser = {
+            email: cleanEmail,
+            name: name || emailNames[cleanEmail] || cleanEmail.split("@")[0],
+            picture: picture || null,
+            isRealGoogleAuth: !!isReal,
+            authenticatedAt: new Date().toISOString()
+        };
+        localStorage.setItem("dongtan_auth_user", JSON.stringify(this.currentUser));
+        this.isAdmin = true;
+        sessionStorage.setItem("dongtan_admin_auth", "true");
 
-    selectQuickGoogleEmail(email) {
-        const input = document.getElementById("google-email-input");
-        if (input) input.value = email;
-        this.authenticateGoogleEmail(email);
-    },
-
-    submitGoogleAuth(e) {
-        if (e) e.preventDefault();
-        const input = document.getElementById("google-email-input");
-        const email = (input ? input.value : "").trim();
-        this.authenticateGoogleEmail(email);
-    },
-
-    authenticateGoogleEmail(email, name = null, picture = null) {
-        const cleanEmail = (email || "").trim().toLowerCase();
-        const errorMsg = document.getElementById("google-auth-error-msg");
-        const errorText = document.getElementById("google-auth-error-text");
-
-        if (!cleanEmail) {
-            if (errorMsg && errorText) {
-                errorText.textContent = "구글 계정 이메일을 입력해주세요.";
-                errorMsg.classList.remove("hidden");
-            }
-            return;
-        }
-
-        if (this.AUTHORIZED_GOOGLE_EMAILS.includes(cleanEmail)) {
-            this.currentUser = {
-                email: cleanEmail,
-                name: name || cleanEmail.split("@")[0],
-                picture: picture || null,
-                authenticatedAt: new Date().toISOString()
-            };
-            localStorage.setItem("dongtan_auth_user", JSON.stringify(this.currentUser));
-            this.isAdmin = true;
-            sessionStorage.setItem("dongtan_admin_auth", "true");
-
-            if (errorMsg) errorMsg.classList.add("hidden");
-            this.closeGoogleAuthModal();
-            this.updateAuthUI();
-            this.renderAll();
-            this.showToast(`✅ [${cleanEmail}] 계정 인증 완료! 대시보드 작성 및 수정 권한이 활성화되었습니다.`, "success", 4000);
-        } else {
-            if (errorMsg && errorText) {
-                errorText.textContent = `[${cleanEmail}]은(는) 승인된 위원 구글 계정이 아닙니다. 지정된 7개 계정만 권한이 부여됩니다.`;
-                errorMsg.classList.remove("hidden");
-            }
-            this.showToast("대시보드 수정 권한이 부여되지 않은 구글 계정입니다.", "error", 3500);
-        }
+        if (errorMsg) errorMsg.classList.add("hidden");
+        this.closeGoogleAuthModal();
+        this.updateAuthUI();
+        this.renderAll();
+        
+        const authTypeDesc = isReal ? "구글 공식 계정 연동" : "보안코드 검증";
+        this.showToast(`✅ [${cleanEmail}] ${authTypeDesc} 성공! 대시보드 작성 및 수정 권한이 활성화되었습니다.`, "success", 4000);
+        return true;
     },
 
     logoutGoogle() {
