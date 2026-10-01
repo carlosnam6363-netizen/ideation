@@ -50,10 +50,11 @@ const App = {
     flowSearch: "",
     flowCheckedTasks: {},
 
-    // 5번 탭 (위원 명단 관리: 운영위 & 분과위원) 상태
+    // 5번 탭 (위원 명단 관리: 운영위, 분과위원, 홍보팀) 상태
     steeringMembers: [],
     divisionMembers: [],   // 분과 위원 명단
-    tab5Sub: "division",   // 5번 탭의 활성 서브 탭 (기본값: 첨부 이미지와 같은 "division")
+    prMembers: [],         // 홍보팀 명단 (팀장: 김나연 분과장, 팀원: 유연주 병점구 위원)
+    tab5Sub: "division",   // 5번 탭의 활성 서브 탭 (기본값: "division")
 
     // 3번 탭 (회칙 정리) 보안 인증 상태 (비밀번호: 1123)
     isBylawsAuthenticated: sessionStorage.getItem("dongtan_bylaws_auth") === "true",
@@ -234,13 +235,37 @@ const App = {
             }
         }
 
-        // 5. 휴지통 목록 불러오기 및 30일 만료 항목 자동 영구 삭제
+        // 5. 홍보팀 명단 불러오기 (팀장: 김나연 분과장, 팀원: 유연주 병점구 위원)
+        try {
+            const savedPR = localStorage.getItem("dongtan_pr_members");
+            if (savedPR && typeof PR_MEMBERS_INITIAL !== "undefined") {
+                const parsed = JSON.parse(savedPR);
+                this.prMembers = Array.isArray(parsed) && parsed.length > 0 ? parsed : JSON.parse(JSON.stringify(PR_MEMBERS_INITIAL));
+            } else if (typeof PR_MEMBERS_INITIAL !== "undefined") {
+                this.prMembers = JSON.parse(JSON.stringify(PR_MEMBERS_INITIAL));
+                this.savePrMembers();
+            }
+        } catch {
+            if (typeof PR_MEMBERS_INITIAL !== "undefined") {
+                this.prMembers = JSON.parse(JSON.stringify(PR_MEMBERS_INITIAL));
+            }
+        }
+
+        // 6. 휴지통 목록 불러오기 및 30일 만료 항목 자동 영구 삭제
         try {
             const savedTrash = localStorage.getItem("dongtan_trash_programs");
             this.trashPrograms = savedTrash ? JSON.parse(savedTrash) : [];
             this.cleanExpiredTrash();
         } catch {
             this.trashPrograms = [];
+        }
+    },
+
+    savePrMembers() {
+        try {
+            localStorage.setItem("dongtan_pr_members", JSON.stringify(this.prMembers));
+        } catch (e) {
+            console.warn("홍보팀 명단 저장 실패:", e);
         }
     },
 
@@ -1290,6 +1315,19 @@ const App = {
             }
         }
 
+        // 홍보팀 위원
+        if (this.prMembers && this.prMembers.length > 0) {
+            const optGroupPr = document.createElement("optgroup");
+            optGroupPr.label = "홍보팀";
+            this.prMembers.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.id || m.name;
+                opt.textContent = `${m.name} (${m.role || '홍보팀'})`;
+                optGroupPr.appendChild(opt);
+            });
+            select.appendChild(optGroupPr);
+        }
+
         // 세션에 저장된 최근 투표자 자동 선택
         const lastVoterId = sessionStorage.getItem("dongtan_last_voter_id");
         if (lastVoterId && Array.from(select.options).some(o => o.value === lastVoterId)) {
@@ -1324,6 +1362,9 @@ const App = {
         let member = (this.divisionMembers || []).find(m => m.id === voterKey || m.name === voterKey);
         if (!member) {
             member = (this.steeringMembers || []).find(m => m.id === voterKey || m.name === voterKey);
+        }
+        if (!member) {
+            member = (this.prMembers || []).find(m => m.id === voterKey || m.name === voterKey);
         }
 
         const isAlreadyLiked = member && (prog.likedBy || []).some(v => v.memberId === member.id || v.name === member.name);
@@ -1389,6 +1430,9 @@ const App = {
         let member = (this.divisionMembers || []).find(m => m.id === voterKey || m.name === voterKey);
         if (!member) {
             member = (this.steeringMembers || []).find(m => m.id === voterKey || m.name === voterKey);
+        }
+        if (!member) {
+            member = (this.prMembers || []).find(m => m.id === voterKey || m.name === voterKey);
         }
         if (!member) {
             errorMsg.textContent = "선택하신 위원 정보를 찾을 수 없습니다.";
@@ -3135,35 +3179,47 @@ ${data.effects}
     },
 
     // ==========================================
-    // 5번 탭 상단 서브 탭 전환 (운영위원회 / 분과 위원 명단 관리)
+    // 5번 탭 상단 서브 탭 전환 (운영위원회 / 분과 위원 / 홍보팀 명단 관리)
     // ==========================================
     switchTab5Sub(subTab) {
         this.tab5Sub = subTab;
 
         const steeringBtn = document.getElementById("tab5-sub-steering-btn");
         const divisionBtn = document.getElementById("tab5-sub-division-btn");
+        const prBtn = document.getElementById("tab5-sub-pr-btn");
+
         const steeringPanel = document.getElementById("tab5-panel-steering");
         const divisionPanel = document.getElementById("tab5-panel-division");
+        const prPanel = document.getElementById("tab5-panel-pr");
+
+        // 초기화: 모든 버튼 비활성 스타일 적용
+        const inactiveBtnClass = "px-5 sm:px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition";
+        if (steeringBtn) steeringBtn.className = inactiveBtnClass;
+        if (divisionBtn) divisionBtn.className = inactiveBtnClass;
+        if (prBtn) prBtn.className = inactiveBtnClass;
+
+        if (steeringPanel) steeringPanel.classList.add("hidden");
+        if (divisionPanel) divisionPanel.classList.add("hidden");
+        if (prPanel) prPanel.classList.add("hidden");
 
         if (subTab === "steering") {
             if (steeringBtn) {
-                steeringBtn.className = "px-6 py-3.5 text-sm font-bold text-white bg-blue-600 border-b-2 border-blue-600 flex items-center gap-2 transition shadow-xs";
-            }
-            if (divisionBtn) {
-                divisionBtn.className = "px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition";
+                steeringBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-blue-600 border-b-2 border-blue-600 flex items-center gap-2 transition shadow-xs";
             }
             if (steeringPanel) steeringPanel.classList.remove("hidden");
-            if (divisionPanel) divisionPanel.classList.add("hidden");
             this.renderSteeringMembersGrid();
-        } else {
-            if (divisionBtn) {
-                divisionBtn.className = "px-6 py-3.5 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center gap-2 transition shadow-xs";
+        } else if (subTab === "pr") {
+            if (prBtn) {
+                prBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-rose-600 border-b-2 border-rose-600 flex items-center gap-2 transition shadow-xs";
             }
-            if (steeringBtn) {
-                steeringBtn.className = "px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition";
+            if (prPanel) prPanel.classList.remove("hidden");
+            this.renderPrMembersGrid();
+        } else {
+            // 기본값: division (분과 위원 명단 관리)
+            if (divisionBtn) {
+                divisionBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center gap-2 transition shadow-xs";
             }
             if (divisionPanel) divisionPanel.classList.remove("hidden");
-            if (steeringPanel) steeringPanel.classList.add("hidden");
             this.renderDivisionMembersGrid();
         }
         this.updateIcons();
@@ -3241,8 +3297,98 @@ ${data.effects}
         if (tab5DivisionBadge) tab5DivisionBadge.textContent = total;
 
         const totalSteering = this.steeringMembers ? this.steeringMembers.length : 0;
+        const totalPr = this.prMembers ? this.prMembers.length : 0;
         const navMembersBadge = document.getElementById("nav-members-count-badge");
-        if (navMembersBadge) navMembersBadge.textContent = `총 ${total + totalSteering}인`;
+        if (navMembersBadge) navMembersBadge.textContent = `총 ${total + totalSteering + totalPr}인`;
+    },
+
+    // ==========================================
+    // 홍보팀 명단 그리드 렌더링 (3번째 명단 관리)
+    // - 홍보팀장: 김나연 분과장
+    // - 팀원: 유연주 병점구 위원
+    // ==========================================
+    renderPrMembersGrid() {
+        const grid = document.getElementById("pr-members-grid");
+        if (!grid) return;
+
+        if (!this.prMembers || !this.prMembers.length) {
+            grid.innerHTML = `<div class="col-span-full text-center py-10 text-slate-400 text-sm">등록된 홍보팀 위원이 없습니다.</div>`;
+            return;
+        }
+
+        grid.innerHTML = this.prMembers.map(m => `
+            <div class="p-4 bg-slate-50 hover:bg-white rounded-2xl border border-slate-200 hover:border-rose-400 transition-all shadow-xs flex flex-col justify-between" id="pr-card-${escapeHtml(m.id)}">
+                <div>
+                    <!-- 직책 및 권역 배지 -->
+                    <div class="flex items-center justify-between mb-2.5">
+                        <span class="text-[11px] font-extrabold px-2.5 py-0.5 rounded-full ${m.role === '홍보팀장' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-100 text-rose-800 border border-rose-200'}">
+                            ${m.role === '홍보팀장' ? '⭐ ' : '📢 '}${escapeHtml(m.role)}
+                        </span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-50 text-sky-700 border border-sky-200">
+                            ${escapeHtml(m.district || '병점구')}
+                        </span>
+                    </div>
+
+                    <!-- 성명 및 직위 -->
+                    <div class="mt-1 mb-2.5">
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-0.5">성명</label>
+                        <div class="flex items-center justify-between px-2.5 py-1.5 bg-white border border-slate-200 rounded-xl">
+                            <span class="text-base font-black text-slate-900">${escapeHtml(m.name)}</span>
+                            <span class="text-[11px] font-bold text-slate-500">${escapeHtml(m.position || '')}</span>
+                        </div>
+                    </div>
+
+                    <!-- 주요 역할 및 전담 과업 -->
+                    <div class="mb-3">
+                        <label class="block text-[10px] font-semibold text-slate-500 mb-1">전담 업무 및 역할</label>
+                        <p class="text-xs text-slate-700 bg-white/70 p-2.5 rounded-xl border border-slate-200/80 leading-relaxed min-h-[48px]">
+                            ${escapeHtml(m.duties || '청년 소통 및 미디어 콘텐츠 기획·제작 지원')}
+                        </p>
+                    </div>
+
+                    <!-- 연락처 (관리자 인증 시에만 표기) -->
+                    <div class="mt-2 pt-2.5 border-t border-slate-200/80">
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="text-[10px] font-semibold text-slate-500">연락처</label>
+                            ${this.isAdmin ? `
+                                <span class="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-100">관리자 인증</span>
+                            ` : `
+                                <span class="text-[9px] font-medium text-slate-400">비공개</span>
+                            `}
+                        </div>
+                        ${this.isAdmin ? `
+                            <div class="flex items-center space-x-1.5 px-2 py-1.5 bg-emerald-50/70 border border-emerald-200/80 rounded-lg text-emerald-900 text-xs font-bold font-mono">
+                                <i data-lucide="phone-call" class="w-3.5 h-3.5 text-emerald-600 shrink-0"></i>
+                                <span>${escapeHtml(m.phone || '연락처 미등록 (관리자 등록 가능)')}</span>
+                            </div>
+                        ` : `
+                            <div class="flex items-center space-x-1.5 px-2 py-1.5 bg-slate-100/80 border border-dashed border-slate-200 rounded-lg text-slate-400 text-xs font-mono">
+                                <i data-lucide="lock" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
+                                <span>비공개</span>
+                            </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `).join("");
+
+        this.updatePrCounts();
+        this.updateIcons();
+    },
+
+    // 홍보팀 인원수 갱신
+    updatePrCounts() {
+        const totalPr = this.prMembers ? this.prMembers.length : 0;
+        const el = document.getElementById("pr-header-count");
+        if (el) el.textContent = `(총 ${totalPr}인)`;
+
+        const badge = document.getElementById("tab5-pr-badge");
+        if (badge) badge.textContent = totalPr;
+
+        const totalSteering = this.steeringMembers ? this.steeringMembers.length : 0;
+        const totalDiv = this.divisionMembers ? this.divisionMembers.length : 0;
+        const navMembersBadge = document.getElementById("nav-members-count-badge");
+        if (navMembersBadge) navMembersBadge.textContent = `총 ${totalSteering + totalDiv + totalPr}인`;
     },
 
     // 분과 위원 삭제
@@ -3364,6 +3510,7 @@ ${data.effects}
                 this.updateAdminUI();
                 this.renderSteeringMembersGrid();
                 this.renderDivisionMembersGrid();
+                this.renderPrMembersGrid();
                 alert("관리자 권한이 안전하게 해제되었습니다.");
             }
             return;
@@ -3407,6 +3554,7 @@ ${data.effects}
             this.updateAdminUI();
             this.renderSteeringMembersGrid();
             this.renderDivisionMembersGrid();
+            this.renderPrMembersGrid();
             alert("✅ 관리자 권한이 정상 승인되었습니다.\n위원 연락처가 즉시 공개 표기됩니다.");
         } else {
             if (errorMsg) errorMsg.classList.remove("hidden");
@@ -3520,6 +3668,7 @@ ${data.effects}
         this.renderUploadedFilesList();
         this.renderSteeringMembersGrid();
         this.renderDivisionMembersGrid();
+        this.renderPrMembersGrid();
         this.renderCouncilFlow();
         this.updateTrashBadge();
         this.animateSurveyBars();

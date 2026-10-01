@@ -2013,12 +2013,15 @@
                         <span class="px-2.5 py-0.5 rounded-full bg-violet-500/20 text-violet-300 text-xs font-bold border border-violet-400/30">
                             동탄구 분과위원 12인
                         </span>
+                        <span class="px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-xs font-bold border border-rose-400/30">
+                            홍보팀 2인
+                        </span>
                     </div>
                     <h2 class="text-2xl sm:text-3xl font-black tracking-tight mb-2">
                         화성시 청년정책협의체 <span class="text-indigo-400">위원 명단 관리</span>
                     </h2>
                     <p class="text-slate-300 text-xs sm:text-sm leading-relaxed">
-                        화성시 청년정책협의체의 <strong>공식 운영위원회</strong> 및 <strong>동탄구 교육·참여·권리 분과 위원</strong>의 명단입니다.<br>
+                        화성시 청년정책협의체의 <strong>공식 운영위원회</strong>, <strong>동탄구 교육·참여·권리 분과 위원</strong> 및 대외 소통을 전담하는 <strong>홍보팀</strong>의 명단입니다.<br>
                         위원 명단 관리는 시스템 관리자(대화)를 통해 공식 반영되며, 관리자 보안 인증 시 연락처가 안전하게 열람됩니다.
                     </p>
                 </div>
@@ -2028,18 +2031,24 @@
             <!-- 첨부 사진 스타일의 하위 탭 전환 컨테이너 -->
             <div class="glass-card rounded-2xl shadow-sm overflow-hidden">
                 <!-- 상단 탭 버튼 바 (첨부 이미지 레이아웃) -->
-                <div class="flex border-b border-slate-200 bg-slate-50/80">
+                <div class="flex flex-wrap border-b border-slate-200 bg-slate-50/80">
                     <button id="tab5-sub-steering-btn" type="button" onclick="App.switchTab5Sub('steering')"
-                        class="px-6 py-3.5 text-sm font-bold text-slate-600 hover:text-slate-900 border-b-2 border-transparent flex items-center gap-2 transition">
+                        class="px-5 sm:px-6 py-3.5 text-sm font-bold text-slate-600 hover:text-slate-900 border-b-2 border-transparent flex items-center gap-2 transition">
                         <i data-lucide="users" class="w-4 h-4"></i>
                         <span>운영위원회</span>
                         <span id="tab5-steering-badge" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-blue-100 text-blue-800 font-bold">15</span>
                     </button>
                     <button id="tab5-sub-division-btn" type="button" onclick="App.switchTab5Sub('division')"
-                        class="px-6 py-3.5 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center gap-2 transition shadow-xs">
+                        class="px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center gap-2 transition shadow-xs">
                         <i data-lucide="git-branch" class="w-4 h-4"></i>
                         <span>분과 위원 명단 관리</span>
                         <span id="tab5-division-badge" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-white/20 text-white font-bold">12</span>
+                    </button>
+                    <button id="tab5-sub-pr-btn" type="button" onclick="App.switchTab5Sub('pr')"
+                        class="px-5 sm:px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition">
+                        <i data-lucide="megaphone" class="w-4 h-4"></i>
+                        <span>홍보팀 명단 관리</span>
+                        <span id="tab5-pr-badge" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-800 font-bold">2</span>
                     </button>
                 </div>
 
@@ -2111,6 +2120,43 @@
                     <!-- 분과 위원 카드 그리드 (JS 동적 렌더링) -->
                     <div id="division-members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 pt-2">
                         <!-- Injected via App.renderDivisionMembersGrid() -->
+                    </div>
+                </div>
+
+                <!-- 3. 홍보팀 서브 패널 -->
+                <div id="tab5-panel-pr" class="p-6 space-y-4 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-rose-600"></span>
+                                <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-1.5">
+                                    <span>홍보팀 명단 관리</span>
+                                    <span id="pr-header-count" class="text-rose-600 font-bold text-sm sm:text-base">(총 2인)</span>
+                                </h3>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-rose-50 text-rose-700 border border-rose-200">공식 홍보 TF</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                청년정책협의체 대외 정책 홍보, 카드뉴스·숏폼 등 미디어 콘텐츠 기획 및 SNS 소통을 전담하는 홍보팀 명단입니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 홍보팀 소개 요약 카드 -->
+                    <div class="p-4 bg-gradient-to-r from-rose-50 to-pink-50 border border-rose-200/80 rounded-xl flex items-start space-x-3">
+                        <div class="w-9 h-9 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs mt-0.5">
+                            <i data-lucide="sparkles" class="w-5 h-5"></i>
+                        </div>
+                        <div class="text-xs space-y-1">
+                            <p class="font-black text-rose-950">📢 화성시 청년정책협의체 홍보팀 역할 및 협력 체계</p>
+                            <p class="text-slate-600 leading-relaxed">
+                                홍보팀은 <strong>김나연 분과장(홍보팀장)</strong>과 <strong>유연주 병점구 위원(팀원)</strong>으로 구성되어, 4개 구(동탄구·만세구·병점구·효행구)의 청년 정책 제안 및 분과별 활동 성과를 청년들에게 친근하고 신속하게 전파하는 미디어 허브 역할을 수행합니다.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- 홍보팀 위원 카드 그리드 (JS 동적 렌더링) -->
+                    <div id="pr-members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 pt-2">
+                        <!-- Injected via App.renderPrMembersGrid() -->
                     </div>
                 </div>
             </div>

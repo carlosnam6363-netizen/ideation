@@ -746,3 +746,32 @@ const DIVISION_MEMBERS_INITIAL = [
     }
 ];
 
+// ==========================================
+// 3. 홍보팀 공식 명단 (2인)
+// - 홍보팀장: 김나연 분과장 (병점구 일자리 분과장)
+// - 팀원: 유연주 병점구 위원
+// ==========================================
+const PR_MEMBERS_INITIAL = [
+    {
+        id: "pr-1",
+        name: "김나연",
+        role: "홍보팀장",
+        position: "홍보팀장 (병점구 일자리 분과장)",
+        district: "병점구",
+        phone: "",
+        email: "",
+        duties: "청년정책협의체 대외 홍보 총괄, 정책 보도자료 배포, 온·오프라인 청년 소통 및 언론·미디어 기획 총괄",
+        badgeColor: "bg-rose-600 text-white"
+    },
+    {
+        id: "pr-2",
+        name: "유연주",
+        role: "팀원",
+        position: "홍보팀원 (병점구 위원)",
+        district: "병점구",
+        phone: "",
+        email: "",
+        duties: "청년 체감형 카드뉴스·숏폼 영상 등 SNS 미디어 콘텐츠 기획 및 제작, 화성시 청년 홍보 채널 모니터링",
+        badgeColor: "bg-rose-50 text-rose-700 border border-rose-200"
+    }
+];
