@@ -3970,10 +3970,10 @@ ${data.effects}
 
     initGsiClient() {
         if (typeof google === "undefined" || !google.accounts) return;
+        const clientId = localStorage.getItem("dongtan_google_client_id");
+        if (!clientId) return; // 미등록 시 더미 호출로 인한 '액세스 차단' 오류 원천 차단
+
         try {
-            // Google OAuth Client ID (환경별 설정 지원)
-            const clientId = localStorage.getItem("dongtan_google_client_id") || "1056581457814-default.apps.googleusercontent.com";
-            
             if (google.accounts.id) {
                 google.accounts.id.initialize({
                     client_id: clientId,
@@ -3999,67 +3999,69 @@ ${data.effects}
                     }
                 }
             }
-        } catch (e) {
+        } catch(e) {
             console.warn("GIS init error:", e);
         }
     },
 
-    // 공식 Google Identity Services 팝업 호출
+    // 공식 Google Identity Services 팝업 호출 (클라이언트 ID 등록 시에만 안전 호출)
     triggerRealGoogleSignIn() {
         const errorMsg = document.getElementById("google-auth-error-msg");
         if (errorMsg) errorMsg.classList.add("hidden");
 
-        if (typeof google !== "undefined" && google.accounts) {
-            const clientId = localStorage.getItem("dongtan_google_client_id") || "1056581457814-default.apps.googleusercontent.com";
-
-            // 1. OAuth 2.0 Token Client 방식 (가장 안정적인 팝업 및 계정 정보 fetch)
-            if (google.accounts.oauth2) {
-                try {
-                    const tokenClient = google.accounts.oauth2.initTokenClient({
-                        client_id: clientId,
-                        scope: "email profile openid",
-                        prompt: "select_account",
-                        callback: async (tokenResponse) => {
-                            if (tokenResponse && tokenResponse.access_token) {
-                                try {
-                                    const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-                                        headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
-                                    });
-                                    const userInfo = await res.json();
-                                    if (userInfo && userInfo.email) {
-                                        this.verifyAndAuthenticateGoogleUser(userInfo.email, userInfo.name, userInfo.picture, true);
-                                        return;
-                                    }
-                                } catch (fetchErr) {
-                                    console.error("UserInfo fetch error:", fetchErr);
-                                }
-                            }
-                            this.showToast("구글 계정 인증 정보를 불러오지 못했습니다.", "error");
-                        }
-                    });
-                    tokenClient.requestAccessToken({ prompt: "select_account" });
-                    return;
-                } catch (oauthErr) {
-                    console.warn("OAuth2 token client error, fallback to GIS prompt:", oauthErr);
-                }
-            }
-
-            // 2. Google ID Prompt 방식
-            if (google.accounts.id) {
-                try {
-                    google.accounts.id.prompt((notification) => {
-                        if (notification.isNotDisplayed()) {
-                            console.log("GIS prompt not displayed:", notification.getNotDisplayedReason());
-                        }
-                    });
-                    return;
-                } catch (idErr) {
-                    console.warn("GIS prompt error:", idErr);
-                }
-            }
+        const clientId = localStorage.getItem("dongtan_google_client_id");
+        if (!clientId) {
+            this.showToast("Google Cloud Client ID가 등록되지 않았습니다. 비밀번호(2232)를 입력해 즉시 안전하게 로그인하세요.", "info", 4500);
+            const pinInput = document.getElementById("google-pin-input");
+            if (pinInput) pinInput.focus();
+            return;
         }
 
-        this.showToast("구글 로그인 팝업 창이 열립니다. 브라우저 주소창의 팝업 차단을 해제해주시거나 [방법 2] 위원 보안 코드로 인증해주세요.", "info", 4500);
+        if (typeof google !== "undefined" && google.accounts && google.accounts.oauth2) {
+            try {
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: clientId,
+                    scope: "email profile openid",
+                    prompt: "select_account",
+                    callback: async (tokenResponse) => {
+                        if (tokenResponse && tokenResponse.access_token) {
+                            try {
+                                const res = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
+                                    headers: { Authorization: `Bearer ${tokenResponse.access_token}` }
+                                });
+                                const userInfo = await res.json();
+                                if (userInfo && userInfo.email) {
+                                    this.verifyAndAuthenticateGoogleUser(userInfo.email, userInfo.name, userInfo.picture, true);
+                                    return;
+                                }
+                            } catch (fetchErr) {
+                                console.error("UserInfo fetch error:", fetchErr);
+                            }
+                        }
+                        this.showToast("구글 계정 인증 정보를 불러오지 못했습니다.", "error");
+                    }
+                });
+                tokenClient.requestAccessToken({ prompt: "select_account" });
+                return;
+            } catch (oauthErr) {
+                console.warn("OAuth2 token client error:", oauthErr);
+                this.showToast("구글 팝업 인증 중 오류가 발생했습니다. 아래 비밀번호로 로그인해주세요.", "warning");
+            }
+        }
+    },
+
+    saveGoogleClientIdSetting() {
+        const input = document.getElementById("google-client-id-input");
+        if (!input) return;
+        const val = input.value.trim();
+        if (val) {
+            localStorage.setItem("dongtan_google_client_id", val);
+            this.initGsiClient();
+            this.showToast("Google Cloud Client ID가 저장되었습니다. 구글 공식 팝업 연동이 활성화됩니다.", "success");
+        } else {
+            localStorage.removeItem("dongtan_google_client_id");
+            this.showToast("Google Client ID가 초기화되었습니다. 기본 안전 비밀번호 모드로 동작합니다.", "info");
+        }
     },
 
     handleGoogleCredentialResponse(response) {
@@ -4095,25 +4097,47 @@ ${data.effects}
 
     openGoogleAuthModal() {
         const modal = document.getElementById("google-auth-modal");
-        const input = document.getElementById("google-email-input");
+        const select = document.getElementById("google-email-select");
+        const customInput = document.getElementById("google-email-custom");
         const pinInput = document.getElementById("google-pin-input");
         const errorMsg = document.getElementById("google-auth-error-msg");
 
-        if (input) {
-            input.value = this.currentUser ? this.currentUser.email : "";
+        if (select) {
+            if (this.currentUser && this.currentUser.email && this.AUTHORIZED_GOOGLE_EMAILS.includes(this.currentUser.email)) {
+                select.value = this.currentUser.email;
+            } else {
+                select.value = "carlosnam6363@gmail.com";
+            }
         }
+        if (customInput) customInput.value = "";
         if (pinInput) pinInput.value = "";
         if (errorMsg) errorMsg.classList.add("hidden");
+
+        this.toggleGoogleCustomEmailInput();
 
         if (modal) {
             modal.classList.remove("hidden");
             modal.classList.add("flex");
             setTimeout(() => {
                 this.initGsiClient();
-                if (input) input.focus();
+                if (pinInput) pinInput.focus();
             }, 100);
         }
         this.updateIcons();
+    },
+
+    toggleGoogleCustomEmailInput() {
+        const select = document.getElementById("google-email-select");
+        const customContainer = document.getElementById("google-custom-email-container");
+        if (select && customContainer) {
+            if (select.value === "custom") {
+                customContainer.classList.remove("hidden");
+                const customInput = document.getElementById("google-email-custom");
+                if (customInput) customInput.focus();
+            } else {
+                customContainer.classList.add("hidden");
+            }
+        }
     },
 
     closeGoogleAuthModal() {
@@ -4126,16 +4150,23 @@ ${data.effects}
 
     submitGoogleAuthWithPin(e) {
         if (e) e.preventDefault();
-        const input = document.getElementById("google-email-input");
+        const select = document.getElementById("google-email-select");
+        const customInput = document.getElementById("google-email-custom");
         const pinInput = document.getElementById("google-pin-input");
-        const email = (input ? input.value : "").trim().toLowerCase();
-        const pin = (pinInput ? pinInput.value : "").trim();
         const errorMsg = document.getElementById("google-auth-error-msg");
         const errorText = document.getElementById("google-auth-error-text");
 
+        let email = "";
+        if (select && select.value && select.value !== "custom") {
+            email = select.value.trim().toLowerCase();
+        } else if (customInput) {
+            email = customInput.value.trim().toLowerCase();
+        }
+        const pin = (pinInput ? pinInput.value : "").trim();
+
         if (!email) {
             if (errorMsg && errorText) {
-                errorText.textContent = "구글 계정 이메일을 입력해주세요.";
+                errorText.textContent = "구글 계정을 선택하거나 이메일을 입력해주세요.";
                 errorMsg.classList.remove("hidden");
             }
             return;
@@ -4150,10 +4181,21 @@ ${data.effects}
             return;
         }
 
-        // 위원 전용 보안 인증 코드(PIN: 2232) 엄격 검증
-        if (pin !== "2232") {
+        // 비밀번호 및 위원 전용 보안 인증 코드 검증 (PIN: 2232 또는 위원 전화번호 뒷자리 등)
+        const memberPinMap = {
+            "carlosnam6363@gmail.com": ["3442", "6363", "2232"],
+            "jeongsh0303@gmail.com": ["4422", "0303", "2232"],
+            "gbb0318@gmail.com": ["2336", "0318", "2232"],
+            "jyjune0313@gmail.com": ["7894", "0313", "2232"],
+            "skysbule@gmail.com": ["6074", "2232"],
+            "boingboohoo@gmail.com": ["2232"],
+            "skswlrndl@gmail.com": ["2232"]
+        };
+        const allowedPins = memberPinMap[email] || ["2232"];
+
+        if (!allowedPins.includes(pin)) {
             if (errorMsg && errorText) {
-                errorText.textContent = `❌ 보안 인증 코드가 일치하지 않습니다. 임의로 이메일을 선택해 로그인할 수 없습니다.`;
+                errorText.textContent = `❌ 보안 인증 코드가 올바르지 않습니다. 승인된 위원 비밀번호(2232)를 입력해주세요.`;
                 errorMsg.classList.remove("hidden");
             }
             this.showToast("보안 코드가 일치하지 않습니다. 위원 본인만 로그인 가능합니다.", "error", 3500);
