@@ -359,31 +359,6 @@ body {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
 
-/* 모바일 사이드바 백드롭 */
-#sidebar-backdrop {
-    transition: opacity 0.3s ease;
-}
 
-/* ============================================================== */
-/* CDN 장애 대비 핵심 Fallback CSS (공공망 인트라넷 방화벽 대응) */
-/* ============================================================== */
-.hidden { display: none !important; }
-.flex { display: flex !important; }
-.inline-flex { display: inline-flex !important; }
-.grid { display: grid !important; }
-.block { display: block !important; }
-.inline-block { display: inline-block !important; }
-.items-center { align-items: center !important; }
-.justify-between { justify-content: space-between !important; }
-.justify-center { justify-content: center !important; }
-.flex-col { flex-direction: column !important; }
-.flex-1 { flex: 1 1 0% !important; }
-.w-full { width: 100% !important; }
-.h-full { height: 100% !important; }
-.rounded-xl { border-radius: 0.75rem !important; }
-.rounded-2xl { border-radius: 1rem !important; }
-.rounded-full { border-radius: 9999px !important; }
-.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important; }
-.cursor-pointer { cursor: pointer !important; }
 
 

@@ -463,26 +463,19 @@ const App = {
 
     toggleMobileSidebar() {
         const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
-        const backdrop = document.getElementById("sidebar-backdrop");
         if (!collapsibleWrapper) return;
-
-        const isCurrentlyHidden = collapsibleWrapper.classList.contains("hidden");
-        if (isCurrentlyHidden) {
-            collapsibleWrapper.classList.remove("hidden");
-            if (backdrop) backdrop.classList.remove("hidden");
+        collapsibleWrapper.classList.toggle("hidden");
+        if (!collapsibleWrapper.classList.contains("hidden")) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            collapsibleWrapper.classList.add("hidden");
-            if (backdrop) backdrop.classList.add("hidden");
         }
         this.updateIcons();
     },
 
     closeMobileSidebar() {
         const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
-        const backdrop = document.getElementById("sidebar-backdrop");
-        if (collapsibleWrapper) collapsibleWrapper.classList.add("hidden");
-        if (backdrop) backdrop.classList.add("hidden");
+        if (collapsibleWrapper && window.innerWidth < 1024) {
+            collapsibleWrapper.classList.add("hidden");
+        }
     },
 
     openProgramModal(progId = null) {

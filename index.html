@@ -43,35 +43,29 @@
             }
         }, true);
 
-        if (typeof tailwind === 'undefined') {
-            console.warn('Tailwind CDN 로드 지연됨 - 내장 Fallback 스타일로 자동 전환됩니다.');
-        } else {
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        colors: {
-                            brand: {
-                                50: '#eff6ff',
-                                100: '#dbeafe',
-                                500: '#3b82f6',
-                                600: '#2563eb',
-                                700: '#1d4ed8',
-                                800: '#1e40af',
-                                900: '#1e3a8a',
-                            }
+        window.tailwind = window.tailwind || {};
+        window.tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
                         }
                     }
                 }
-            };
-        }
+            }
+        };
     </script>
 </head>
 <body class="min-h-screen bg-slate-50 text-slate-800 antialiased overflow-x-hidden">
     <!-- 화면 상단 토스트 알림 컨테이너 (Toast Notifications) -->
     <div id="toast-container" role="region" aria-live="polite"></div>
-
-    <!-- 모바일 사이드바 활성 시 배경 딤(Backdrop) 오버레이 -->
-    <div id="sidebar-backdrop" onclick="App.closeMobileSidebar()" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-30 hidden lg:hidden transition-opacity"></div>
 
     <div class="min-h-screen flex flex-col lg:flex-row">
         <!-- ============================================================== -->
