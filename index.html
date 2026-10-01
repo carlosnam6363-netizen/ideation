@@ -164,22 +164,7 @@
                         </div>
                     </button>
 
-                    <!-- 탭 3 -->
-                    <button data-tab="tab-3" class="nav-tab-btn group" id="nav-btn-tab-3">
-                        <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 mr-3 group-hover:bg-slate-700 group-hover:text-white transition">
-                            <i data-lucide="file-check-2" class="w-4 h-4"></i>
-                        </div>
-                        <div class="flex-1 min-w-0 pr-1">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold truncate">3. 회칙 정리</span>
-                                <span id="tab3-lock-badge" class="ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold shrink-0 flex items-center gap-0.5">
-                                    <i data-lucide="lock" class="w-2.5 h-2.5"></i>
-                                    <span>비활성</span>
-                                </span>
-                            </div>
-                            <p class="text-[10px] text-slate-400 truncate mt-0.5">비밀번호 인증 필요</p>
-                        </div>
-                    </button>
+
 
                     <!-- 탭 4: 협의체 전체 플로우 -->
                     <button data-tab="tab-4" class="nav-tab-btn group">
@@ -1722,223 +1707,7 @@
             </div>
         </section>
 
-                <!-- ============================================================== -->
-        <!-- 탭 3: 회칙 정리 (신구조문대비표 & 개정검토본) -->
-        <!-- ============================================================== -->
-        <section id="tab-3" class="tab-content-panel hidden space-y-6">
-            <!-- 공식 개정안 헤더 배너 -->
-            <div class="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
-                <div class="relative z-10 max-w-4xl">
-                    <div class="flex flex-wrap items-center gap-2 mb-3">
-                        <span class="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-blue-500/30 text-blue-200 text-xs font-extrabold border border-blue-400/30 backdrop-blur-md">
-                            <i data-lucide="file-check-2" class="w-3.5 h-3.5 text-teal-300"></i>
-                            <span>제6기 공식 회칙 개정 검토본</span>
-                        </span>
-                        <span class="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-400/30">
-                            검토기준일: 2026. 9. 26.
-                        </span>
-                        <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-400/30">
-                            부칙 일부 수정 반영
-                        </span>
-                    </div>
-                    <h2 class="text-2xl sm:text-3xl font-black tracking-tight mb-2">
-                        화성시 청년정책협의체 회칙 <span class="text-teal-400">신·구 조문 대비표</span>
-                    </h2>
-                    <p class="text-blue-100 text-xs sm:text-sm leading-relaxed mb-4">
-                        화성특례시 출범과 제6기 협의체 적용을 위해 수립된 <strong>조직개편(4개 구 체제)·재정운영·외부 후원금품·활동행정 법령근거 반영안</strong>입니다.<br>
-                        기존 내용(현행)과 변경 내용(개정안)의 차이점을 한눈에 비교하실 수 있도록 2열 대비 및 하이라이트로 구성되었습니다.
-                    </p>
-                    <div class="flex flex-wrap items-center gap-3">
-                        <a href="docs/화성시_청년정책협의체_회칙_개정검토본_수정본(부칙일부수정).hwpx" download class="px-4 py-2 bg-teal-500 hover:bg-teal-600 text-slate-900 font-bold text-xs rounded-xl shadow-md flex items-center space-x-2 transition">
-                            <i data-lucide="download" class="w-4 h-4"></i>
-                            <span>원본 HWPX 파일 다운로드</span>
-                        </a>
-                        <button type="button" onclick="App.lockBylaws()" class="px-3.5 py-2 bg-slate-800/90 hover:bg-rose-900/90 text-rose-200 border border-rose-400/40 font-bold text-xs rounded-xl shadow-md flex items-center space-x-1.5 transition cursor-pointer" title="열람 권한 해제 후 잠금 상태로 복귀">
-                            <i data-lucide="lock" class="w-3.5 h-3.5 text-rose-300"></i>
-                            <span>3번 탭 다시 잠그기</span>
-                        </button>
-                        <span class="text-[11px] text-slate-300">※ 카카오톡 공유 원본 파일 연동 완료</span>
-                    </div>
-                </div>
-                <div class="absolute -right-8 -bottom-8 w-60 h-60 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-            </div>
-
-            <!-- 제6기 4대 핵심 개정 포인트 요약 카드 -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div class="p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-blue-400 transition">
-                    <div class="flex items-center space-x-2 text-blue-600 font-bold text-xs mb-1.5">
-                        <i data-lucide="landmark" class="w-4 h-4"></i>
-                        <span>1. 조직개편 (제4조, 제10조)</span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-sm mb-1">구위원장 중심 책임 운영</h4>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        기존 임명직 '운영위원 5인' 폐지. 4개 구(동탄구 등) 소속 위원이 직접 선출한 <strong>구위원장 4인 + 사무국장 2인</strong>으로 운영위원회 정예화.
-                    </p>
-                </div>
-
-                <div class="p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-emerald-400 transition">
-                    <div class="flex items-center space-x-2 text-emerald-600 font-bold text-xs mb-1.5">
-                        <i data-lucide="share-2" class="w-4 h-4"></i>
-                        <span>2. 소통 확대 (제26조의3)</span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-sm mb-1">공식 '홍보팀' 신설</h4>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        「청년기본법」 제4조제5항에 근거, 청년·시민과의 활발한 소통을 위해 <strong>SNS·카드뉴스·영상·청년축제</strong>를 전담하는 홍보팀 신설.
-                    </p>
-                </div>
-
-                <div class="p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-purple-400 transition">
-                    <div class="flex items-center space-x-2 text-purple-600 font-bold text-xs mb-1.5">
-                        <i data-lucide="wallet" class="w-4 h-4"></i>
-                        <span>3. 활동경비 법제화 (제27조의2~5)</span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-sm mb-1">공식활동 기준 및 증빙 명문화</h4>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        시 예산 지원 대상이 되는 공식활동의 범위를 명확히 규정하고, <strong>사전계획서·결과보고서·행정책임자 지정</strong>으로 감사 지적 예방.
-                    </p>
-                </div>
-
-                <div class="p-4 bg-white rounded-xl border border-slate-200 shadow-sm hover:border-amber-400 transition">
-                    <div class="flex items-center space-x-2 text-amber-600 font-bold text-xs mb-1.5">
-                        <i data-lucide="shield-check" class="w-4 h-4"></i>
-                        <span>4. 투명 회계 (제30조~32조)</span>
-                    </div>
-                    <h4 class="font-bold text-slate-900 text-sm mb-1">기부금품법 준수 & 계좌 개설</h4>
-                    <p class="text-xs text-slate-600 leading-relaxed">
-                        시 지원금과 자체회비 분리 관리. 1천만원 미만 <strong>외부 후원금품 사전심의·결산공개</strong> 및 국세기본법상 고유번호증 발급 토대 마련.
-                    </p>
-                </div>
-            </div>
-
-            <!-- 신구조문대비표 컨트롤 바 (뷰모드 전환, 필터, 검색) -->
-            <div class="glass-card p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <!-- 좌측: 뷰 모드 스위처 (대비표 vs 개정안만 vs 현행만) -->
-                    <div class="inline-flex rounded-xl border border-slate-200 p-1 bg-slate-100 w-full md:w-auto justify-center">
-                        <button id="bylaw-view-diff-btn" onclick="App.setBylawViewMode('diff')" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white transition flex items-center space-x-1.5 shadow-sm">
-                            <i data-lucide="split" class="w-3.5 h-3.5"></i>
-                            <span>신·구 조문 대비표 (2열 비교)</span>
-                        </button>
-                        <button id="bylaw-view-revised-btn" onclick="App.setBylawViewMode('revised')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                            <i data-lucide="file-check" class="w-3.5 h-3.5"></i>
-                            <span>제6기 개정안 전문</span>
-                        </button>
-                        <button id="bylaw-view-current-btn" onclick="App.setBylawViewMode('current')" class="px-3.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center space-x-1.5">
-                            <i data-lucide="history" class="w-3.5 h-3.5"></i>
-                            <span>종전 현행 조문</span>
-                        </button>
-                    </div>
-
-                    <!-- 우측: 검색창 및 조항 수 카운트 -->
-                    <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
-                        <div class="relative w-full md:w-72">
-                            <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-                            <input id="bylaw-search-input" type="text" placeholder="조항명, 키워드(예: 구위원장, 후원금, 해촉)..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
-                        </div>
-                        <span id="bylaw-count-badge" class="text-xs font-bold text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-200 whitespace-nowrap">
-                            총 14개 주요 조항
-                        </span>
-                    </div>
-                </div>
-
-                <!-- 챕터 & 유형 필터 칩 -->
-                <div class="flex items-center space-x-1.5 overflow-x-auto pb-1 text-xs">
-                    <span class="font-bold text-slate-400 mr-1 uppercase text-[11px]">필터:</span>
-                    <button data-bylaw-filter="all" onclick="App.filterBylaws('all', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-slate-900 text-white transition">전체</button>
-                    <button data-bylaw-filter="important" onclick="App.filterBylaws('important', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
-                        <span>⭐ 핵심 개정</span>
-                    </button>
-                    <button data-bylaw-filter="new" onclick="App.filterBylaws('new', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-bold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition flex items-center gap-1">
-                        <span>✨ 조항 신설</span>
-                    </button>
-                    <button data-bylaw-filter="제1장 총칙" onclick="App.filterBylaws('제1장 총칙', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제1장 총칙</button>
-                    <button data-bylaw-filter="제2장 위원" onclick="App.filterBylaws('제2장 위원', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제2장 위원</button>
-                    <button data-bylaw-filter="제3장 임원 및 운영직" onclick="App.filterBylaws('제3장 임원 및 운영직', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제3장 임원</button>
-                    <button data-bylaw-filter="제5장 운영위원회" onclick="App.filterBylaws('제5장 운영위원회', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제5장 운영위</button>
-                    <button data-bylaw-filter="제6장 위원회 운영" onclick="App.filterBylaws('제6장 위원회 운영', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제6장 분과·구위</button>
-                    <button data-bylaw-filter="제8장 재정 및 회계" onclick="App.filterBylaws('제8장 재정 및 회계', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">제8장 재정·회계</button>
-                    <button data-bylaw-filter="부칙" onclick="App.filterBylaws('부칙', this)" class="bylaw-filter-chip px-3 py-1 rounded-lg font-semibold bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 transition">부칙</button>
-                </div>
-            </div>
-
-            <!-- 신구조문대비표 메인 목록 컨테이너 (JS 동적 렌더링) -->
-            <div id="bylaws-diff-container" class="space-y-6">
-                <!-- Injected via App.renderBylawsDiff() -->
-            </div>
-
-            <!-- 하단 2단 레이아웃: 관련 법령 및 해석례 + 공식 파일 보관함 -->
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-6 border-t border-slate-200">
-                <!-- 좌측: 주요 법령 및 법제처 해석례 요약집 (7열) -->
-                <div class="lg:col-span-7 glass-card p-6 rounded-2xl shadow-sm">
-                    <div class="flex items-center space-x-2 text-slate-900 font-bold text-sm mb-3">
-                        <i data-lucide="scale" class="w-4 h-4 text-blue-600"></i>
-                        <span>개정 검토본 반영 주요 법령 및 유권해석 근거</span>
-                    </div>
-                    <div class="space-y-2.5 text-xs text-slate-600">
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                            <strong class="text-slate-800 block mb-0.5">· 「화성시 청년 기본 조례」 제18조 (협의체의 설치·운영)</strong>
-                            <p class="text-[11px] text-slate-500">시장은 의견수렴·모니터링 등을 위하여 협의체를 구성·운영할 수 있고 활동경비를 지원할 수 있으며, 모집 및 운영 등에 관한 세부사항은 청년 의견을 반영하여 정함.</p>
-                        </div>
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                            <strong class="text-slate-800 block mb-0.5">· 「기부금품의 모집 및 사용에 관한 법률」 제2조, 제4조, 제5조</strong>
-                            <p class="text-[11px] text-slate-500">회칙에 따른 회원 회비는 기부금품에서 제외. 외부 후원금 1천만원 미만은 등록 제외되나 지자체 명의를 이용한 강제 모집은 엄격 금지.</p>
-                        </div>
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                            <strong class="text-slate-800 block mb-0.5">· 「국세기본법」 제13조 & 「금융실명법 시행령」 제3조</strong>
-                            <p class="text-[11px] text-slate-500">규약과 대표자를 갖춘 비법인 단체는 세무서 승인으로 고유번호증을 발급받아 협의체 명의 공식 통장 개설 가능.</p>
-                        </div>
-                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
-                            <strong class="text-slate-800 block mb-0.5">· 법제처 법령해석 24-0501, 15-0798 (연임 관련)</strong>
-                            <p class="text-[11px] text-slate-500">'연임'은 같은 직위를 연속하여 다시 맡는 것을 뜻하며, 중임(단절 후 재선출)까지 일괄 금지하는 것은 아님. 제6기부터 구위원장·분과장 연임제한 해제 적용 근거.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 우측: 원본 파일 다운로드 및 추가 파일 보관함 (5열) -->
-                <div class="lg:col-span-5 glass-card p-6 rounded-2xl shadow-sm flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center space-x-2 text-slate-900 font-bold text-sm mb-2">
-                            <i data-lucide="folder-check" class="w-4 h-4 text-emerald-600"></i>
-                            <span>공식 회칙 문서 보관함</span>
-                        </div>
-                        <p class="text-xs text-slate-500 mb-4">
-                            공유받으신 HWPX 파일이 플랫폼 내부 보관함에 동기화되어 있습니다.
-                        </p>
-
-                        <!-- 원본 파일 다운로드 카드 -->
-                        <div class="p-3.5 bg-blue-50/80 border border-blue-200 rounded-xl flex items-center justify-between mb-4">
-                            <div class="flex items-center space-x-3 min-w-0">
-                                <div class="w-9 h-9 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
-                                    HWPX
-                                </div>
-                                <div class="min-w-0">
-                                    <p class="font-bold text-slate-900 text-xs truncate">화성시_청년정책협의체_회칙_개정검토본_수정본.hwpx</p>
-                                    <p class="text-[11px] text-slate-500">73.5 KB | 검토본 원본 문서</p>
-                                </div>
-                            </div>
-                            <a href="docs/화성시_청년정책협의체_회칙_개정검토본_수정본(부칙일부수정).hwpx" download class="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-100 rounded-lg transition" title="다운로드">
-                                <i data-lucide="download" class="w-4 h-4"></i>
-                            </a>
-                        </div>
-
-                        <!-- 추가 파일 드래그 & 드롭 영역 -->
-                        <div id="bylaws-dropzone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-xl p-4 text-center cursor-pointer bg-slate-50 hover:bg-blue-50/40 transition">
-                            <i data-lucide="cloud-upload" class="w-6 h-6 mx-auto mb-1 text-slate-400"></i>
-                            <p class="text-xs font-bold text-slate-700">추가 수정본 파일 드래그 업로드</p>
-                            <input id="bylaws-file-input" type="file" multiple class="hidden">
-                        </div>
-
-                        <!-- 업로드된 추가 파일 목록 -->
-                        <div id="bylaws-files-list" class="mt-3"></div>
-                    </div>
-
-                    <div class="pt-4 border-t border-slate-100 text-[11px] text-slate-400 flex items-center justify-between">
-                        <span>화성시 청년정책협의체 회칙심의위원회</span>
-                        <span>최종 수정본 적용</span>
-                    </div>
-                </div>
-            </div>
-        </section>
+        
 
         <!-- ============================================================== -->
         <!-- 탭 4: 협의체 전체 플로우 (2026~2027 로드맵 & 운영위원 명단) -->
@@ -1980,7 +1749,93 @@
                 <div class="absolute -right-8 -bottom-8 w-60 h-60 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
             </div>
 
-            <!-- (운영위원회 및 분과위원 명단은 5번 탭으로 독립 분리됨) -->
+            <!-- ============================================================== -->
+            <!-- [ I ] 연간일정 (2번 사진 기반 공식 연간 추진 간트차트 & 실시간 편집기) -->
+            <!-- ============================================================== -->
+            <div class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden space-y-0">
+                <!-- 상단 타이틀 & 툴바 -->
+                <div class="p-5 sm:p-6 bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center space-x-2 mb-1.5">
+                            <span class="px-2.5 py-0.5 rounded-full bg-blue-500/20 text-blue-300 text-[11px] font-extrabold border border-blue-400/30">
+                                공식 일정 체계 (사진 2 반영)
+                            </span>
+                            <span class="text-xs text-slate-400">2026~2027 2개년 연계 및 자유 편집</span>
+                        </div>
+                        <h3 class="text-xl sm:text-2xl font-black flex items-center gap-2">
+                            <span>[ I ] 연간일정</span>
+                            <span id="schedule-current-year-badge" class="text-teal-400 text-base font-bold">(2026년 추진계획)</span>
+                        </h3>
+                        <p class="text-xs text-slate-300 mt-1">
+                            💡 월별 셀을 클릭하면 <span class="text-amber-300 font-bold">[빈칸 → 준비/기획(회색) → 본행사/실행(파란색)]</span>으로 순환 변경되며, 과업명 직접 수정·추가·삭제 및 2027년 확장이 가능합니다.
+                        </p>
+                    </div>
+
+                    <!-- 우측 연도 전환 버튼 및 컨트롤 -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- 2026 / 2027 선택 버튼 -->
+                        <div class="inline-flex rounded-xl bg-slate-800/90 p-1 border border-slate-700 shadow-inner">
+                            <button id="sched-tab-2026-btn" type="button" onclick="App.setScheduleYear(2026)" class="px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-xs transition cursor-pointer">
+                                2026년
+                            </button>
+                            <button id="sched-tab-2027-btn" type="button" onclick="App.setScheduleYear(2027)" class="px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition cursor-pointer">
+                                2027년
+                            </button>
+                        </div>
+
+                        <button type="button" onclick="App.openAddScheduleTaskModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center space-x-1 shadow-xs transition cursor-pointer">
+                            <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                            <span>과업 추가</span>
+                        </button>
+                        <button type="button" onclick="App.copyScheduleToOtherYear()" class="px-3 py-1.5 bg-indigo-600/90 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center space-x-1 shadow-xs transition cursor-pointer" title="현재 연도의 모든 일정을 다른 연도로 그대로 복사/동기화합니다">
+                            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+                            <span>연도 간 복사</span>
+                        </button>
+                        <button type="button" onclick="App.resetScheduleToInitial()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-xl text-xs font-bold flex items-center space-x-1 transition cursor-pointer" title="공식 초기 일정 템플릿으로 되돌리기">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            <span>초기화</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 범례(Legend) 및 가이드 -->
+                <div class="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center space-x-4">
+                        <span class="font-bold text-slate-600">범례:</span>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-4 h-4 rounded bg-blue-500 border border-blue-600 inline-block shadow-2xs"></span>
+                            <span class="text-slate-700 font-semibold">본행사 / 총회 / 핵심실행</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-4 h-4 rounded bg-slate-300 border border-slate-400 inline-block shadow-2xs"></span>
+                            <span class="text-slate-700 font-semibold">기획 / 준비 / 활동기간</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5">
+                            <span class="w-4 h-4 rounded bg-white border border-slate-200 inline-block"></span>
+                            <span class="text-slate-500">해당 없음</span>
+                        </div>
+                    </div>
+                    <div class="text-[11px] text-slate-500">
+                        ※ 셀 클릭: 색상 토글 | 과업명 클릭: 이름 수정 | 수정사항 자동 영구 저장
+                    </div>
+                </div>
+
+                <!-- 간트차트 그리드 테이블 컨테이너 (반응형 가로 스크롤) -->
+                <div class="overflow-x-auto p-4 sm:p-6 bg-white">
+                    <div id="annual-schedule-gantt-container" class="min-w-[760px]">
+                        <!-- Injected via App.renderAnnualSchedule() -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 월별 로드맵 상세 타임라인 구분 타이틀 -->
+            <div class="flex items-center justify-between pt-2">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-teal-500"></span>
+                    <h3 class="font-black text-slate-900 text-base sm:text-lg">[ II ] 월별 법정 의무 및 상세 액션 플랜 (타임라인)</h3>
+                </div>
+                <span class="text-xs text-slate-400 font-medium">회칙 제27조 및 세부 과업 체크리스트</span>
+            </div>
 
             <!-- 월별 로드맵 컨트롤 바 (연도 전환, 분기 필터, 검색, 인쇄) -->
             <div class="glass-card p-4 sm:p-5 rounded-2xl shadow-sm space-y-4">
@@ -2081,10 +1936,16 @@
                         <span id="tab5-division-badge" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-white/20 text-white font-bold">12</span>
                     </button>
                     <button id="tab5-sub-pr-btn" type="button" onclick="App.switchTab5Sub('pr')"
-                        class="px-5 sm:px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition">
+                        class="px-5 sm:px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition cursor-pointer">
                         <i data-lucide="megaphone" class="w-4 h-4"></i>
                         <span>홍보팀 명단 관리</span>
                         <span id="tab5-pr-badge" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-rose-100 text-rose-800 font-bold">2</span>
+                    </button>
+                    <button id="tab5-sub-attendance-btn" type="button" onclick="App.switchTab5Sub('attendance')"
+                        class="px-5 sm:px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition cursor-pointer">
+                        <i data-lucide="calendar-check-2" class="w-4 h-4"></i>
+                        <span>출석 명부 관리</span>
+                        <span id="tab5-attendance-badge" class="ml-1 text-[11px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-bold">12인</span>
                     </button>
                 </div>
 
@@ -2193,6 +2054,75 @@
                     <!-- 홍보팀 위원 카드 그리드 (JS 동적 렌더링) -->
                     <div id="pr-members-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3.5 pt-2">
                         <!-- Injected via App.renderPrMembersGrid() -->
+                    </div>
+                </div>
+
+                <!-- 4. 출석 명부 관리 서브 패널 (1번 사진 완벽 일치 & 인터랙티브 편집) -->
+                <div id="tab5-panel-attendance" class="p-4 sm:p-6 space-y-4 hidden">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="w-2.5 h-2.5 rounded-full bg-emerald-600"></span>
+                                <h3 class="font-black text-slate-900 text-base sm:text-lg flex items-center gap-1.5">
+                                    <span>동탄구 분과 위원 출석 명부 관리</span>
+                                    <span class="text-emerald-700 font-bold text-sm sm:text-base">(총 12인 · 23개 회의/행사)</span>
+                                </h3>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">공식 출석부 (사진 1 반영)</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                2026년 4월부터 2027년 12월까지 정기회의 및 주요 행사(시장님 간담회, 청년 주간 행사)의 위원별 출석 현황입니다.
+                            </p>
+                        </div>
+
+                        <!-- 우측 컨트롤 단추들 -->
+                        <div class="flex flex-wrap items-center gap-2">
+                            <button type="button" onclick="App.exportAttendanceToCSV()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition cursor-pointer">
+                                <i data-lucide="file-spreadsheet" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                <span>엑셀(CSV) 다운로드</span>
+                            </button>
+                            <button type="button" onclick="App.openAddAttendanceMeetingModal()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-2xs transition cursor-pointer">
+                                <i data-lucide="calendar-plus" class="w-3.5 h-3.5"></i>
+                                <span>새 회의/행사 열 추가</span>
+                            </button>
+                            <button type="button" onclick="App.resetAttendanceToInitial()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg text-xs font-bold flex items-center space-x-1.5 transition cursor-pointer" title="사진 1의 원본 출석 데이터로 되돌리기">
+                                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-slate-500"></i>
+                                <span>초기 데이터 복원</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 안내 및 범례 카드 -->
+                    <div class="p-3.5 bg-emerald-50/60 border border-emerald-200 rounded-xl flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs text-emerald-950">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold flex items-center gap-1 text-emerald-800">
+                                <i data-lucide="info" class="w-4 h-4 text-emerald-600"></i>
+                                <span>기호 안내:</span>
+                            </span>
+                            <span class="px-2 py-0.5 rounded bg-emerald-200/80 font-bold text-emerald-900">O : 참석</span>
+                            <span class="px-2 py-0.5 rounded bg-white text-slate-500 border border-slate-200">공란 : 불참</span>
+                            <span class="text-slate-600">| 셀 클릭 시 <strong>[O ↔ 공란]</strong> 토글, <strong>[수정]</strong> 버튼으로 세부 활동내역(예: 부스 운영) 및 비고 편집 가능</span>
+                        </div>
+                        <div class="text-[11px] text-emerald-800 font-semibold flex items-center gap-1.5">
+                            <i data-lucide="check-circle-2" class="w-3.5 h-3.5 text-emerald-600"></i>
+                            <span>실시간 로컬스토리지 자동 영구 저장</span>
+                        </div>
+                    </div>
+
+                    <!-- 출석 명부 데이터 테이블 (스크롤 및 고정 컬럼) -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-xs bg-white">
+                        <div class="overflow-x-auto max-h-[640px] relative">
+                            <table id="attendance-table" class="w-full text-xs text-center border-collapse border-spacing-0">
+                                <thead id="attendance-table-head" class="bg-slate-100/90 sticky top-0 z-20 backdrop-blur-sm border-b border-slate-300">
+                                    <!-- Dynamic Injected Headers -->
+                                </thead>
+                                <tbody id="attendance-table-body" class="divide-y divide-slate-200">
+                                    <!-- Dynamic Injected Attendance Rows -->
+                                </tbody>
+                                <tfoot id="attendance-table-foot" class="bg-slate-100 font-bold border-t-2 border-slate-300 sticky bottom-0 z-10">
+                                    <!-- Dynamic Injected Total Attendance Summary -->
+                                </tfoot>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -2637,59 +2567,6 @@
         </div>
     </div>
 
-    <!-- 3번 탭: 회칙 정리 잠금 해제 비밀번호 인증 모달 -->
-    <div id="bylaws-auth-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
-                <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
-                        <i data-lucide="lock" class="w-4 h-4"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-slate-900 text-base">3번 탭 (회칙 정리) 보안 인증</h3>
-                        <p class="text-[11px] text-slate-500">열람 권한 확인이 필요합니다.</p>
-                    </div>
-                </div>
-                <button type="button" onclick="App.closeBylawsAuthModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg transition cursor-pointer">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-
-            <form id="bylaws-auth-form" onsubmit="App.submitBylawsAuth(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-                        <span>회칙 열람 비밀번호를 입력해주세요</span>
-                        <span class="text-[10px] text-amber-600 font-semibold">보안 인증</span>
-                    </label>
-                    <input 
-                        id="bylaws-password-input" 
-                        type="password" 
-                        inputmode="numeric" 
-                        pattern="[0-9]*" 
-                        placeholder="비밀번호 입력" 
-                        maxlength="10"
-                        autocomplete="off"
-                        class="w-full text-center tracking-widest text-lg font-bold px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
-                        required
-                    >
-                    <p id="bylaws-auth-error-msg" class="text-xs text-rose-600 font-semibold mt-1.5 hidden flex items-center gap-1">
-                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
-                        <span>비밀번호가 올바르지 않습니다. 다시 입력해주세요.</span>
-                    </p>
-                </div>
-
-                <div class="flex items-center space-x-2 pt-2">
-                    <button type="button" onclick="App.closeBylawsAuthModal()" class="flex-1 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
-                        취소
-                    </button>
-                    <button type="submit" class="flex-1 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-sm transition flex items-center justify-center space-x-1 cursor-pointer">
-                        <i data-lucide="unlock" class="w-3.5 h-3.5"></i>
-                        <span>열람 승인</span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- 1번 탭: 교육제안 좋아요(추천) 위원 인증 및 투표 모달 -->
     <div id="like-vote-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
@@ -3010,6 +2887,181 @@
                     닫기
                 </button>
             </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 4번 탭: 연간일정 과업 추가 / 수정 모달 -->
+    <!-- ============================================================== -->
+    <div id="schedule-task-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold">
+                        <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 id="schedule-modal-title" class="font-bold text-slate-900 text-base">연간일정 과업 추가</h3>
+                        <p class="text-[11px] text-slate-500">2026~2027 연간 일정표에 과업을 등록합니다.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="App.closeScheduleTaskModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="schedule-task-form" onsubmit="App.saveScheduleTask(event)" class="space-y-4">
+                <input type="hidden" id="modal-task-id" value="">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">구분 / 과업 카테고리</label>
+                    <select id="modal-task-category" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white">
+                        <option value="조직구성">조직구성</option>
+                        <option value="공식행사">공식행사</option>
+                        <option value="정기회의">정기회의</option>
+                        <option value="핵심축제">핵심축제</option>
+                        <option value="교류사업">교류사업</option>
+                        <option value="정책활동">정책활동</option>
+                        <option value="기타">기타</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">과업명 (일정 명칭) *</label>
+                    <input id="modal-task-name" type="text" placeholder="예: 분과별 정책제안 워크숍" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white font-bold" required>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">상세 설명 / 활동 내용</label>
+                    <textarea id="modal-task-desc" rows="2" placeholder="해당 과업의 추진 목적 및 주요 일정을 서술해주세요." class="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-teal-500 focus:bg-white"></textarea>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="App.closeScheduleTaskModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                        취소
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-teal-600 hover:bg-teal-700 rounded-xl shadow-xs transition cursor-pointer">
+                        저장하기
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 5번 탭: 출석 상세 수정 모달 (특이사항 기재 및 비고 수정) -->
+    <!-- ============================================================== -->
+    <div id="attendance-cell-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <i data-lucide="user-check" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">출석 상세 수정</h3>
+                        <p id="att-modal-subtitle" class="text-[11px] text-slate-500">위원명 / 회의명</p>
+                    </div>
+                </div>
+                <button type="button" onclick="App.closeAttendanceCellModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="attendance-cell-form" onsubmit="App.saveAttendanceCellModal(event)" class="space-y-4">
+                <input type="hidden" id="modal-att-member-id" value="">
+                <input type="hidden" id="modal-att-meeting-id" value="">
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5">출석 상태 선택</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <label class="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition has-checked:bg-emerald-50 has-checked:border-emerald-500 has-checked:text-emerald-800">
+                            <input type="radio" name="attStatus" value="O" id="att-status-present" class="sr-only">
+                            <span class="text-xs font-bold flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-emerald-600 inline-block"></span>
+                                <span>O (참석)</span>
+                            </span>
+                        </label>
+                        <label class="flex items-center justify-center p-2.5 rounded-xl border border-slate-200 cursor-pointer hover:bg-slate-50 transition has-checked:bg-slate-100 has-checked:border-slate-500 has-checked:text-slate-800">
+                            <input type="radio" name="attStatus" value="" id="att-status-absent" class="sr-only">
+                            <span class="text-xs font-bold flex items-center gap-1.5">
+                                <span class="w-3 h-3 rounded-full bg-slate-300 inline-block"></span>
+                                <span>공란 (불참)</span>
+                            </span>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">상세 활동 표기 (선택)</label>
+                    <input id="modal-att-detail" type="text" placeholder="예: O [부스 운영, 간담회]" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white font-medium">
+                    <p class="text-[10px] text-slate-400 mt-1">※ 일반 참석은 'O'로 남기시고 부스운영 등 특이사항이 있을 때 기재해주세요.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">위원 비고 사항</label>
+                    <input id="modal-att-note" type="text" placeholder="예: 수요일 회의 참석 어려움 의사 표명" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="App.closeAttendanceCellModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                        취소
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition cursor-pointer">
+                        적용 및 저장
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- 5번 탭: 새 회의 / 행사 열 추가 모달 -->
+    <!-- ============================================================== -->
+    <div id="attendance-meeting-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                        <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                    </div>
+                    <h3 class="font-bold text-slate-900 text-base">새 회의/행사 열 추가</h3>
+                </div>
+                <button type="button" onclick="App.closeAddAttendanceMeetingModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="attendance-meeting-form" onsubmit="App.saveNewAttendanceMeeting(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">회의 / 행사 명칭 *</label>
+                    <input id="modal-meeting-label" type="text" placeholder="예: 26년 10월 워크숍" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white font-bold" required>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">해당 연도</label>
+                        <select id="modal-meeting-year" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                            <option value="2026">2026년</option>
+                            <option value="2027">2027년</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">유형</label>
+                        <select id="modal-meeting-type" class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:bg-white">
+                            <option value="monthly">정기 회의</option>
+                            <option value="special">특별 행사 / 간담회</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-100 flex items-center justify-end space-x-2">
+                    <button type="button" onclick="App.closeAddAttendanceMeetingModal()" class="px-4 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                        취소
+                    </button>
+                    <button type="submit" class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition cursor-pointer">
+                        추가하기
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -3034,8 +3086,8 @@
             var v = Date.now();
             var scripts = [
                 'js/data.js',
-                'js/bylaws_diff.js',
                 'js/flow_data.js',
+                'js/attendance_schedule_data.js',
                 'js/app.js'
             ];
             for (var i = 0; i < scripts.length; i++) {
@@ -3045,8 +3097,8 @@
     </script>
     <noscript>
         <script src="js/data.js"></script>
-        <script src="js/bylaws_diff.js"></script>
         <script src="js/flow_data.js"></script>
+        <script src="js/attendance_schedule_data.js"></script>
         <script src="js/app.js"></script>
     </noscript>
 </body>

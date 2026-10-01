@@ -44,20 +44,21 @@ const App = {
     surveyChartViewMode: "visual",
     iconDebounceTimer: null,
 
-    // 4번 탭 (협의체 전체 플로우) 상태
+    // 4번 탭 (협의체 전체 플로우 및 연간일정) 상태
     flowYear: 2026, // "all", 2026, 2027
     flowQuarter: "all", // "all", "Q1", "Q2", "Q3", "Q4"
     flowSearch: "",
     flowCheckedTasks: {},
+    scheduleYear: 2026, // 4번 탭 연간일정 간트차트 연도 (2026 or 2027)
+    annualSchedule: {}, // 2026 및 2027 연간일정 과업 데이터셋
 
-    // 5번 탭 (위원 명단 관리: 운영위, 분과위원, 홍보팀) 상태
+    // 5번 탭 (위원 명단 관리: 운영위, 분과위원, 홍보팀, 출석명부) 상태
     steeringMembers: [],
     divisionMembers: [],   // 분과 위원 명단
     prMembers: [],         // 홍보팀 명단 (팀장: 김나연 분과장, 팀원: 유연주 병점구 위원)
     tab5Sub: "division",   // 5번 탭의 활성 서브 탭 (기본값: "division")
-
-    // 3번 탭 (회칙 정리) 보안 인증 상태 (비밀번호: 1123)
-    isBylawsAuthenticated: sessionStorage.getItem("dongtan_bylaws_auth") === "true",
+    attendanceData: [],    // 1번 사진 기반 위원별 23개 회의 출석부 데이터
+    attendanceMeetings: [], // 23개 회의/일정 메타데이터
 
     // 관리자 권한 상태
     isAdmin: sessionStorage.getItem("dongtan_admin_auth") === "true",
@@ -67,12 +68,10 @@ const App = {
         this.setupNavigation();
         this.setupPadlet();
         this.setupIdeation();
-        this.setupBylaws();
         this.setupCouncilFlow();
         this.setupProgramDraft();
         this.renderAll();
         this.updateAdminUI();
-        this.updateBylawsAuthUI();
         this.updateIcons();
     },
 
@@ -301,6 +300,75 @@ const App = {
         } catch {
             this.trashPrograms = [];
         }
+
+        // 7. 4번 탭: 연간일정 간트차트 데이터 (2번 사진 기반, 2026 및 2027 연계)
+        try {
+            const savedSched = localStorage.getItem("dongtan_annual_schedule_v2");
+            if (savedSched) {
+                this.annualSchedule = JSON.parse(savedSched);
+            } else if (typeof ANNUAL_SCHEDULE_INITIAL !== "undefined") {
+                this.annualSchedule = JSON.parse(JSON.stringify(ANNUAL_SCHEDULE_INITIAL));
+                this.saveAnnualSchedule();
+            }
+        } catch {
+            if (typeof ANNUAL_SCHEDULE_INITIAL !== "undefined") {
+                this.annualSchedule = JSON.parse(JSON.stringify(ANNUAL_SCHEDULE_INITIAL));
+            }
+        }
+
+        // 8. 5번 탭: 출석 명부 관리 데이터 (1번 사진 기반, 12인 위원)
+        try {
+            const savedAtt = localStorage.getItem("dongtan_attendance_records_v2");
+            if (savedAtt) {
+                this.attendanceData = JSON.parse(savedAtt);
+            } else if (typeof ATTENDANCE_INITIAL_DATA !== "undefined") {
+                this.attendanceData = JSON.parse(JSON.stringify(ATTENDANCE_INITIAL_DATA));
+                this.saveAttendanceData();
+            }
+        } catch {
+            if (typeof ATTENDANCE_INITIAL_DATA !== "undefined") {
+                this.attendanceData = JSON.parse(JSON.stringify(ATTENDANCE_INITIAL_DATA));
+            }
+        }
+
+        // 9. 5번 탭: 회의 및 행사 열 목록 (총 23개 일정)
+        try {
+            const savedMeetings = localStorage.getItem("dongtan_attendance_meetings_v2");
+            if (savedMeetings) {
+                this.attendanceMeetings = JSON.parse(savedMeetings);
+            } else if (typeof ATTENDANCE_MEETINGS !== "undefined") {
+                this.attendanceMeetings = JSON.parse(JSON.stringify(ATTENDANCE_MEETINGS));
+                this.saveAttendanceMeetings();
+            }
+        } catch {
+            if (typeof ATTENDANCE_MEETINGS !== "undefined") {
+                this.attendanceMeetings = JSON.parse(JSON.stringify(ATTENDANCE_MEETINGS));
+            }
+        }
+    },
+
+    saveAnnualSchedule() {
+        try {
+            localStorage.setItem("dongtan_annual_schedule_v2", JSON.stringify(this.annualSchedule));
+        } catch (e) {
+            console.warn("연간일정 저장 실패:", e);
+        }
+    },
+
+    saveAttendanceData() {
+        try {
+            localStorage.setItem("dongtan_attendance_records_v2", JSON.stringify(this.attendanceData));
+        } catch (e) {
+            console.warn("출석부 저장 실패:", e);
+        }
+    },
+
+    saveAttendanceMeetings() {
+        try {
+            localStorage.setItem("dongtan_attendance_meetings_v2", JSON.stringify(this.attendanceMeetings));
+        } catch (e) {
+            console.warn("회의 일정 목록 저장 실패:", e);
+        }
     },
 
     savePrMembers() {
@@ -401,10 +469,6 @@ const App = {
             btn.addEventListener("click", () => {
                 const targetTab = btn.getAttribute("data-tab");
                 if (targetTab) {
-                    if (targetTab === "tab-3" && !this.isBylawsAuthenticated) {
-                        this.openBylawsAuthModal();
-                        return;
-                    }
                     this.switchTab(targetTab);
                     // 모바일 화면에서는 탭 선택 후 사이드바 메뉴 자동 닫기
                     if (window.innerWidth < 1024) {
@@ -437,11 +501,13 @@ const App = {
             { id: "steering-member-modal", close: () => this.closeSteeringModal() },
             { id: "division-member-modal", close: () => this.closeDivisionModal() },
             { id: "admin-auth-modal", close: () => this.closeAdminModal() },
-            { id: "bylaws-auth-modal", close: () => this.closeBylawsAuthModal() },
             { id: "like-vote-modal", close: () => this.closeLikeVoteModal() },
             { id: "liked-by-modal", close: () => this.closeLikedByModal() },
             { id: "comment-modal", close: () => this.closeCommentModal() },
-            { id: "cloud-sync-modal", close: () => this.closeCloudSyncModal() }
+            { id: "cloud-sync-modal", close: () => this.closeCloudSyncModal() },
+            { id: "schedule-task-modal", close: () => this.closeScheduleTaskModal() },
+            { id: "attendance-cell-modal", close: () => this.closeAttendanceCellModal() },
+            { id: "attendance-meeting-modal", close: () => this.closeAddAttendanceMeetingModal() }
         ];
 
         modalBackdrops.forEach(({ id, close }) => {
@@ -460,11 +526,13 @@ const App = {
                 this.closeSteeringModal();
                 this.closeDivisionModal();
                 this.closeAdminModal();
-                this.closeBylawsAuthModal();
                 this.closeLikeVoteModal();
                 this.closeLikedByModal();
                 this.closeCommentModal();
                 this.closeCloudSyncModal();
+                this.closeScheduleTaskModal();
+                this.closeAttendanceCellModal();
+                this.closeAddAttendanceMeetingModal();
                 this.closeMobileSidebar();
             }
         });
@@ -726,9 +794,8 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     },
 
     switchTab(tabId) {
-        if (tabId === "tab-3" && !this.isBylawsAuthenticated) {
-            this.openBylawsAuthModal();
-            return;
+        if (tabId === "tab-3") {
+            tabId = "tab-1";
         }
 
         if (this.currentTab === tabId) return;
@@ -742,9 +809,8 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
         const tabTitles = {
             "tab-1": "1. 2027년 교육 프로그램 취합 (패들렛 보드)",
             "tab-2": "2. 2027년 정책제안서 작성 아이디에이션 (5단계 워크플로우)",
-            "tab-3": "3. 회칙 정리 (신·구 조문 대비표 & 파일 보관함)",
-            "tab-4": "4. 협의체 전체 플로우 (2026~2027 연간 로드맵)",
-            "tab-5": "5. 위원 명단 관리 (운영위원회 & 분과위원)",
+            "tab-4": "4. 협의체 전체 플로우 및 연간일정 (2026~2027 로드맵)",
+            "tab-5": "5. 위원 명단 관리 (운영위·분과위원·홍보팀·출석부)",
             "tab-6": "6. 휴지통 (삭제된 교육 제안 30일 보관함)"
         };
         const titleEl = document.getElementById("header-active-tab-title");
@@ -767,9 +833,8 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
             if (this.surveyChartViewMode === "chart") {
                 setTimeout(() => this.renderSurveyChart(), 100);
             }
-        } else if (tabId === "tab-3") {
-            this.renderBylawsDiff();
         } else if (tabId === "tab-4") {
+            this.renderAnnualSchedule();
             this.renderCouncilFlow();
         } else if (tabId === "tab-5") {
             this.switchTab5Sub(this.tab5Sub || "division");
@@ -3399,7 +3464,7 @@ ${data.effects}
     },
 
     // ==========================================
-    // 5번 탭 상단 서브 탭 전환 (운영위원회 / 분과 위원 / 홍보팀 명단 관리)
+    // 5번 탭 상단 서브 탭 전환 (운영위원회 / 분과 위원 / 홍보팀 / 출석 명부 관리)
     // ==========================================
     switchTab5Sub(subTab) {
         this.tab5Sub = subTab;
@@ -3407,37 +3472,47 @@ ${data.effects}
         const steeringBtn = document.getElementById("tab5-sub-steering-btn");
         const divisionBtn = document.getElementById("tab5-sub-division-btn");
         const prBtn = document.getElementById("tab5-sub-pr-btn");
+        const attendanceBtn = document.getElementById("tab5-sub-attendance-btn");
 
         const steeringPanel = document.getElementById("tab5-panel-steering");
         const divisionPanel = document.getElementById("tab5-panel-division");
         const prPanel = document.getElementById("tab5-panel-pr");
+        const attendancePanel = document.getElementById("tab5-panel-attendance");
 
         // 초기화: 모든 버튼 비활성 스타일 적용
-        const inactiveBtnClass = "px-5 sm:px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition";
+        const inactiveBtnClass = "px-5 sm:px-6 py-3.5 text-sm font-semibold text-slate-500 hover:text-slate-800 hover:bg-slate-100 border-b-2 border-transparent flex items-center gap-2 transition cursor-pointer";
         if (steeringBtn) steeringBtn.className = inactiveBtnClass;
         if (divisionBtn) divisionBtn.className = inactiveBtnClass;
         if (prBtn) prBtn.className = inactiveBtnClass;
+        if (attendanceBtn) attendanceBtn.className = inactiveBtnClass;
 
         if (steeringPanel) steeringPanel.classList.add("hidden");
         if (divisionPanel) divisionPanel.classList.add("hidden");
         if (prPanel) prPanel.classList.add("hidden");
+        if (attendancePanel) attendancePanel.classList.add("hidden");
 
         if (subTab === "steering") {
             if (steeringBtn) {
-                steeringBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-blue-600 border-b-2 border-blue-600 flex items-center gap-2 transition shadow-xs";
+                steeringBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-blue-600 border-b-2 border-blue-600 flex items-center gap-2 transition shadow-xs cursor-pointer";
             }
             if (steeringPanel) steeringPanel.classList.remove("hidden");
             this.renderSteeringMembersGrid();
         } else if (subTab === "pr") {
             if (prBtn) {
-                prBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-rose-600 border-b-2 border-rose-600 flex items-center gap-2 transition shadow-xs";
+                prBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-rose-600 border-b-2 border-rose-600 flex items-center gap-2 transition shadow-xs cursor-pointer";
             }
             if (prPanel) prPanel.classList.remove("hidden");
             this.renderPrMembersGrid();
+        } else if (subTab === "attendance") {
+            if (attendanceBtn) {
+                attendanceBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-emerald-600 border-b-2 border-emerald-600 flex items-center gap-2 transition shadow-xs cursor-pointer";
+            }
+            if (attendancePanel) attendancePanel.classList.remove("hidden");
+            this.renderAttendanceTable();
         } else {
             // 기본값: division (분과 위원 명단 관리)
             if (divisionBtn) {
-                divisionBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center gap-2 transition shadow-xs";
+                divisionBtn.className = "px-5 sm:px-6 py-3.5 text-sm font-bold text-white bg-violet-600 border-b-2 border-violet-600 flex items-center gap-2 transition shadow-xs cursor-pointer";
             }
             if (divisionPanel) divisionPanel.classList.remove("hidden");
             this.renderDivisionMembersGrid();
@@ -4206,6 +4281,662 @@ function doPost(e) {
         }
     },
 
+    // ==============================================================
+    // [4번 탭] 연간일정 (2번 사진 기반 공식 연간 추진 간트차트 & 실시간 편집기)
+    // ==============================================================
+    setScheduleYear(year) {
+        this.scheduleYear = parseInt(year, 10);
+        const btn2026 = document.getElementById("sched-tab-2026-btn");
+        const btn2027 = document.getElementById("sched-tab-2027-btn");
+        const badge = document.getElementById("schedule-current-year-badge");
+
+        if (btn2026 && btn2027) {
+            if (this.scheduleYear === 2026) {
+                btn2026.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-blue-600 text-white shadow-xs transition cursor-pointer";
+                btn2027.className = "px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition cursor-pointer";
+                if (badge) badge.textContent = "(2026년 추진계획)";
+            } else {
+                btn2027.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg bg-indigo-600 text-white shadow-xs transition cursor-pointer";
+                btn2026.className = "px-3.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white rounded-lg transition cursor-pointer";
+                if (badge) badge.textContent = "(2027년 추진계획)";
+            }
+        }
+        this.renderAnnualSchedule();
+    },
+
+    renderAnnualSchedule() {
+        const container = document.getElementById("annual-schedule-gantt-container");
+        if (!container) return;
+
+        const year = this.scheduleYear || 2026;
+        if (!this.annualSchedule || !this.annualSchedule[year]) {
+            if (typeof ANNUAL_SCHEDULE_INITIAL !== "undefined" && ANNUAL_SCHEDULE_INITIAL[year]) {
+                this.annualSchedule = this.annualSchedule || {};
+                this.annualSchedule[year] = JSON.parse(JSON.stringify(ANNUAL_SCHEDULE_INITIAL[year]));
+            } else {
+                container.innerHTML = `<div class="p-6 text-center text-slate-400 text-xs">일정 데이터가 없습니다.</div>`;
+                return;
+            }
+        }
+
+        const tasks = this.annualSchedule[year] || [];
+        const months = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+
+        const categoryColors = {
+            "조직구성": "bg-slate-100 text-slate-700 border-slate-200",
+            "공식행사": "bg-indigo-50 text-indigo-700 border-indigo-200",
+            "정기회의": "bg-blue-50 text-blue-700 border-blue-200",
+            "핵심축제": "bg-rose-50 text-rose-700 border-rose-200",
+            "교류사업": "bg-teal-50 text-teal-700 border-teal-200",
+            "정책활동": "bg-emerald-50 text-emerald-700 border-emerald-200",
+            "기타": "bg-slate-50 text-slate-600 border-slate-200"
+        };
+
+        let html = `
+            <table class="w-full border-collapse border border-slate-300 text-xs shadow-2xs rounded-lg overflow-hidden">
+                <thead>
+                    <tr class="bg-slate-100 text-slate-800 font-extrabold text-center border-b border-slate-300">
+                        <th class="p-3 w-56 text-left border-r border-slate-300">구분 (주요 과업)</th>
+                        ${months.map(m => `<th class="p-2 w-12 border-r border-slate-300">${m}월</th>`).join("")}
+                        <th class="p-2 w-16 text-center">관리</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+        `;
+
+        if (tasks.length === 0) {
+            html += `<tr><td colspan="14" class="p-8 text-center text-slate-400">등록된 연간 일정이 없습니다. [+ 과업 추가] 단추를 눌러 등록해보세요.</td></tr>`;
+        } else {
+            tasks.forEach((task, idx) => {
+                const catColor = categoryColors[task.category] || categoryColors["기타"];
+                html += `
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <!-- 과업명 컬럼 -->
+                        <td class="p-2.5 border-r border-slate-300">
+                            <div class="flex items-center space-x-1.5 mb-1">
+                                <span class="text-[10px] font-extrabold px-1.5 py-0.2 rounded border ${catColor}">
+                                    ${escapeHtml(task.category || '과업')}
+                                </span>
+                            </div>
+                            <div onclick="App.openEditScheduleTaskModal('${escapeHtml(task.id)}')" class="font-bold text-slate-900 hover:text-blue-600 cursor-pointer flex items-center justify-between group" title="클릭하여 과업명 및 설명 수정">
+                                <span class="truncate">${escapeHtml(task.name)}</span>
+                                <i data-lucide="pencil" class="w-3 h-3 text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition shrink-0 ml-1"></i>
+                            </div>
+                            ${task.desc ? `<p class="text-[10px] text-slate-500 truncate mt-0.5" title="${escapeHtml(task.desc)}">${escapeHtml(task.desc)}</p>` : ''}
+                        </td>
+
+                        <!-- 1~12월 간트차트 셀 -->
+                        ${months.map(m => {
+                            const status = (task.months && task.months[m]) || "none";
+                            let cellBg = "bg-white hover:bg-blue-50/60";
+                            let cellContent = "";
+                            let cellTitle = `${m}월: 일정 없음 (클릭 시 준비 상태로 변경)`;
+
+                            if (status === "event") {
+                                cellBg = "bg-blue-500 hover:bg-blue-600 text-white font-black shadow-inner";
+                                cellContent = `<i data-lucide="check" class="w-3.5 h-3.5 mx-auto"></i>`;
+                                cellTitle = `${m}월: 본행사 / 총회 / 핵심실행 (클릭 시 빈칸으로 변경)`;
+                            } else if (status === "prep") {
+                                cellBg = "bg-slate-300 hover:bg-slate-400 text-slate-700 font-bold shadow-2xs";
+                                cellContent = `<span class="inline-block w-2 h-2 rounded-full bg-slate-500 mx-auto"></span>`;
+                                cellTitle = `${m}월: 기획 / 준비 / 활동기간 (클릭 시 본행사 상태로 변경)`;
+                            }
+
+                            return `
+                                <td onclick="App.toggleScheduleMonth('${escapeHtml(task.id)}', ${m})" class="p-1 border-r border-slate-300 text-center cursor-pointer transition select-none ${cellBg}" title="${cellTitle}">
+                                    <div class="w-full h-8 flex items-center justify-center">
+                                        ${cellContent}
+                                    </div>
+                                </td>
+                            `;
+                        }).join("")}
+
+                        <!-- 관리 컬럼 (수정 및 삭제) -->
+                        <td class="p-1 text-center border-l border-slate-200">
+                            <div class="flex items-center justify-center space-x-1">
+                                <button type="button" onclick="App.openEditScheduleTaskModal('${escapeHtml(task.id)}')" class="p-1 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition cursor-pointer" title="과업명 및 설명 수정">
+                                    <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                </button>
+                                <button type="button" onclick="App.deleteScheduleTask('${escapeHtml(task.id)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer" title="해당 과업 삭제">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        html += `
+                </tbody>
+            </table>
+        `;
+
+        container.innerHTML = html;
+        this.updateIcons();
+    },
+
+    toggleScheduleMonth(taskId, month) {
+        const year = this.scheduleYear || 2026;
+        const tasks = this.annualSchedule[year] || [];
+        const task = tasks.find(t => t.id === taskId);
+        if (!task) return;
+
+        if (!task.months) task.months = {};
+        const current = task.months[month] || "none";
+        // 순환 토글: none -> prep -> event -> none
+        let next = "prep";
+        if (current === "prep") next = "event";
+        else if (current === "event") next = "none";
+
+        task.months[month] = next;
+        this.saveAnnualSchedule();
+        this.renderAnnualSchedule();
+
+        const statusNames = { prep: "기획/준비(회색)", event: "본행사/총회(파란색)", none: "해당없음(빈칸)" };
+        this.showToast(`[${task.name}] ${month}월 상태가 '${statusNames[next]}'으로 변경되었습니다.`, "info", 1500);
+    },
+
+    openAddScheduleTaskModal() {
+        const modal = document.getElementById("schedule-task-modal");
+        const title = document.getElementById("schedule-modal-title");
+        const form = document.getElementById("schedule-task-form");
+        if (!modal || !form) return;
+
+        form.reset();
+        document.getElementById("modal-task-id").value = "";
+        if (title) title.textContent = `${this.scheduleYear || 2026}년 연간일정 과업 추가`;
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        this.updateIcons();
+    },
+
+    openEditScheduleTaskModal(taskId) {
+        const year = this.scheduleYear || 2026;
+        const task = (this.annualSchedule[year] || []).find(t => t.id === taskId);
+        if (!task) return;
+
+        const modal = document.getElementById("schedule-task-modal");
+        const title = document.getElementById("schedule-modal-title");
+        if (!modal) return;
+
+        document.getElementById("modal-task-id").value = task.id;
+        document.getElementById("modal-task-category").value = task.category || "기타";
+        document.getElementById("modal-task-name").value = task.name || "";
+        document.getElementById("modal-task-desc").value = task.desc || "";
+
+        if (title) title.textContent = `연간일정 과업 수정 (${year}년)`;
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        this.updateIcons();
+    },
+
+    closeScheduleTaskModal() {
+        const modal = document.getElementById("schedule-task-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    saveScheduleTask(event) {
+        if (event) event.preventDefault();
+        const year = this.scheduleYear || 2026;
+        const taskId = document.getElementById("modal-task-id").value;
+        const category = document.getElementById("modal-task-category").value;
+        const name = document.getElementById("modal-task-name").value.trim();
+        const desc = document.getElementById("modal-task-desc").value.trim();
+
+        if (!name) {
+            this.showToast("과업명을 입력해주세요.", "warning");
+            return;
+        }
+
+        if (!this.annualSchedule[year]) this.annualSchedule[year] = [];
+
+        if (taskId) {
+            const task = this.annualSchedule[year].find(t => t.id === taskId);
+            if (task) {
+                task.category = category;
+                task.name = name;
+                task.desc = desc;
+                this.showToast("과업 정보가 수정되었습니다.", "success");
+            }
+        } else {
+            const newTask = {
+                id: `task-${Date.now()}`,
+                category: category,
+                name: name,
+                desc: desc,
+                months: { 1: "none", 2: "none", 3: "none", 4: "none", 5: "none", 6: "none", 7: "none", 8: "none", 9: "none", 10: "none", 11: "none", 12: "none" }
+            };
+            this.annualSchedule[year].push(newTask);
+            this.showToast(`[${name}] 신규 과업이 등록되었습니다.`, "success");
+        }
+
+        this.saveAnnualSchedule();
+        this.closeScheduleTaskModal();
+        this.renderAnnualSchedule();
+    },
+
+    deleteScheduleTask(taskId) {
+        const year = this.scheduleYear || 2026;
+        const task = (this.annualSchedule[year] || []).find(t => t.id === taskId);
+        if (!task) return;
+
+        if (confirm(`정말 '${task.name}' 과업을 ${year}년 일정표에서 삭제하시겠습니까?`)) {
+            this.annualSchedule[year] = this.annualSchedule[year].filter(t => t.id !== taskId);
+            this.saveAnnualSchedule();
+            this.renderAnnualSchedule();
+            this.showToast(`'${task.name}' 과업이 삭제되었습니다.`, "info");
+        }
+    },
+
+    copyScheduleToOtherYear() {
+        const currentYear = this.scheduleYear || 2026;
+        const targetYear = currentYear === 2026 ? 2027 : 2026;
+
+        if (confirm(`현재 [${currentYear}년]의 모든 과업 일정을 [${targetYear}년] 일정표로 그대로 복사 및 동기화하시겠습니까?\n(기존 ${targetYear}년 일정은 현재 내용으로 갱신됩니다)`)) {
+            const currentTasks = this.annualSchedule[currentYear] || [];
+            this.annualSchedule[targetYear] = JSON.parse(JSON.stringify(currentTasks)).map((t, idx) => {
+                return {
+                    ...t,
+                    id: `task-${targetYear}-${idx + 1}`
+                };
+            });
+            this.saveAnnualSchedule();
+            this.setScheduleYear(targetYear);
+            this.showToast(`✅ [${currentYear}년] 일정이 [${targetYear}년]으로 완벽히 복사되었습니다!`, "success");
+        }
+    },
+
+    resetScheduleToInitial() {
+        const year = this.scheduleYear || 2026;
+        if (confirm(`공식 사진 2 기준의 초기 연간일정 템플릿으로 되돌리시겠습니까?\n(${year}년에 수정한 일정이 초기화됩니다)`)) {
+            if (typeof ANNUAL_SCHEDULE_INITIAL !== "undefined" && ANNUAL_SCHEDULE_INITIAL[year]) {
+                this.annualSchedule[year] = JSON.parse(JSON.stringify(ANNUAL_SCHEDULE_INITIAL[year]));
+                this.saveAnnualSchedule();
+                this.renderAnnualSchedule();
+                this.showToast(`[${year}년] 일정이 공식 초기 템플릿으로 복원되었습니다.`, "success");
+            }
+        }
+    },
+
+    // ==============================================================
+    // [5번 탭] 출석 명부 관리 (1번 사진 완벽 일치 & 인터랙티브 편집기)
+    // ==============================================================
+    renderAttendanceTable() {
+        const thead = document.getElementById("attendance-table-head");
+        const tbody = document.getElementById("attendance-table-body");
+        const tfoot = document.getElementById("attendance-table-foot");
+        if (!thead || !tbody || !tfoot) return;
+
+        const meetings = this.attendanceMeetings || [];
+        const members = this.attendanceData || [];
+
+        // 1. thead 헤더 렌더링
+        thead.innerHTML = `
+            <tr class="divide-x divide-slate-300">
+                <th class="p-3 w-28 text-center font-black text-slate-800 bg-slate-200 sticky left-0 z-30 shadow-xs">
+                    성명
+                </th>
+                ${meetings.map(m => {
+                    const isSpecial = m.type === "special" || m.label.includes("간담회") || m.label.includes("행사");
+                    const thBg = isSpecial ? "bg-amber-100/90 text-amber-900 font-black border-b-2 border-amber-400" : "bg-slate-100 text-slate-700 font-extrabold";
+                    return `
+                        <th class="p-2 min-w-[70px] max-w-[120px] text-center ${thBg}">
+                            <div class="leading-tight">
+                                <span>${escapeHtml(m.label)}</span>
+                                ${isSpecial ? '<span class="block text-[9px] text-amber-700 font-semibold">(특별행사)</span>' : ''}
+                            </div>
+                        </th>
+                    `;
+                }).join("")}
+                <th class="p-2.5 min-w-[75px] text-center font-extrabold text-blue-900 bg-blue-50">
+                    참석 / 출석률
+                </th>
+                <th class="p-2.5 min-w-[200px] text-left font-extrabold text-slate-700 bg-slate-100">
+                    비고 (특이사항)
+                </th>
+                <th class="p-2 w-14 text-center font-bold text-slate-500 bg-slate-100">
+                    수정
+                </th>
+            </tr>
+        `;
+
+        // 2. tbody 행 렌더링 (각 위원별 출석 현황)
+        if (members.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${meetings.length + 4}" class="p-8 text-center text-slate-400">등록된 출석 위원 데이터가 없습니다.</td></tr>`;
+        } else {
+            tbody.innerHTML = members.map((m, idx) => {
+                const records = m.records || {};
+                let attendCount = 0;
+
+                // 회의별 참석 횟수 집계
+                meetings.forEach(meeting => {
+                    const val = (records[meeting.id] || "").trim();
+                    if (val && val.toUpperCase().startsWith("O")) attendCount++;
+                });
+
+                const rate = meetings.length > 0 ? Math.round((attendCount / meetings.length) * 100) : 0;
+                const isLeader = (m.role || "").includes("분과장");
+                const rowBg = idx % 2 === 1 ? "bg-slate-50/50" : "bg-white";
+
+                return `
+                    <tr class="hover:bg-blue-50/40 transition divide-x divide-slate-200 ${rowBg}">
+                        <!-- 성명 컬럼 (Sticky Left) -->
+                        <td class="p-2.5 text-center font-bold text-slate-900 bg-white sticky left-0 z-10 shadow-xs border-r border-slate-300">
+                            <div class="flex items-center justify-center space-x-1">
+                                <span class="text-xs font-black text-slate-900">${escapeHtml(m.name)}</span>
+                                ${isLeader ? '<span class="text-[9px] px-1 py-0.2 rounded bg-amber-500 text-white font-extrabold">장</span>' : ''}
+                            </div>
+                        </td>
+
+                        <!-- 23개 회의/일정 출석 셀 -->
+                        ${meetings.map(meeting => {
+                            const val = (records[meeting.id] || "").trim();
+                            const isPresent = val && val.toUpperCase().startsWith("O");
+                            const hasDetail = isPresent && val.length > 1;
+
+                            if (hasDetail) {
+                                // 예: "O [부스 운영, 간담회]"
+                                return `
+                                    <td class="p-1 text-center cursor-pointer hover:bg-emerald-50 transition" onclick="App.openAttendanceCellModal('${escapeHtml(m.id)}', '${escapeHtml(meeting.id)}')" title="클릭하여 상세 활동 수정 (${escapeHtml(val)})">
+                                        <div class="inline-flex flex-col items-center justify-center p-1 rounded-lg bg-emerald-100 text-emerald-900 border border-emerald-300 shadow-2xs max-w-[110px]">
+                                            <span class="font-black text-xs">O</span>
+                                            <span class="text-[9px] font-semibold text-emerald-800 truncate max-w-[100px]">${escapeHtml(val.replace(/^O\s*/i, ''))}</span>
+                                        </div>
+                                    </td>
+                                `;
+                            } else if (isPresent) {
+                                return `
+                                    <td class="p-1 text-center cursor-pointer hover:bg-emerald-50 transition" onclick="App.quickToggleAttendance('${escapeHtml(m.id)}', '${escapeHtml(meeting.id)}')" title="참석 (클릭 시 불참으로 토글)">
+                                        <div class="w-7 h-7 mx-auto rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-200 font-black text-xs flex items-center justify-center hover:bg-emerald-200 transition">
+                                            O
+                                        </div>
+                                    </td>
+                                `;
+                            } else {
+                                return `
+                                    <td class="p-1 text-center cursor-pointer hover:bg-slate-100 transition" onclick="App.quickToggleAttendance('${escapeHtml(m.id)}', '${escapeHtml(meeting.id)}')" title="불참/공란 (클릭 시 참석 'O'로 토글)">
+                                        <span class="text-slate-300 text-xs">-</span>
+                                    </td>
+                                `;
+                            }
+                        }).join("")}
+
+                        <!-- 출석률 -->
+                        <td class="p-2 text-center font-bold text-slate-800 bg-blue-50/40">
+                            <span class="text-xs font-black text-blue-700">${attendCount}회</span>
+                            <span class="block text-[10px] text-slate-400 font-semibold">${rate}%</span>
+                        </td>
+
+                        <!-- 비고 컬럼 (인라인 수정 지원) -->
+                        <td class="p-2 text-left text-slate-600 cursor-pointer hover:bg-amber-50/50 transition group" onclick="App.editAttendanceNoteInline('${escapeHtml(m.id)}')" title="클릭하여 비고 수정">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs ${m.notes ? 'text-slate-800 font-medium' : 'text-slate-300 italic'} truncate max-w-[240px]">
+                                    ${escapeHtml(m.notes || '비고 입력...')}
+                                </span>
+                                <i data-lucide="pencil" class="w-3 h-3 text-slate-300 group-hover:text-blue-500 opacity-0 group-hover:opacity-100 transition shrink-0 ml-1"></i>
+                            </div>
+                        </td>
+
+                        <!-- 수정 단추 -->
+                        <td class="p-1 text-center">
+                            <button type="button" onclick="App.openAttendanceCellModal('${escapeHtml(m.id)}', '${meetings[0] ? escapeHtml(meetings[0].id) : ''}')" class="p-1 text-slate-400 hover:text-emerald-600 rounded transition cursor-pointer" title="해당 위원 상세 수정">
+                                <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join("");
+        }
+
+        // 3. tfoot 요약 행 렌더링 (참석 인원 합계 행 - 1번 사진 완벽 일치)
+        const colTotals = meetings.map(meeting => {
+            let count = 0;
+            members.forEach(m => {
+                const val = ((m.records && m.records[meeting.id]) || "").trim();
+                if (val && val.toUpperCase().startsWith("O")) count++;
+            });
+            return count;
+        });
+
+        const totalAttendeesSum = colTotals.reduce((a, b) => a + b, 0);
+        const avgAttendees = meetings.length > 0 ? (totalAttendeesSum / meetings.length).toFixed(1) : 0;
+
+        tfoot.innerHTML = `
+            <tr class="divide-x divide-slate-300 bg-slate-100 text-slate-900 border-t-2 border-slate-300">
+                <td class="p-3 text-center font-black text-slate-900 bg-slate-200 sticky left-0 z-30 shadow-xs">
+                    참석 인원
+                </td>
+                ${colTotals.map((tot, idx) => {
+                    const isZero = tot === 0;
+                    return `
+                        <td class="p-2 text-center font-black ${isZero ? 'text-slate-400' : 'text-emerald-700 bg-emerald-50/70'} text-xs">
+                            ${tot > 0 ? tot : '0'}
+                        </td>
+                    `;
+                }).join("")}
+                <td class="p-2 text-center font-black text-blue-800 bg-blue-100/70 text-xs">
+                    평균 ${avgAttendees}인
+                </td>
+                <td class="p-2 text-left text-[11px] text-slate-500 font-semibold">
+                    총 12인 위원 기준 정기회의 및 특별행사 집계
+                </td>
+                <td class="p-1 text-center text-slate-400 text-[10px]">
+                    집계완료
+                </td>
+            </tr>
+        `;
+
+        this.updateIcons();
+    },
+
+    quickToggleAttendance(memberId, meetingId) {
+        const member = (this.attendanceData || []).find(m => m.id === memberId);
+        if (!member) return;
+
+        if (!member.records) member.records = {};
+        const current = (member.records[meetingId] || "").trim();
+
+        if (current && current.toUpperCase().startsWith("O")) {
+            member.records[meetingId] = "";
+        } else {
+            member.records[meetingId] = "O";
+        }
+
+        this.saveAttendanceData();
+        this.renderAttendanceTable();
+    },
+
+    editAttendanceNoteInline(memberId) {
+        const member = (this.attendanceData || []).find(m => m.id === memberId);
+        if (!member) return;
+
+        const currentNote = member.notes || "";
+        const newNote = prompt(`[${member.name} 위원] 비고(특이사항)를 입력해주세요:`, currentNote);
+        if (newNote !== null) {
+            member.notes = newNote.trim();
+            this.saveAttendanceData();
+            this.renderAttendanceTable();
+            this.showToast(`[${member.name} 위원] 비고가 저장되었습니다.`, "success");
+        }
+    },
+
+    openAttendanceCellModal(memberId, meetingId) {
+        const member = (this.attendanceData || []).find(m => m.id === memberId);
+        if (!member) return;
+
+        const meeting = (this.attendanceMeetings || []).find(meet => meet.id === meetingId) || (this.attendanceMeetings[0] || { id: "2026-04", label: "26년 4월" });
+
+        const modal = document.getElementById("attendance-cell-modal");
+        const subtitle = document.getElementById("att-modal-subtitle");
+        if (!modal) return;
+
+        document.getElementById("modal-att-member-id").value = member.id;
+        document.getElementById("modal-att-meeting-id").value = meeting.id;
+
+        if (subtitle) {
+            subtitle.textContent = `${member.name} 위원 (${member.role || '위원'}) - ${meeting.label}`;
+        }
+
+        const currentVal = ((member.records && member.records[meeting.id]) || "").trim();
+        const isPresent = currentVal && currentVal.toUpperCase().startsWith("O");
+
+        const presentRadio = document.getElementById("att-status-present");
+        const absentRadio = document.getElementById("att-status-absent");
+        if (presentRadio && absentRadio) {
+            if (isPresent) presentRadio.checked = true;
+            else absentRadio.checked = true;
+        }
+
+        document.getElementById("modal-att-detail").value = currentVal || "";
+        document.getElementById("modal-att-note").value = member.notes || "";
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        this.updateIcons();
+    },
+
+    closeAttendanceCellModal() {
+        const modal = document.getElementById("attendance-cell-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    saveAttendanceCellModal(event) {
+        if (event) event.preventDefault();
+        const memberId = document.getElementById("modal-att-member-id").value;
+        const meetingId = document.getElementById("modal-att-meeting-id").value;
+        const form = document.getElementById("attendance-cell-form");
+        const statusVal = form ? form.elements["attStatus"].value : "";
+        const detailVal = document.getElementById("modal-att-detail").value.trim();
+        const noteVal = document.getElementById("modal-att-note").value.trim();
+
+        const member = (this.attendanceData || []).find(m => m.id === memberId);
+        if (!member) return;
+
+        if (!member.records) member.records = {};
+
+        if (statusVal === "O") {
+            member.records[meetingId] = detailVal ? detailVal : "O";
+        } else {
+            member.records[meetingId] = "";
+        }
+
+        member.notes = noteVal;
+
+        this.saveAttendanceData();
+        this.closeAttendanceCellModal();
+        this.renderAttendanceTable();
+        this.showToast(`[${member.name} 위원] 출석 정보가 성공적으로 반영되었습니다.`, "success");
+    },
+
+    openAddAttendanceMeetingModal() {
+        const modal = document.getElementById("attendance-meeting-modal");
+        const form = document.getElementById("attendance-meeting-form");
+        if (!modal || !form) return;
+
+        form.reset();
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        this.updateIcons();
+    },
+
+    closeAddAttendanceMeetingModal() {
+        const modal = document.getElementById("attendance-meeting-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    saveNewAttendanceMeeting(event) {
+        if (event) event.preventDefault();
+        const label = document.getElementById("modal-meeting-label").value.trim();
+        const year = parseInt(document.getElementById("modal-meeting-year").value, 10);
+        const type = document.getElementById("modal-meeting-type").value;
+
+        if (!label) {
+            this.showToast("회의/행사 명칭을 입력해주세요.", "warning");
+            return;
+        }
+
+        const newId = `meeting-${Date.now()}`;
+        this.attendanceMeetings = this.attendanceMeetings || [];
+        this.attendanceMeetings.push({
+            id: newId,
+            label: label,
+            year: year,
+            type: type
+        });
+
+        this.saveAttendanceMeetings();
+        this.closeAddAttendanceMeetingModal();
+        this.renderAttendanceTable();
+        this.showToast(`[${label}] 신규 일정이 출석 명부에 추가되었습니다.`, "success");
+    },
+
+    resetAttendanceToInitial() {
+        if (confirm("공식 사진 1 원본 데이터로 출석부를 되돌리시겠습니까?\n(12인 위원의 출석 및 비고가 초기 상태로 복구됩니다)")) {
+            if (typeof ATTENDANCE_INITIAL_DATA !== "undefined" && typeof ATTENDANCE_MEETINGS !== "undefined") {
+                this.attendanceData = JSON.parse(JSON.stringify(ATTENDANCE_INITIAL_DATA));
+                this.attendanceMeetings = JSON.parse(JSON.stringify(ATTENDANCE_MEETINGS));
+                this.saveAttendanceData();
+                this.saveAttendanceMeetings();
+                this.renderAttendanceTable();
+                this.showToast("출석 명부가 사진 1의 공식 데이터로 완벽히 복구되었습니다.", "success");
+            }
+        }
+    },
+
+    exportAttendanceToCSV() {
+        const meetings = this.attendanceMeetings || [];
+        const members = this.attendanceData || [];
+
+        let csv = "\uFEFF"; // UTF-8 BOM
+        csv += "성명,직책," + meetings.map(m => `"${m.label}"`).join(",") + ",출석횟수,출석률(%),비고\n";
+
+        members.forEach(m => {
+            const records = m.records || {};
+            let count = 0;
+            const rowValues = meetings.map(meet => {
+                const val = (records[meet.id] || "").trim();
+                if (val && val.toUpperCase().startsWith("O")) count++;
+                return `"${val.replace(/"/g, '""')}"`;
+            });
+
+            const rate = meetings.length > 0 ? Math.round((count / meetings.length) * 100) : 0;
+            csv += `"${m.name}","${m.role || '위원'}",${rowValues.join(",")},${count},${rate}%,"${(m.notes || '').replace(/"/g, '""')}"\n`;
+        });
+
+        // 참석인원 합계 행
+        const totals = meetings.map(meet => {
+            let c = 0;
+            members.forEach(m => {
+                const val = ((m.records && m.records[meet.id]) || "").trim();
+                if (val && val.toUpperCase().startsWith("O")) c++;
+            });
+            return c;
+        });
+        csv += `"참석 인원","-",${totals.join(",")},"-","-","총 12인 위원 기준 집계"\n`;
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `화성시_청년정책협의체_출석명부_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        this.showToast("출석 명부 엑셀(CSV) 파일 다운로드가 완료되었습니다.", "success");
+    },
+
     renderAll() {
         this.renderPadletBoard();
         this.renderMcpPolicyList();
@@ -4214,6 +4945,8 @@ function doPost(e) {
         this.renderSteeringMembersGrid();
         this.renderDivisionMembersGrid();
         this.renderPrMembersGrid();
+        this.renderAttendanceTable();
+        this.renderAnnualSchedule();
         this.renderCouncilFlow();
         this.updateTrashBadge();
         this.animateSurveyBars();
