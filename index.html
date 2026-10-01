@@ -420,134 +420,355 @@
             <div id="ideation-steps-wrapper" class="relative">
 
                 <!-- ---------------------------------------------------------- -->
-                <!-- STEP 1: 최근 청년 설문조사 크롤링/통계 분석 안내 -->
+                <!-- STEP 1: 최근 청년 설문조사 및 화성시 정책 로드맵 안내 -->
                 <!-- ---------------------------------------------------------- -->
-                <div id="ideation-step-1" class="step-panel space-y-6">
+                <div id="ideation-step-1" class="step-panel space-y-8">
                     <div class="glass-card p-6 sm:p-8 rounded-2xl shadow-sm">
+                        <!-- 섹션 상단 헤더 -->
                         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200">
                             <div>
-                                <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">STEP 01. 빅데이터 실태 분석</span>
+                                <span class="text-xs font-bold text-blue-600 tracking-wider uppercase">STEP 01. 빅데이터 실태 분석 및 정책 나침반</span>
                                 <h3 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">
-                                    청년들이 지금 가장 필요로 하는 도움은 무엇일까요?
+                                    청년들의 현실 애로사항 및 2027~2030 정책 수립 근거
                                 </h3>
                                 <p class="text-xs sm:text-sm text-slate-500 mt-1">
-                                    국무조정실, 경기도, 화성특례시의 공식 청년 삶 실태조사 데이터를 종합 분석하여 정책 제안의 명확한 근거를 제공합니다.
+                                    대한민국 청년들의 공식 실태조사 빅데이터와 화성특례시 정명근 시장의 청년 공약 및 제2차 청년정책 기본계획을 종합 분석하여 최적의 아이디에이션 근거를 제공합니다.
                                 </p>
                             </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xs font-semibold px-3 py-1.5 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200 flex items-center gap-1">
+                            <div class="flex items-center space-x-2 shrink-0">
+                                <span class="text-xs font-semibold px-3 py-1.5 bg-blue-50 text-blue-700 rounded-lg border border-blue-200 flex items-center gap-1">
                                     <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
-                                    공식 출처 데이터 반영
+                                    온통청년 & 화성특례시 공식 데이터
                                 </span>
                             </div>
                         </div>
 
-                        <!-- 설문조사 출처 카드 목록 -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 my-6">
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                <div class="flex items-center space-x-2 text-blue-700 font-bold text-xs mb-1">
-                                    <i data-lucide="landmark" class="w-4 h-4"></i>
-                                    <span>국무조정실 / 통계청</span>
+                        <!-- ============================================================== -->
+                        <!-- 1. 대한민국 청년 (2024년 ~ 2026년 실태 및 지원 필요) -->
+                        <!-- ============================================================== -->
+                        <div class="mt-8 space-y-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b-2 border-blue-600">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2.5 py-1 bg-blue-600 text-white font-black text-xs rounded-md shadow-xs">1</span>
+                                    <h4 class="text-lg font-black text-slate-900">
+                                        대한민국 청년 : 2024~2026년 주요 애로사항 및 지원 필요 분석
+                                    </h4>
                                 </div>
-                                <h4 class="font-bold text-slate-900 text-sm mb-1">2024~2026 청년 삶 실태조사</h4>
-                                <p class="text-xs text-slate-500 mb-2">전국 17,000 청년 가구 표본, 주거비·일자리·정신건강 종합 분석</p>
-                                <a href="https://www.2030db.go.kr" target="_blank" class="text-[11px] font-semibold text-blue-600 hover:underline flex items-center gap-1">
-                                    <span>출처 데이터 원문 열람</span>
-                                    <i data-lucide="external-link" class="w-3 h-3"></i>
+                                <a href="https://www.youthcenter.go.kr/bbs03List/50?srchParam=&curPageNum=1&srchParamEtc1=&srchParamEtc2=9&srchParamEtc3=DESC&srchParamEtc4=1" 
+                                   target="_blank" rel="noopener noreferrer" 
+                                   class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg text-xs font-bold transition border border-blue-200">
+                                    <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                                    <span>온통청년 청년 연구자료실 원문 열람</span>
                                 </a>
                             </div>
 
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                <div class="flex items-center space-x-2 text-teal-700 font-bold text-xs mb-1">
-                                    <i data-lucide="pie-chart" class="w-4 h-4"></i>
-                                    <span>경기연구원 / 경기도</span>
+                            <!-- 대한민국 청년 실태 3대 핵심 지표 요약 카드 -->
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                                <div class="p-4 bg-gradient-to-br from-blue-50 to-indigo-50/50 rounded-xl border border-blue-100">
+                                    <div class="flex items-center justify-between text-blue-900 font-bold text-xs mb-1">
+                                        <span>주거비 & 부채 실태</span>
+                                        <span class="text-[10px] bg-blue-200/60 px-1.5 py-0.5 rounded text-blue-800">1위 필요</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-blue-700 mb-1">45.7%</div>
+                                    <p class="text-xs text-slate-600 leading-snug">
+                                        청년이 가장 필요로 하는 정책 1위. 평균 부채 1,637만 원 중 <strong>주택 부채가 71%</strong>를 차지하며 전세사기 및 월세 부담 극심.
+                                    </p>
                                 </div>
-                                <h4 class="font-bold text-slate-900 text-sm mb-1">경기 청년 패널조사 보고서</h4>
-                                <p class="text-xs text-slate-500 mb-2">경기도 청년 3,500명 대상, 출퇴근 피로도 및 노동환경 실태</p>
-                                <a href="https://youth.gg.go.kr" target="_blank" class="text-[11px] font-semibold text-teal-600 hover:underline flex items-center gap-1">
-                                    <span>경기청년포털 확인</span>
-                                    <i data-lucide="external-link" class="w-3 h-3"></i>
-                                </a>
+
+                                <div class="p-4 bg-gradient-to-br from-teal-50 to-emerald-50/50 rounded-xl border border-teal-100">
+                                    <div class="flex items-center justify-between text-teal-900 font-bold text-xs mb-1">
+                                        <span>일자리 & 취업 미스매치</span>
+                                        <span class="text-[10px] bg-teal-200/60 px-1.5 py-0.5 rounded text-teal-800">2위 필요</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-teal-700 mb-1">33.5%</div>
+                                    <p class="text-xs text-slate-600 leading-snug">
+                                        수시·경력직 채용 선호로 신입 진입 장벽 심화. 실무형 일경험(AX·AI) 및 구직촉진수당 확충 절실.
+                                    </p>
+                                </div>
+
+                                <div class="p-4 bg-gradient-to-br from-purple-50 to-pink-50/50 rounded-xl border border-purple-100">
+                                    <div class="flex items-center justify-between text-purple-900 font-bold text-xs mb-1">
+                                        <span>복지·문화 & 마음건강</span>
+                                        <span class="text-[10px] bg-purple-200/60 px-1.5 py-0.5 rounded text-purple-800">3위 필요</span>
+                                    </div>
+                                    <div class="text-2xl font-black text-purple-700 mb-1">14.1%</div>
+                                    <p class="text-xs text-slate-600 leading-snug">
+                                        고립·은둔 청년 전국 54만 명 추산. 번아웃과 취업 스트레스 해소를 위한 전문 심리상담 및 문화비 지원 요구.
+                                    </p>
+                                </div>
                             </div>
 
-                            <div class="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                <div class="flex items-center space-x-2 text-indigo-700 font-bold text-xs mb-1">
-                                    <i data-lucide="map-pin" class="w-4 h-4"></i>
-                                    <span>화성특례시 / 화성연구원</span>
+                            <!-- 실태조사 차트 및 4대 애로사항 그리드 -->
+                            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+                                <!-- 좌측: 차트 영역 -->
+                                <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-xs">
+                                    <div>
+                                        <div class="flex items-center justify-between mb-3">
+                                            <h5 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                                                <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-600"></i>
+                                                청년이 꼽은 가장 시급한 정책 지원 분야
+                                            </h5>
+                                            <span class="text-[11px] text-slate-400">단위: %</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 mb-2">
+                                            국무조정실·한국보건사회연구원 「2024~2026 청년 삶 실태조사」 기준
+                                        </p>
+                                    </div>
+                                    <div class="h-60 relative my-2">
+                                        <canvas id="surveyChart"></canvas>
+                                    </div>
+                                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-[11px] text-slate-600">
+                                        💡 <strong>시사점:</strong> 단순 현금 지급보다 <strong>주거비 경감(45.7%)</strong>과 <strong>취업 직결 실무교육(33.5%)</strong>의 결합 정책이 가장 높은 체감 효용을 가집니다.
+                                    </div>
                                 </div>
-                                <h4 class="font-bold text-slate-900 text-sm mb-1">화성시 청년 사회경제 통계</h4>
-                                <p class="text-xs text-slate-500 mb-2">동탄 권역 청년 1,200명 대상 특화 수요, 1인가구 거점 욕구</p>
-                                <a href="https://hey.hscity.go.kr" target="_blank" class="text-[11px] font-semibold text-indigo-600 hover:underline flex items-center gap-1">
-                                    <span>화성시 청년청 확인</span>
-                                    <i data-lucide="external-link" class="w-3 h-3"></i>
-                                </a>
+
+                                <!-- 우측: 4대 핵심 애로사항 및 지원 요구 분석 -->
+                                <div class="lg:col-span-7 space-y-2.5">
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-blue-300 transition shadow-2xs">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-6 h-6 rounded-md bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs">🏠</span>
+                                                <h6 class="font-bold text-slate-900 text-xs sm:text-sm">주거 불안정 및 전월세 부담 (지원 1순위: 45.7%)</h6>
+                                            </div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100">최우선 과제</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 leading-relaxed pl-8">
+                                            • <strong>애로사항:</strong> 전세사기·깡통전세 공포(78.3%), 고금리로 인한 대출이자 부담, 월세 급등으로 가처분 소득 고갈.<br/>
+                                            • <strong>필요 지원:</strong> 청년 전용 공공임대주택 공급 확대, 전세보증금 대출이자 지원, 전세보증금 반환보증료 지원, 이사비·중개보수 지원.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-teal-300 transition shadow-2xs">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-6 h-6 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-xs">💼</span>
+                                                <h6 class="font-bold text-slate-900 text-xs sm:text-sm">일자리 미스매치 및 실무 역량 부족 (지원 2순위: 33.5%)</h6>
+                                            </div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-100">취업 역량</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 leading-relaxed pl-8">
+                                            • <strong>애로사항:</strong> 기업의 경력직 선호 현상으로 신입 구직 기간 장기화, 학교 교육과 산업 현장(AI, AX, 반도체) 간의 괴리.<br/>
+                                            • <strong>필요 지원:</strong> 실전 프로젝트형 직무 부트캠프, 구직촉진수당, 어학 및 자격증 응시료 지원, 기업 연계형 인턴십.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-amber-300 transition shadow-2xs">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-6 h-6 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs">💰</span>
+                                                <h6 class="font-bold text-slate-900 text-xs sm:text-sm">자산형성 단절 및 고금리 생활고 (평균 부채 1,637만 원)</h6>
+                                            </div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-100">금융 안전망</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 leading-relaxed pl-8">
+                                            • <strong>애로사항:</strong> 월 생활비(평균 213만 원) 대비 저임금으로 자산 축적 불가, 청년층 다중채무 및 신용유의자 증가.<br/>
+                                            • <strong>필요 지원:</strong> 청년도약계좌 등 매칭지원금 연계, 소액 금융상담 및 채무조정 지원, 청년 자립 자산형성 통장.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 hover:border-purple-300 transition shadow-2xs">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <div class="flex items-center space-x-2">
+                                                <span class="w-6 h-6 rounded-md bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs">🧠</span>
+                                                <h6 class="font-bold text-slate-900 text-xs sm:text-sm">마음건강 위기 및 사회적 고립 (고립·은둔 54만 명)</h6>
+                                            </div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-100">심리 안전망</span>
+                                        </div>
+                                        <p class="text-xs text-slate-600 leading-relaxed pl-8">
+                                            • <strong>애로사항:</strong> 끝없는 스펙 경쟁과 취업 실패로 인한 번아웃, 사회적 지지 기반 부재로 인한 심리적 고립감(38.5%).<br/>
+                                            • <strong>필요 지원:</strong> 청년 마음건강 바우처(전문 1:1 심리상담), 온통청년 24시간 챗봇·심층상담, 청년 소셜다이닝 및 힐링 공간.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- 설문조사 차트 및 핵심 니즈 영역 -->
-                        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 my-6">
-                            <!-- 차트 영역 -->
-                            <div class="lg:col-span-6 bg-white p-5 rounded-xl border border-slate-200 flex flex-col justify-between">
-                                <div class="flex items-center justify-between mb-4">
-                                    <h4 class="font-bold text-slate-900 text-sm flex items-center gap-1.5">
-                                        <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-600"></i>
-                                        청년들의 주요 애로사항 및 지원 필요도
+                        <!-- ============================================================== -->
+                        <!-- 2. 화성시 청년 (정명근 화성시장 청년공약 & 2027~2030 기본자료) -->
+                        <!-- ============================================================== -->
+                        <div class="mt-12 space-y-6 pt-8 border-t border-slate-200">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b-2 border-indigo-600">
+                                <div class="flex items-center space-x-2">
+                                    <span class="px-2.5 py-1 bg-indigo-600 text-white font-black text-xs rounded-md shadow-xs">2</span>
+                                    <h4 class="text-lg font-black text-slate-900">
+                                        화성시 청년 : 정명근 화성시장 청년공약 & 2027~2030 청년정책 기본계획
                                     </h4>
-                                    <span class="text-[11px] text-slate-400">단위: %</span>
                                 </div>
-                                <div class="h-64 relative">
-                                    <canvas id="surveyChart"></canvas>
-                                </div>
-                                <p class="text-[11px] text-slate-400 mt-2 text-right">* 국무조정실 및 경기연구원 패널자료 재구성</p>
+                                <a href="https://drive.google.com/file/d/1qANKOA38krNX4AIwPaGLY9BncxWg4P1Z/view?usp=drive_link" 
+                                   target="_blank" rel="noopener noreferrer" 
+                                   class="inline-flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-lg text-xs font-bold transition border border-indigo-200">
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                    <span>2026~2030 제2차 청년정책 기본계획(PDF) 열람</span>
+                                </a>
                             </div>
 
-                            <!-- 4대 세부 니즈 카드 -->
-                            <div class="lg:col-span-6 space-y-3">
-                                <div class="p-4 rounded-xl bg-blue-50/70 border border-blue-100">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <h5 class="font-bold text-blue-900 text-sm">🎓 교육 & 직무 역량강화 (68.4% 필요)</h5>
-                                        <span class="text-xs font-bold text-blue-700">핵심 1순위</span>
+                            <!-- 화성시 청년 특성 및 공약 핵심 요약 배너 -->
+                            <div class="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-950 text-white shadow-lg">
+                                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 divide-y md:divide-y-0 md:divide-x divide-slate-700/60">
+                                    <div class="px-2 pb-2 md:pb-0">
+                                        <span class="text-xs text-indigo-300 font-bold">100만 화성특례시</span>
+                                        <div class="text-xl sm:text-2xl font-black mt-1 text-white">청년 인구 30%</div>
+                                        <p class="text-xs text-slate-300 mt-1">
+                                            전국 기초지자체 중 가장 젊고 역동적인 도시, 동탄 중심 2030 밀집
+                                        </p>
                                     </div>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
-                                        AI·소프트웨어·반도체 등 첨단 기술 실무 교육 및 포트폴리오 프로젝트 기회 부족 호소. 단순 이론형 자격증보다 <strong>기업 채용과 직결되는 실전 멘토링</strong> 요구.
-                                    </p>
+                                    <div class="px-2 pt-2 md:pt-0">
+                                        <span class="text-xs text-amber-300 font-bold">청년친화헌정대상</span>
+                                        <div class="text-xl sm:text-2xl font-black mt-1 text-amber-300">2년 연속 종합대상</div>
+                                        <p class="text-xs text-slate-300 mt-1">
+                                            청년친화도시 환경 조성 및 실질적 청년 주도 거버넌스 전국 1위 공인
+                                        </p>
+                                    </div>
+                                    <div class="px-2 pt-2 md:pt-0">
+                                        <span class="text-xs text-teal-300 font-bold">2026~2030 청년 예산</span>
+                                        <div class="text-xl sm:text-2xl font-black mt-1 text-teal-300">연간 672억 원</div>
+                                        <p class="text-xs text-slate-300 mt-1">
+                                            5대 분야 68개 중점 과제 투입, 일자리·주거·복지 올인원 지원
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 정명근 화성시장 청년 4대 핵심 공약 -->
+                            <div>
+                                <h5 class="text-sm font-black text-slate-900 mb-3 flex items-center gap-1.5">
+                                    <i data-lucide="award" class="w-4 h-4 text-indigo-600"></i>
+                                    정명근 화성시장의 청년 핵심 공약 및 시정 철학
+                                    <span class="text-xs font-normal text-slate-500">("청년은 시정의 파트너이자 미래 화성의 설계자")</span>
+                                </h5>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:shadow-xs transition">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs mb-2">
+                                            <i data-lucide="users" class="w-4 h-4"></i>
+                                        </div>
+                                        <h6 class="font-bold text-slate-900 text-xs mb-1">① 시정 참여율 10% 확대</h6>
+                                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                                            화성시 224개 위원회 중 145개를 청년 위촉 위원회로 지정. 2028년 5% ➡️ 2030년 10% 이상 청년 위원 위촉 제도화.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:shadow-xs transition">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs mb-2">
+                                            <i data-lucide="briefcase" class="w-4 h-4"></i>
+                                        </div>
+                                        <h6 class="font-bold text-slate-900 text-xs mb-1">② 취업끝까지 지원센터</h6>
+                                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                                            단순 알선이 아닌 취업 성공 시까지 1:1 전담 매칭. 청년 내:일(job) 응원금 및 삼성·현대차 연계 첨단 일자리 발굴.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:shadow-xs transition">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs mb-2">
+                                            <i data-lucide="home" class="w-4 h-4"></i>
+                                        </div>
+                                        <h6 class="font-bold text-slate-900 text-xs mb-1">③ 든든 주거안전망 구축</h6>
+                                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                                            청년 월세 지원(월 최대 20만 원), 전세보증금 대출이자 지원, 전세보증금 반환보증료 지원, 청년 이사비 지원 상설화.
+                                        </p>
+                                    </div>
+
+                                    <div class="p-3.5 rounded-xl bg-white border border-slate-200 shadow-2xs hover:shadow-xs transition">
+                                        <div class="w-8 h-8 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs mb-2">
+                                            <i data-lucide="sprout" class="w-4 h-4"></i>
+                                        </div>
+                                        <h6 class="font-bold text-slate-900 text-xs mb-1">④ 청년농업인 펀드 & 창업</h6>
+                                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                                            화성 농어촌 기반 스마트팜 청년농업인 육성펀드 조성 및 동탄 테크노밸리 청년 창업 인큐베이팅 지원.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 2027~2030 화성시 청년정책 기본자료 (제2차 기본계획) 5대 분야 로드맵 -->
+                            <div>
+                                <div class="flex items-center justify-between mb-3">
+                                    <h5 class="text-sm font-black text-slate-900 flex items-center gap-1.5">
+                                        <i data-lucide="map" class="w-4 h-4 text-indigo-600"></i>
+                                        2027~2030 화성시 청년정책 기본자료 5대 핵심 전략 (제2차 청년정책 기본계획 연계)
+                                    </h5>
+                                    <span class="text-xs font-bold text-indigo-600">비전: 첫걸음부터 함께, 기회가 넘치는 청년친화특례시</span>
                                 </div>
 
-                                <div class="p-4 rounded-xl bg-purple-50/70 border border-purple-100">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <h5 class="font-bold text-purple-900 text-sm">⚖️ 청년 권익 & 주거·노동 안전망 (74.8% 불안)</h5>
-                                        <span class="text-xs font-bold text-purple-700">최대 불안</span>
+                                <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+                                    <!-- 1. 일자리 -->
+                                    <div class="p-3.5 rounded-xl bg-blue-50/60 border border-blue-200 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">1. 일자리 (Job)</span>
+                                            <h6 class="font-bold text-slate-900 text-xs mt-2 mb-1.5">신산업 실무인재 양성</h6>
+                                            <ul class="text-[11px] text-slate-600 space-y-1">
+                                                <li>• AI·AX·반도체 실무 프로젝트 과정</li>
+                                                <li>• 구직단념청년 도전지원사업</li>
+                                                <li>• 로컬 스타트업 투자 펀드 조성</li>
+                                                <li>• 관내 청년기업 매칭 고용지원금</li>
+                                            </ul>
+                                        </div>
                                     </div>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
-                                        동탄 오피스텔 등 <strong>전세사기 불안(78.3%)</strong>과 중소·스타트업 포괄임금제/수당 미지급 등 <strong>노동권 침해(41.2%)</strong>에 대한 전문 법률·노무 무료 안전망 필요.
-                                    </p>
-                                </div>
 
-                                <div class="p-4 rounded-xl bg-emerald-50/70 border border-emerald-100">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <h5 class="font-bold text-emerald-900 text-sm">🗳️ 시정 참여 & 자치 권한 (71.4% 확대 희망)</h5>
-                                        <span class="text-xs font-bold text-emerald-700">거버넌스</span>
+                                    <!-- 2. 주거 -->
+                                    <div class="p-3.5 rounded-xl bg-emerald-50/60 border border-emerald-200 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-800">2. 주거 (Housing)</span>
+                                            <h6 class="font-bold text-slate-900 text-xs mt-2 mb-1.5">청년 안심 주거환경</h6>
+                                            <ul class="text-[11px] text-slate-600 space-y-1">
+                                                <li>• 동탄 등 역세권 안심주택 공급</li>
+                                                <li>• 전월세 대출이자 감면 지원</li>
+                                                <li>• 깡통전세 예방 법률 지원단</li>
+                                                <li>• 독립청년 웰컴키트 보급</li>
+                                            </ul>
+                                        </div>
                                     </div>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
-                                        시정 참여 기회가 형식적 자문에 그친다는 응답 67.8%. <strong>청년참여자율예산 및 리빙랩</strong>을 통해 청년이 예산을 직접 실행하는 실권 부여 강력 요구.
-                                    </p>
-                                </div>
 
-                                <div class="p-4 rounded-xl bg-amber-50/70 border border-amber-100">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <h5 class="font-bold text-amber-900 text-sm">🏢 동탄 청년 거점 & 1인가구 케어 (62.1% 요청)</h5>
-                                        <span class="text-xs font-bold text-amber-700">인프라</span>
+                                    <!-- 3. 교육 -->
+                                    <div class="p-3.5 rounded-xl bg-violet-50/60 border border-violet-200 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-violet-100 text-violet-800">3. 교육 (Education)</span>
+                                            <h6 class="font-bold text-slate-900 text-xs mt-2 mb-1.5">미래역량 평생학습</h6>
+                                            <ul class="text-[11px] text-slate-600 space-y-1">
+                                                <li>• 직무 자격증·어학 응시료 전액 지원</li>
+                                                <li>• 기업 연계 채용확정형 부트캠프</li>
+                                                <li>• 관내 대학 연계 평생교육 바우처</li>
+                                                <li>• 청년 인문·소양 리더십 아카데미</li>
+                                            </ul>
+                                        </div>
                                     </div>
-                                    <p class="text-xs text-slate-600 leading-relaxed">
-                                        타향살이 1인가구 청년 고립감(38.5%) 해소를 위한 <strong>무료 공유오피스, 소셜다이닝, 공구 대여</strong> 등 퇴근 후 모일 수 있는 생활 거점 공간 조성 요구.
-                                    </p>
+
+                                    <!-- 4. 복지·문화 -->
+                                    <div class="p-3.5 rounded-xl bg-rose-50/60 border border-rose-200 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-rose-100 text-rose-800">4. 복지·문화</span>
+                                            <h6 class="font-bold text-slate-900 text-xs mt-2 mb-1.5">활력있는 청년 라이프</h6>
+                                            <ul class="text-[11px] text-slate-600 space-y-1">
+                                                <li>• 청년지원센터(HEY) 동탄 거점화</li>
+                                                <li>• 청년 마음건강상담소 무료 심리케어</li>
+                                                <li>• 청년 문화예술활동비 지원</li>
+                                                <li>• 1인가구 고립예방 소셜다이닝</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <!-- 5. 참여·권리 -->
+                                    <div class="p-3.5 rounded-xl bg-amber-50/60 border border-amber-200 flex flex-col justify-between">
+                                        <div>
+                                            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-800">5. 참여·권리</span>
+                                            <h6 class="font-bold text-slate-900 text-xs mt-2 mb-1.5">청년 주도 거버넌스</h6>
+                                            <ul class="text-[11px] text-slate-600 space-y-1">
+                                                <li>• 청년정책협의체 분과 자치권한 강화</li>
+                                                <li>• 청년참여자율예산제 실권 부여</li>
+                                                <li>• 청년 노동권익 전문 노무상담</li>
+                                                <li>• 시정 위원회 청년 참여 10% 달성</li>
+                                            </ul>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- 하단 다음 버튼 -->
-                        <div class="pt-6 border-t border-slate-200 flex justify-end">
-                            <button onclick="App.goToStep(2)" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm shadow-md flex items-center space-x-2 transition">
+                        <div class="pt-6 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <span class="text-xs text-slate-500">
+                                💡 위의 대한민국 및 화성시 청년 실태를 기반으로 다음 단계에서 본인의 전문·강점 분야를 선택합니다.
+                            </span>
+                            <button onclick="App.goToStep(2)" class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-sm shadow-md flex items-center justify-center space-x-2 transition cursor-pointer">
                                 <span>다음 단계: 본인의 전문·강점 분야 선택하기</span>
                                 <i data-lucide="arrow-right" class="w-4 h-4"></i>
                             </button>
