@@ -500,25 +500,134 @@
 
                             <!-- 실태조사 차트 및 4대 애로사항 그리드 -->
                             <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
-                                <!-- 좌측: 차트 영역 -->
-                                <div class="lg:col-span-5 bg-white p-5 rounded-xl border border-slate-200 flex flex-col justify-between shadow-xs">
+                                <!-- 좌측: 차트 & 인포그래픽 영역 -->
+                                <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 flex flex-col justify-between shadow-xs">
                                     <div>
-                                        <div class="flex items-center justify-between mb-3">
-                                            <h5 class="font-bold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
-                                                <i data-lucide="bar-chart-2" class="w-4 h-4 text-blue-600"></i>
+                                        <div class="flex items-center justify-between mb-2">
+                                            <h5 class="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center gap-1.5">
+                                                <i data-lucide="bar-chart-3" class="w-4 h-4 text-blue-600"></i>
                                                 청년이 꼽은 가장 시급한 정책 지원 분야
                                             </h5>
-                                            <span class="text-[11px] text-slate-400">단위: %</span>
+                                            <div class="flex items-center space-x-1 bg-slate-100 p-0.5 rounded-lg text-[10px]">
+                                                <button type="button" id="survey-view-visual-btn" onclick="App.toggleSurveyChartView('visual')" class="px-2 py-0.5 rounded-md font-bold transition bg-white text-blue-700 shadow-2xs cursor-pointer">
+                                                    비주얼
+                                                </button>
+                                                <button type="button" id="survey-view-chart-btn" onclick="App.toggleSurveyChartView('chart')" class="px-2 py-0.5 rounded-md font-bold transition text-slate-500 hover:text-slate-800 cursor-pointer">
+                                                    차트
+                                                </button>
+                                            </div>
                                         </div>
-                                        <p class="text-[11px] text-slate-500 mb-2">
-                                            국무조정실·한국보건사회연구원 「2024~2026 청년 삶 실태조사」 기준
+                                        <p class="text-[11px] text-slate-500 mb-3 flex items-center justify-between">
+                                            <span>국무조정실·한국보건사회연구원 「2024~2026 청년 삶 실태조사」</span>
+                                            <span class="font-semibold text-slate-400">단위: %</span>
                                         </p>
+
+                                        <!-- 1. 비주얼 인포그래픽 애니메이션 뷰 (기본) -->
+                                        <div id="survey-visual-container" class="space-y-2.5 my-2">
+                                            <!-- 1위: 주거 지원 (45.7%) -->
+                                            <div class="p-2.5 rounded-xl bg-blue-50/70 border border-blue-200/80 transition hover:shadow-xs">
+                                                <div class="flex items-center justify-between text-xs mb-1.5">
+                                                    <div class="flex items-center space-x-1.5 font-bold text-slate-900">
+                                                        <span class="text-sm">🏠</span>
+                                                        <span class="px-1.5 py-0.2 rounded bg-blue-600 text-white text-[10px] font-black">1위</span>
+                                                        <span class="text-xs">주거 지원 정책</span>
+                                                    </div>
+                                                    <span class="font-black text-blue-700 text-xs sm:text-sm">45.7%</span>
+                                                </div>
+                                                <div class="w-full h-3 bg-blue-100/80 rounded-full overflow-hidden relative">
+                                                    <div id="survey-bar-1" class="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-1000 ease-out" style="width: 45.7%;"></div>
+                                                </div>
+                                                <div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                                                    <span>전월세 대출이자 감면, 안심주택 공급</span>
+                                                    <span class="text-blue-600 font-bold">압도적 1순위</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- 2위: 일자리·취업 지원 (33.5%) -->
+                                            <div class="p-2.5 rounded-xl bg-violet-50/70 border border-violet-200/80 transition hover:shadow-xs">
+                                                <div class="flex items-center justify-between text-xs mb-1.5">
+                                                    <div class="flex items-center space-x-1.5 font-bold text-slate-900">
+                                                        <span class="text-sm">💼</span>
+                                                        <span class="px-1.5 py-0.2 rounded bg-violet-600 text-white text-[10px] font-black">2위</span>
+                                                        <span class="text-xs">일자리·취업 지원</span>
+                                                    </div>
+                                                    <span class="font-black text-violet-700 text-xs sm:text-sm">33.5%</span>
+                                                </div>
+                                                <div class="w-full h-3 bg-violet-100/80 rounded-full overflow-hidden relative">
+                                                    <div id="survey-bar-2" class="h-full bg-gradient-to-r from-violet-500 to-purple-600 rounded-full transition-all duration-1000 ease-out" style="width: 33.5%;"></div>
+                                                </div>
+                                                <div class="flex items-center justify-between text-[10px] text-slate-500 mt-1">
+                                                    <span>신산업 실무 교육, 채용연계 부트캠프</span>
+                                                    <span class="text-violet-600 font-bold">실무 연계 선호</span>
+                                                </div>
+                                            </div>
+
+                                            <!-- 3위: 복지·문화 지원 (14.1%) -->
+                                            <div class="p-2 rounded-xl bg-emerald-50/70 border border-emerald-200/80 transition hover:shadow-xs">
+                                                <div class="flex items-center justify-between text-xs mb-1">
+                                                    <div class="flex items-center space-x-1.5 font-bold text-slate-900">
+                                                        <span class="text-sm">🎨</span>
+                                                        <span class="px-1.5 py-0.2 rounded bg-emerald-600 text-white text-[10px] font-black">3위</span>
+                                                        <span class="text-xs">복지·문화 지원</span>
+                                                    </div>
+                                                    <span class="font-black text-emerald-700 text-xs sm:text-sm">14.1%</span>
+                                                </div>
+                                                <div class="w-full h-2.5 bg-emerald-100/80 rounded-full overflow-hidden relative">
+                                                    <div id="survey-bar-3" class="h-full bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full transition-all duration-1000 ease-out" style="width: 14.1%;"></div>
+                                                </div>
+                                                <p class="text-[10px] text-slate-500 mt-0.5">청년지원센터 동탄 거점화, 무료 심리케어</p>
+                                            </div>
+
+                                            <!-- 4위 & 5위: 나란히 배치 (자산형성 4.2% & 참여권익 2.5%) -->
+                                            <div class="grid grid-cols-2 gap-2">
+                                                <div class="p-2 rounded-xl bg-amber-50/70 border border-amber-200/80">
+                                                    <div class="flex items-center justify-between text-[11px] mb-1">
+                                                        <div class="flex items-center space-x-1 font-bold text-slate-800">
+                                                            <span class="text-xs">💰</span>
+                                                            <span>자산형성</span>
+                                                        </div>
+                                                        <span class="font-black text-amber-700 text-xs">4.2%</span>
+                                                    </div>
+                                                    <div class="w-full h-2 bg-amber-100 rounded-full overflow-hidden">
+                                                        <div id="survey-bar-4" class="h-full bg-amber-500 rounded-full transition-all duration-1000 ease-out" style="width: 4.2%;"></div>
+                                                    </div>
+                                                    <span class="text-[9px] text-slate-500 mt-0.5 block truncate">내:일 응원금, 펀드</span>
+                                                </div>
+
+                                                <div class="p-2 rounded-xl bg-rose-50/70 border border-rose-200/80">
+                                                    <div class="flex items-center justify-between text-[11px] mb-1">
+                                                        <div class="flex items-center space-x-1 font-bold text-slate-800">
+                                                            <span class="text-xs">⚖️</span>
+                                                            <span>참여·권익</span>
+                                                        </div>
+                                                        <span class="font-black text-rose-700 text-xs">2.5%</span>
+                                                    </div>
+                                                    <div class="w-full h-2 bg-rose-100 rounded-full overflow-hidden">
+                                                        <div id="survey-bar-5" class="h-full bg-rose-500 rounded-full transition-all duration-1000 ease-out" style="width: 2.5%;"></div>
+                                                    </div>
+                                                    <span class="text-[9px] text-slate-500 mt-0.5 block truncate">참여예산, 시정10%</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 2. Chart.js 캔버스 뷰 (토글 시 표시) -->
+                                        <div id="survey-chart-container" class="h-60 relative my-2 hidden">
+                                            <canvas id="surveyChart"></canvas>
+                                        </div>
                                     </div>
-                                    <div class="h-60 relative my-2">
-                                        <canvas id="surveyChart"></canvas>
-                                    </div>
-                                    <div class="p-2.5 bg-slate-50 rounded-lg border border-slate-100 text-[11px] text-slate-600">
-                                        💡 <strong>시사점:</strong> 단순 현금 지급보다 <strong>주거비 경감(45.7%)</strong>과 <strong>취업 직결 실무교육(33.5%)</strong>의 결합 정책이 가장 높은 체감 효용을 가집니다.
+
+                                    <!-- 하단 핵심 시사점 배너 -->
+                                    <div class="mt-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50/60 rounded-xl border border-blue-100 text-xs text-slate-700 space-y-1">
+                                        <div class="flex items-center space-x-1.5 font-bold text-blue-900">
+                                            <span class="flex h-2 w-2 relative">
+                                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+                                            </span>
+                                            <span>핵심 분석: 주거(45.7%) + 일자리(33.5%) = 79.2%</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-600 leading-relaxed">
+                                            청년 10명 중 8명이 <strong>주거비 경감</strong>과 <strong>취업 직결 실무교육</strong>의 결합 정책을 최우선으로 지목하고 있습니다.
+                                        </p>
                                     </div>
                                 </div>
 
@@ -2170,6 +2279,150 @@
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- 1번 탭: 교육제안 좋아요(추천) 위원 인증 및 투표 모달 -->
+    <div id="like-vote-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4">
+                <div class="flex items-center space-x-2">
+                    <span class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shadow-xs">
+                        <i data-lucide="heart" class="w-4 h-4 fill-rose-500"></i>
+                    </span>
+                    <div>
+                        <h3 class="font-extrabold text-slate-900 text-base">교육 제안 추천 (좋아요 투표)</h3>
+                        <p class="text-[11px] text-slate-500">위원 1인당 1회만 투표할 수 있습니다.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="App.closeLikeVoteModal()" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- 대상 제안 사업 요약 박스 -->
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200/80 mb-4 space-y-1">
+                <div class="flex items-center justify-between">
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">추천 대상 사업</span>
+                    <span id="like-modal-prog-author" class="text-[11px] text-slate-500 font-medium">제안위원</span>
+                </div>
+                <h4 id="like-modal-prog-title" class="font-bold text-slate-900 text-sm leading-snug line-clamp-2">
+                    사업명
+                </h4>
+            </div>
+
+            <!-- 현재 추천한 위원 현황 박스 -->
+            <div class="mb-4 p-3 rounded-xl bg-rose-50/50 border border-rose-100 space-y-1.5">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-rose-800 flex items-center gap-1">
+                        <i data-lucide="users" class="w-3.5 h-3.5 text-rose-600"></i>
+                        현재 추천한 위원 (<span id="like-modal-current-count">0명</span>)
+                    </span>
+                    <span class="text-[10px] text-rose-500 font-medium">실시간 집계</span>
+                </div>
+                <div id="like-modal-current-voters" class="flex flex-wrap gap-1.5 max-h-20 overflow-y-auto pt-1">
+                    <!-- JS로 실시간 렌더링 -->
+                </div>
+            </div>
+
+            <!-- 인증 폼 -->
+            <form id="like-vote-form" onsubmit="App.handleLikeVoteSubmit(event)" class="space-y-4">
+                <input type="hidden" id="like-modal-prog-id">
+
+                <!-- 1. 위원 성함 선택 -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span>1. 본인 위원 성함 선택 *</span>
+                        <span class="text-[10px] text-slate-400 font-normal">본인 확인용</span>
+                    </label>
+                    <select id="like-modal-voter-select" class="w-full text-xs px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white font-medium transition cursor-pointer" required>
+                        <option value="">-- 성함을 선택해주세요 --</option>
+                    </select>
+                </div>
+
+                <!-- 2. 비밀번호 (전화번호 끝 4자리) -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span>2. 비밀번호 (전화번호 숫자 끝 4자리) *</span>
+                        <span class="text-[10px] text-rose-600 font-semibold">보안 PIN</span>
+                    </label>
+                    <div class="relative">
+                        <input 
+                            id="like-modal-pin-input" 
+                            type="password" 
+                            inputmode="numeric" 
+                            pattern="[0-9]*" 
+                            placeholder="전화번호 끝 4자리 (예: 3442)" 
+                            maxlength="4"
+                            autocomplete="off"
+                            class="w-full text-center tracking-widest text-base font-bold px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-rose-500 focus:bg-white transition"
+                            required
+                        >
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
+                            <i data-lucide="lock" class="w-4 h-4"></i>
+                        </div>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-1">
+                        💡 위원 명단(5번 탭)에 등록된 본인 휴대전화의 마지막 4자리 숫자입니다.
+                    </p>
+                </div>
+
+                <!-- 오류 메시지 -->
+                <div id="like-modal-error" class="hidden p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium flex items-center gap-1.5">
+                    <i data-lucide="alert-circle" class="w-4 h-4 text-rose-600 shrink-0"></i>
+                    <span id="like-modal-error-msg">비밀번호가 올바르지 않습니다.</span>
+                </div>
+
+                <!-- 성공 메시지 -->
+                <div id="like-modal-success" class="hidden p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 font-bold flex items-center gap-1.5">
+                    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-600 shrink-0"></i>
+                    <span id="like-modal-success-msg">추천이 성공적으로 반영되었습니다.</span>
+                </div>
+
+                <div class="flex items-center space-x-2 pt-1">
+                    <button type="button" onclick="App.closeLikeVoteModal()" class="py-2.5 px-4 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                        취소
+                    </button>
+                    <button type="submit" id="like-modal-submit-btn" class="flex-1 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-98 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer">
+                        <i data-lucide="heart" class="w-3.5 h-3.5 fill-white"></i>
+                        <span id="like-modal-submit-text">❤️ 좋아요 추천하기</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 1번 탭: 교육 제안 추천(좋아요) 누른 위원 전체 명단 상세 보기 모달 -->
+    <div id="liked-by-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 transform transition-all max-h-[85vh] flex flex-col">
+            <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 mb-4 shrink-0">
+                <div class="flex items-center space-x-2">
+                    <span class="w-8 h-8 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center shadow-xs">
+                        <i data-lucide="heart" class="w-4 h-4 fill-rose-500"></i>
+                    </span>
+                    <div>
+                        <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-1.5">
+                            <span>추천 위원 명단</span>
+                            <span id="liked-by-modal-count" class="px-2 py-0.2 rounded-full bg-rose-100 text-rose-700 text-xs font-black">0명</span>
+                        </h3>
+                        <p id="liked-by-modal-title" class="text-[11px] text-slate-500 truncate max-w-[280px]">사업명</p>
+                    </div>
+                </div>
+                <button type="button" onclick="App.closeLikedByModal()" class="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- 추천 위원 목록 컨테이너 -->
+            <div id="liked-by-modal-list" class="space-y-2 overflow-y-auto flex-1 pr-1">
+                <!-- JS 렌더링 -->
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 mt-4 flex items-center justify-end shrink-0">
+                <button type="button" onclick="App.closeLikedByModal()" class="px-5 py-2 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                    닫기
+                </button>
+            </div>
         </div>
     </div>
 

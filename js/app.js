@@ -41,6 +41,7 @@ const App = {
     bylawFilter: "all",
     bylawSearch: "",
     chartInstance: null,
+    surveyChartViewMode: "visual",
     iconDebounceTimer: null,
 
     // 4번 탭 (협의체 전체 플로우) 상태
@@ -110,7 +111,35 @@ const App = {
                         if (!p.contact) p.contact = match.contact;
                     }
                 }
+
+                // 각 교육제안별 추천(좋아요) 위원 명단(likedBy) 초기화 및 1인 1회 투표 데이터셋 보장
+                if (!Array.isArray(p.likedBy)) {
+                    p.likedBy = [];
+                    // 초기 시드 추천 위원 배정 (화면에서 추천 위원 명단 즉시 확인 가능)
+                    const seedVoters = [
+                        { memberId: "dm-1", name: "김남현", role: "분과장" },
+                        { memberId: "dm-2", name: "박고은", role: "위원" },
+                        { memberId: "dm-3", name: "채윤규", role: "위원" },
+                        { memberId: "dm-4", name: "음시연", role: "위원" },
+                        { memberId: "dm-5", name: "유소연", role: "위원" },
+                        { memberId: "dm-6", name: "조찬우", role: "위원" }
+                    ];
+                    const seedCount = Math.min(Math.max(1, p.likes || 2), 3);
+                    for (let i = 0; i < seedCount; i++) {
+                        const voter = seedVoters[(p.id.charCodeAt(p.id.length - 1) + i) % seedVoters.length];
+                        if (!p.likedBy.some(v => v.name === voter.name)) {
+                            p.likedBy.push({
+                                memberId: voter.memberId,
+                                name: voter.name,
+                                role: voter.role,
+                                votedAt: "2026-10-01T09:00:00.000Z"
+                            });
+                        }
+                    }
+                }
+                p.likes = p.likedBy.length;
             });
+            this.savePrograms();
         } catch {
             this.programs = [...DONGTAN_DATA.initialPrograms];
         }
@@ -505,7 +534,10 @@ const App = {
         });
 
         if (tabId === "tab-2" && this.currentStep === 1) {
-            this.renderSurveyChart();
+            this.animateSurveyBars();
+            if (this.surveyChartViewMode === "chart") {
+                setTimeout(() => this.renderSurveyChart(), 100);
+            }
         } else if (tabId === "tab-3") {
             this.renderBylawsDiff();
         } else if (tabId === "tab-4") {
@@ -857,6 +889,37 @@ const App = {
             "제안됨": "bg-slate-100 text-slate-600 border-slate-200"
         };
 
+        const likedByList = prog.likedBy || [];
+        const likeCount = likedByList.length > 0 ? likedByList.length : (prog.likes || 0);
+
+        let likedByHtml = "";
+        if (likedByList.length > 0) {
+            const voterNames = likedByList.map(v => typeof v === 'string' ? v : v.name);
+            const shortNames = voterNames.slice(0, 3).join(", ") + (voterNames.length > 3 ? ` 외 ${voterNames.length - 3}명` : "");
+            likedByHtml = `
+                <div class="mt-2.5 pt-2 border-t border-rose-100 flex items-center justify-between text-[11px] bg-rose-50/60 -mx-4 -mb-4 px-3.5 py-1.5 rounded-b-xl">
+                    <div class="flex items-center space-x-1.5 truncate text-rose-700 min-w-0" title="추천 위원: ${escapeHtml(voterNames.join(', '))}">
+                        <i data-lucide="heart" class="w-3.5 h-3.5 fill-rose-500 text-rose-500 shrink-0"></i>
+                        <span class="font-bold text-[10px] shrink-0">추천 위원:</span>
+                        <span class="text-slate-800 font-semibold truncate text-[11px]">${escapeHtml(shortNames)}</span>
+                    </div>
+                    <button type="button" onclick="App.openLikedByModal('${escapeHtml(prog.id)}')" class="text-[10px] text-blue-600 hover:text-blue-800 hover:underline shrink-0 ml-1.5 font-bold cursor-pointer">
+                        명단(${likeCount}명)
+                    </button>
+                </div>
+            `;
+        } else {
+            likedByHtml = `
+                <div class="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-400 -mx-4 -mb-4 px-3.5 py-1.5 rounded-b-xl bg-slate-50/60">
+                    <span class="flex items-center space-x-1 text-slate-500">
+                        <i data-lucide="heart" class="w-3 h-3 text-slate-300"></i>
+                        <span>전화번호 끝 4자리로 첫 추천을 해보세요!</span>
+                    </span>
+                    <span class="text-[9px] text-slate-400 shrink-0">1인 1회</span>
+                </div>
+            `;
+        }
+
         return `
             <div class="padlet-card p-4 flex flex-col justify-between" id="${escapeHtml(prog.id)}">
                 <div>
@@ -925,19 +988,22 @@ const App = {
                         ✍️ ${escapeHtml(prog.author)}
                     </span>
                     <div class="flex items-center space-x-1.5">
-                        <button onclick="App.handleVote('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition cursor-pointer" title="추천">
+                        <button type="button" onclick="App.openLikeVoteModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200/80 font-bold transition cursor-pointer shadow-2xs active:scale-95" title="좋아요 추천하기 (전화번호 끝 4자리 인증)">
                             <i data-lucide="heart" class="w-3.5 h-3.5 fill-rose-500"></i>
-                            <span>${prog.likes || 0}</span>
+                            <span>${likeCount}</span>
                         </button>
-                        <button onclick="App.openCommentModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer" title="의견 등록">
+                        <button type="button" onclick="App.openCommentModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer" title="의견 등록">
                             <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
                             <span>${(prog.comments || []).length}</span>
                         </button>
-                        <button onclick="App.deleteProgramToTrash('${escapeHtml(prog.id)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer" title="삭제 (휴지통 30일 보관)">
+                        <button type="button" onclick="App.deleteProgramToTrash('${escapeHtml(prog.id)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer" title="삭제 (휴지통 30일 보관)">
                             <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
                 </div>
+
+                <!-- 추천한 위원 명단 하단 바 -->
+                ${likedByHtml}
             </div>
         `;
     },
@@ -1132,6 +1198,23 @@ const App = {
                         <td class="border border-slate-700 py-2 px-3 w-1/4 text-slate-800 font-semibold">${escapeHtml(prog.author || '김남현')} (${escapeHtml(contactDisplay)})</td>
                     </tr>
                 </table>
+
+                <!-- 위원 추천(좋아요) 현황 바 -->
+                <div class="mt-4 p-3 bg-rose-50/70 border border-rose-200 rounded-lg flex flex-wrap items-center justify-between text-xs text-slate-800">
+                    <div class="flex items-center space-x-2">
+                        <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-black text-[11px] flex items-center space-x-1 shadow-2xs">
+                            <i data-lucide="heart" class="w-3 h-3 fill-white"></i>
+                            <span>추천 ${(prog.likedBy || []).length}표</span>
+                        </span>
+                        <span class="text-slate-700 text-xs">
+                            ${(prog.likedBy && prog.likedBy.length > 0) ? `<strong>추천 위원:</strong> ${escapeHtml(prog.likedBy.map(v => typeof v === 'string' ? v : v.name).join(', '))}` : '아직 추천한 위원이 없습니다.'}
+                        </span>
+                    </div>
+                    <button type="button" onclick="App.openLikeVoteModal('${escapeHtml(prog.id)}')" class="no-print mt-2 sm:mt-0 px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white rounded-md font-bold text-xs shadow-xs transition flex items-center space-x-1 cursor-pointer">
+                        <i data-lucide="heart" class="w-3 h-3 fill-white"></i>
+                        <span>추천(좋아요) 투표하기</span>
+                    </button>
+                </div>
             </div>
         `;
     },
@@ -1145,11 +1228,294 @@ const App = {
     },
 
     handleVote(progId) {
+        this.openLikeVoteModal(progId);
+    },
+
+    openLikeVoteModal(progId) {
         const prog = this.programs.find(p => p.id === progId);
-        if (prog) {
-            prog.likes = (prog.likes || 0) + 1;
+        if (!prog) return;
+
+        if (!Array.isArray(prog.likedBy)) {
+            prog.likedBy = [];
+        }
+
+        const modal = document.getElementById("like-vote-modal");
+        if (!modal) return;
+
+        document.getElementById("like-modal-prog-id").value = prog.id;
+        document.getElementById("like-modal-prog-title").textContent = `[${prog.code || '1-1'}] ${prog.title}`;
+        document.getElementById("like-modal-prog-author").textContent = `제안: ${prog.author || '위원'}`;
+
+        const select = document.getElementById("like-modal-voter-select");
+        select.innerHTML = '<option value="">-- 본인 위원 성함을 선택해주세요 --</option>';
+
+        // 12명 분과위원
+        const optGroupDiv = document.createElement("optgroup");
+        optGroupDiv.label = "교육·참여·권리 분과 위원 (12인)";
+        (this.divisionMembers || []).forEach(m => {
+            const opt = document.createElement("option");
+            opt.value = m.id || m.name;
+            opt.textContent = `${m.name} (${m.role || '위원'})`;
+            optGroupDiv.appendChild(opt);
+        });
+        select.appendChild(optGroupDiv);
+
+        // 운영위원회 위원 (연락처 등록된 경우)
+        if (this.steeringMembers && this.steeringMembers.length > 0) {
+            const optGroupSt = document.createElement("optgroup");
+            optGroupSt.label = "운영위원회";
+            this.steeringMembers.forEach(m => {
+                if (m.phone && m.phone.trim()) {
+                    const opt = document.createElement("option");
+                    opt.value = m.id || m.name;
+                    opt.textContent = `${m.name} (${m.role || '운영위원'})`;
+                    optGroupSt.appendChild(opt);
+                }
+            });
+            if (optGroupSt.children.length > 0) {
+                select.appendChild(optGroupSt);
+            }
+        }
+
+        // 세션에 저장된 최근 투표자 자동 선택
+        const lastVoterId = sessionStorage.getItem("dongtan_last_voter_id");
+        if (lastVoterId && Array.from(select.options).some(o => o.value === lastVoterId)) {
+            select.value = lastVoterId;
+        }
+
+        const pinInput = document.getElementById("like-modal-pin-input");
+        pinInput.value = "";
+        document.getElementById("like-modal-error").classList.add("hidden");
+        document.getElementById("like-modal-success").classList.add("hidden");
+
+        this.renderLikeModalVoterStatus(prog);
+
+        select.onchange = () => {
+            this.updateLikeModalButtonState(prog);
+        };
+        this.updateLikeModalButtonState(prog);
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        setTimeout(() => pinInput.focus(), 100);
+        this.updateIcons();
+    },
+
+    updateLikeModalButtonState(prog) {
+        const select = document.getElementById("like-modal-voter-select");
+        const voterKey = select.value;
+        const submitBtn = document.getElementById("like-modal-submit-btn");
+        const submitText = document.getElementById("like-modal-submit-text");
+        if (!submitBtn || !submitText) return;
+
+        let member = (this.divisionMembers || []).find(m => m.id === voterKey || m.name === voterKey);
+        if (!member) {
+            member = (this.steeringMembers || []).find(m => m.id === voterKey || m.name === voterKey);
+        }
+
+        const isAlreadyLiked = member && (prog.likedBy || []).some(v => v.memberId === member.id || v.name === member.name);
+
+        if (isAlreadyLiked) {
+            submitBtn.className = "flex-1 py-2.5 text-xs font-bold text-white bg-slate-700 hover:bg-slate-800 active:scale-98 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer";
+            submitText.textContent = "💔 추천 취소하기";
+        } else {
+            submitBtn.className = "flex-1 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:scale-98 rounded-xl shadow-xs transition flex items-center justify-center space-x-1.5 cursor-pointer";
+            submitText.textContent = "❤️ 좋아요 추천하기";
+        }
+    },
+
+    renderLikeModalVoterStatus(prog) {
+        const listEl = document.getElementById("like-modal-current-voters");
+        const countEl = document.getElementById("like-modal-current-count");
+        if (!listEl || !countEl) return;
+
+        const likedByList = prog.likedBy || [];
+        countEl.textContent = `${likedByList.length}명`;
+
+        if (likedByList.length === 0) {
+            listEl.innerHTML = '<span class="text-slate-400 text-xs">아직 추천한 위원이 없습니다. 첫 번째로 추천해주세요!</span>';
+        } else {
+            listEl.innerHTML = likedByList.map(v => `
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white text-rose-700 border border-rose-200 text-xs font-semibold shadow-2xs">
+                    <i data-lucide="heart" class="w-3 h-3 fill-rose-500"></i>
+                    <span>${escapeHtml(v.name)}</span>
+                    <span class="text-[10px] text-rose-400 font-normal">(${escapeHtml(v.role || '위원')})</span>
+                </span>
+            `).join("");
+        }
+        this.updateIcons();
+    },
+
+    handleLikeVoteSubmit(e) {
+        e.preventDefault();
+        const progId = document.getElementById("like-modal-prog-id").value;
+        const select = document.getElementById("like-modal-voter-select");
+        const voterKey = select.value;
+        const pin = document.getElementById("like-modal-pin-input").value.trim();
+        const errorEl = document.getElementById("like-modal-error");
+        const errorMsg = document.getElementById("like-modal-error-msg");
+        const successEl = document.getElementById("like-modal-success");
+        const successMsg = document.getElementById("like-modal-success-msg");
+
+        errorEl.classList.add("hidden");
+        successEl.classList.add("hidden");
+
+        if (!voterKey) {
+            errorMsg.textContent = "본인의 위원 성함을 선택해주세요.";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        if (!pin || pin.length !== 4) {
+            errorMsg.textContent = "비밀번호는 전화번호 끝 4자리(숫자 4자리)를 입력해야 합니다.";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        // 위원 객체 조회
+        let member = (this.divisionMembers || []).find(m => m.id === voterKey || m.name === voterKey);
+        if (!member) {
+            member = (this.steeringMembers || []).find(m => m.id === voterKey || m.name === voterKey);
+        }
+        if (!member) {
+            errorMsg.textContent = "선택하신 위원 정보를 찾을 수 없습니다.";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        // 전화번호 끝 4자리 검증
+        let phone = member.phone || "";
+        if (!phone && typeof DIVISION_MEMBERS_INITIAL !== "undefined") {
+            const initialMatch = DIVISION_MEMBERS_INITIAL.find(dm => dm.id === member.id || dm.name === member.name);
+            if (initialMatch && initialMatch.phone) phone = initialMatch.phone;
+        }
+
+        const cleanDigits = phone.replace(/[^0-9]/g, "");
+        const expectedPin = cleanDigits.slice(-4);
+
+        if (!expectedPin || expectedPin !== pin) {
+            errorMsg.textContent = "비밀번호(전화번호 끝 4자리)가 일치하지 않습니다. 다시 확인해주세요.";
+            errorEl.classList.remove("hidden");
+            return;
+        }
+
+        // 본인 인증 완료 -> 세션에 최근 투표자 저장
+        sessionStorage.setItem("dongtan_last_voter_id", voterKey);
+
+        const prog = this.programs.find(p => p.id === progId);
+        if (!prog) return;
+
+        if (!Array.isArray(prog.likedBy)) prog.likedBy = [];
+
+        const existingIdx = prog.likedBy.findIndex(v => v.memberId === member.id || v.name === member.name);
+
+        if (existingIdx >= 0) {
+            // 이미 투표한 상태 -> 추천 취소
+            prog.likedBy.splice(existingIdx, 1);
+            prog.likes = prog.likedBy.length;
             this.savePrograms();
             this.renderPadletBoard();
+            this.renderLikeModalVoterStatus(prog);
+            this.updateLikeModalButtonState(prog);
+
+            successMsg.textContent = `💔 ${member.name} 위원님의 추천이 정상적으로 취소되었습니다.`;
+            successEl.classList.remove("hidden");
+            setTimeout(() => {
+                this.closeLikeVoteModal();
+            }, 1000);
+        } else {
+            // 신규 추천 등록
+            prog.likedBy.push({
+                memberId: member.id,
+                name: member.name,
+                role: member.role || "위원",
+                votedAt: new Date().toISOString()
+            });
+            prog.likes = prog.likedBy.length;
+            this.savePrograms();
+            this.renderPadletBoard();
+            this.renderLikeModalVoterStatus(prog);
+            this.updateLikeModalButtonState(prog);
+
+            successMsg.textContent = `🎉 ${member.name} 위원님의 추천이 완료되었습니다! (1인 1회 투표)`;
+            successEl.classList.remove("hidden");
+            setTimeout(() => {
+                this.closeLikeVoteModal();
+            }, 1000);
+        }
+    },
+
+    closeLikeVoteModal() {
+        const modal = document.getElementById("like-vote-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    openLikedByModal(progId) {
+        const prog = this.programs.find(p => p.id === progId);
+        if (!prog) return;
+
+        const modal = document.getElementById("liked-by-modal");
+        if (!modal) return;
+
+        document.getElementById("liked-by-modal-title").textContent = `[${prog.code || '1-1'}] ${prog.title}`;
+        const listEl = document.getElementById("liked-by-modal-list");
+        const countEl = document.getElementById("liked-by-modal-count");
+
+        const likedByList = prog.likedBy || [];
+        countEl.textContent = `${likedByList.length}명`;
+
+        if (likedByList.length === 0) {
+            listEl.innerHTML = `
+                <div class="py-8 text-center text-slate-400">
+                    <i data-lucide="heart" class="w-10 h-10 mx-auto text-slate-300 mb-2"></i>
+                    <p class="text-sm font-bold text-slate-600">아직 추천한 위원이 없습니다.</p>
+                    <p class="text-xs text-slate-400 mt-1">1번 탭의 카드 하단 [좋아요] 버튼을 눌러 추천해주세요!</p>
+                </div>
+            `;
+        } else {
+            listEl.innerHTML = likedByList.map((v, i) => {
+                const timeStr = v.votedAt ? new Date(v.votedAt).toLocaleString('ko-KR', {
+                    month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                }) : '최근';
+                return `
+                    <div class="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:bg-rose-50/50 hover:border-rose-200 transition">
+                        <div class="flex items-center space-x-3">
+                            <span class="w-7 h-7 rounded-full bg-rose-100 text-rose-600 font-black text-xs flex items-center justify-center">
+                                ${i + 1}
+                            </span>
+                            <div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="font-bold text-slate-900 text-sm">${escapeHtml(v.name)}</span>
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700">${escapeHtml(v.role || '위원')}</span>
+                                </div>
+                                <span class="text-[11px] text-slate-400">화성시 청년정책협의체 동탄구 교육·참여·권리 분과</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="inline-flex items-center gap-1 text-[11px] text-rose-600 font-bold bg-rose-100/70 px-2.5 py-0.5 rounded-full">
+                                <i data-lucide="heart" class="w-3 h-3 fill-rose-500"></i>
+                                추천 완료
+                            </span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">${timeStr}</p>
+                        </div>
+                    </div>
+                `;
+            }).join("");
+        }
+
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        this.updateIcons();
+    },
+
+    closeLikedByModal() {
+        const modal = document.getElementById("liked-by-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
         }
     },
 
@@ -1468,7 +1834,10 @@ const App = {
         }
 
         if (stepNumber === 1) {
-            this.renderSurveyChart();
+            this.animateSurveyBars();
+            if (this.surveyChartViewMode === "chart") {
+                setTimeout(() => this.renderSurveyChart(), 100);
+            }
         } else if (stepNumber === 3) {
             this.renderMcpPolicyList();
         } else if (stepNumber === 5) {
@@ -1480,61 +1849,125 @@ const App = {
         this.updateIcons();
     },
 
+    toggleSurveyChartView(mode) {
+        this.surveyChartViewMode = mode;
+        const visualContainer = document.getElementById("survey-visual-container");
+        const chartContainer = document.getElementById("survey-chart-container");
+        const visualBtn = document.getElementById("survey-view-visual-btn");
+        const chartBtn = document.getElementById("survey-view-chart-btn");
+
+        if (mode === "visual") {
+            if (visualContainer) visualContainer.classList.remove("hidden");
+            if (chartContainer) chartContainer.classList.add("hidden");
+            if (visualBtn) {
+                visualBtn.className = "px-2 py-0.5 rounded-md font-bold transition bg-white text-blue-700 shadow-2xs cursor-pointer";
+            }
+            if (chartBtn) {
+                chartBtn.className = "px-2 py-0.5 rounded-md font-bold transition text-slate-500 hover:text-slate-800 cursor-pointer";
+            }
+            this.animateSurveyBars();
+        } else {
+            if (visualContainer) visualContainer.classList.add("hidden");
+            if (chartContainer) chartContainer.classList.remove("hidden");
+            if (chartBtn) {
+                chartBtn.className = "px-2 py-0.5 rounded-md font-bold transition bg-white text-blue-700 shadow-2xs cursor-pointer";
+            }
+            if (visualBtn) {
+                visualBtn.className = "px-2 py-0.5 rounded-md font-bold transition text-slate-500 hover:text-slate-800 cursor-pointer";
+            }
+            setTimeout(() => this.renderSurveyChart(), 50);
+        }
+    },
+
+    animateSurveyBars() {
+        const bars = [
+            { id: "survey-bar-1", width: "45.7%" },
+            { id: "survey-bar-2", width: "33.5%" },
+            { id: "survey-bar-3", width: "14.1%" },
+            { id: "survey-bar-4", width: "4.2%" },
+            { id: "survey-bar-5", width: "2.5%" }
+        ];
+        bars.forEach(b => {
+            const el = document.getElementById(b.id);
+            if (el) el.style.width = "0%";
+        });
+        setTimeout(() => {
+            bars.forEach(b => {
+                const el = document.getElementById(b.id);
+                if (el) el.style.width = b.width;
+            });
+        }, 50);
+    },
+
     renderSurveyChart() {
         const canvas = document.getElementById("surveyChart");
         if (!canvas) return;
 
-        if (this.chartInstance) {
-            this.chartInstance.destroy();
-            this.chartInstance = null;
+        if (typeof Chart === "undefined") {
+            console.warn("Chart.js 라이브러리가 로드되지 않아 비주얼 인포그래픽 뷰로 전환합니다.");
+            this.toggleSurveyChartView("visual");
+            return;
         }
 
-        const ctx = canvas.getContext("2d");
-        this.chartInstance = new Chart(ctx, {
-            type: "bar",
-            data: {
-                labels: DONGTAN_DATA.surveyData.chartLabels,
-                datasets: [{
-                    label: "도움 필요 응답률 (%)",
-                    data: DONGTAN_DATA.surveyData.chartData,
-                    backgroundColor: [
-                        "rgba(37, 99, 235, 0.85)",
-                        "rgba(124, 58, 237, 0.85)",
-                        "rgba(13, 148, 136, 0.85)",
-                        "rgba(16, 185, 129, 0.85)",
-                        "rgba(245, 158, 11, 0.85)",
-                        "rgba(59, 130, 246, 0.85)"
-                    ],
-                    borderRadius: 6,
-                    borderWidth: 0
-                }]
-            },
-            options: {
-                indexAxis: 'y',
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => ` 청년 체감 필요도: ${ctx.raw}%`
+        try {
+            if (this.chartInstance) {
+                this.chartInstance.destroy();
+                this.chartInstance = null;
+            }
+
+            const ctx = canvas.getContext("2d");
+            this.chartInstance = new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: DONGTAN_DATA.surveyData.chartLabels,
+                    datasets: [{
+                        label: "도움 필요 응답률 (%)",
+                        data: DONGTAN_DATA.surveyData.chartData,
+                        backgroundColor: [
+                            "rgba(37, 99, 235, 0.85)",
+                            "rgba(124, 58, 237, 0.85)",
+                            "rgba(16, 185, 129, 0.85)",
+                            "rgba(245, 158, 11, 0.85)",
+                            "rgba(239, 68, 68, 0.85)"
+                        ],
+                        borderRadius: 6,
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => ` 청년 체감 필요도: ${ctx.raw}%`
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            min: 0,
+                            max: 50,
+                            grid: { color: "#F1F5F9" },
+                            ticks: { callback: v => v + "%" }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { font: { weight: "600" } }
                         }
                     }
-                },
-                scales: {
-                    x: {
-                        min: 0,
-                        max: 100,
-                        grid: { color: "#F1F5F9" },
-                        ticks: { callback: v => v + "%" }
-                    },
-                    y: {
-                        grid: { display: false },
-                        ticks: { font: { weight: "600" } }
-                    }
                 }
-            }
-        });
+            });
+        } catch (err) {
+            console.warn("Chart.js 렌더링 오류:", err);
+            this.toggleSurveyChartView("visual");
+        }
     },
 
     renderMcpPolicyList() {
@@ -3007,6 +3440,7 @@ ${data.effects}
         this.renderDivisionMembersGrid();
         this.renderCouncilFlow();
         this.updateTrashBadge();
+        this.animateSurveyBars();
     }
 };
 
