@@ -190,6 +190,20 @@
                             <p class="text-[10px] text-slate-400 truncate mt-0.5">운영위 15인 · 분과 12인</p>
                         </div>
                     </button>
+
+                    <!-- 탭 6: 휴지통 (삭제 보관함 - 30일 보관) -->
+                    <button data-tab="tab-6" class="nav-tab-btn group">
+                        <div class="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mr-3 group-hover:bg-rose-600 group-hover:text-white transition">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </div>
+                        <div class="flex-1 min-w-0 pr-1">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold truncate">6. 휴지통</span>
+                                <span id="nav-trash-count-badge" class="ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-500 font-bold shrink-0">0건</span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 truncate mt-0.5">30일간 임시 보관 및 복원</p>
+                        </div>
+                    </button>
                 </nav>
 
                 <!-- 사이드바 하단 정보 및 관리자 권한 단추 -->
@@ -300,6 +314,13 @@
                     <button id="export-programs-csv-btn" class="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg flex items-center space-x-1 shadow-sm transition">
                         <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
                         <span class="hidden sm:inline">엑셀출력</span>
+                    </button>
+
+                    <!-- 휴지통 바로가기 -->
+                    <button type="button" onclick="App.switchTab('tab-6')" class="px-2.5 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg flex items-center space-x-1 shadow-xs transition cursor-pointer" title="삭제된 교육 제안 30일 보관함">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+                        <span class="hidden sm:inline">휴지통</span>
+                        <span id="tab1-trash-count-badge" class="px-1.5 py-0.2 rounded-full bg-rose-200 text-rose-800 text-[10px] font-black">0</span>
                     </button>
 
                     <!-- 신규 교육 등록 버튼 -->
@@ -1514,6 +1535,56 @@
             </div>
         </section>
 
+        <!-- ============================================================== -->
+        <!-- 탭 6: 휴지통 (삭제된 교육 제안 30일 임시 보관함) -->
+        <!-- ============================================================== -->
+        <section id="tab-6" class="tab-content-panel hidden space-y-6">
+            <!-- 탭 안내 배너 -->
+            <div class="bg-gradient-to-r from-rose-950 via-red-900 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-xl relative overflow-hidden">
+                <div class="relative z-10 max-w-3xl">
+                    <div class="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-rose-500/20 text-rose-200 text-xs font-semibold mb-3 border border-rose-400/30">
+                        <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-300"></i>
+                        <span>30일 자동 보관 및 안심 복원 보관함</span>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-extrabold tracking-tight mb-2">
+                        6. 휴지통 (삭제 보관함)
+                    </h2>
+                    <p class="text-rose-100 text-sm sm:text-base leading-relaxed">
+                        1번 탭에서 삭제된 교육 프로그램 사업카드는 삭제 시점으로부터 <strong>30일간 임시 보관</strong>되며 언제든지 원래 패들렛 보드로 <strong>[원클릭 복원]</strong>할 수 있습니다. 30일이 경과하면 시스템에서 자동으로 영구 삭제됩니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 휴지통 컨트롤 바 -->
+            <div class="glass-card p-4 rounded-xl shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div class="flex items-center space-x-2 text-xs">
+                    <span class="font-bold text-slate-700">현재 보관된 삭제 항목:</span>
+                    <span id="trash-total-count" class="font-black text-rose-600 px-2 py-0.5 rounded-full bg-rose-50 border border-rose-200">0건</span>
+                    <span class="text-slate-300">|</span>
+                    <span class="text-slate-500">⏳ 삭제일로부터 30일 후 자동 영구 삭제</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <button type="button" onclick="App.restoreAllFromTrash()" class="px-3 py-1.5 text-xs font-bold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 rounded-lg flex items-center space-x-1.5 transition cursor-pointer shadow-xs">
+                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 text-emerald-600"></i>
+                        <span>전체 복원</span>
+                    </button>
+                    <button type="button" onclick="App.emptyTrash()" class="px-3 py-1.5 text-xs font-bold text-rose-700 bg-white hover:bg-rose-50 border border-rose-200 rounded-lg flex items-center space-x-1.5 transition cursor-pointer shadow-xs">
+                        <i data-lucide="trash" class="w-3.5 h-3.5 text-rose-600"></i>
+                        <span>휴지통 비우기</span>
+                    </button>
+                    <button type="button" onclick="App.switchTab('tab-1')" class="px-3 py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg flex items-center space-x-1.5 transition cursor-pointer shadow-xs">
+                        <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-blue-600"></i>
+                        <span>패들렛으로 가기</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 휴지통 목록 컨테이너 (JS 동적 렌더링) -->
+            <div id="trash-list-container" class="space-y-3">
+                <!-- Injected via App.renderTrashPanel() -->
+            </div>
+        </section>
+
     </main>
 
     <!-- 교육 프로그램 신규 제안 모달 -->
@@ -1692,6 +1763,10 @@
                     <button type="button" onclick="App.editCurrentProgramCard()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer">
                         <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-500"></i>
                         <span>내용 수정</span>
+                    </button>
+                    <button type="button" onclick="App.deleteCurrentProgramCardToTrash()" class="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer" title="해당 교육 제안 삭제 및 휴지통 이동">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-500"></i>
+                        <span>삭제(휴지통)</span>
                     </button>
                     <button type="button" onclick="App.closeProgramDetailModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200 transition cursor-pointer">
                         <i data-lucide="x" class="w-5 h-5"></i>

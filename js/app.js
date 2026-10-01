@@ -28,6 +28,7 @@ const App = {
     currentStep: 1,
     selectedTrack: "track-1",
     programs: [],
+    trashPrograms: [],
     currentProgramDetailId: null,
     selectedProposalIndex: 0,
     uploadedBylawsFiles: [],
@@ -199,6 +200,15 @@ const App = {
                 this.divisionMembers = JSON.parse(JSON.stringify(DIVISION_MEMBERS_INITIAL));
             }
         }
+
+        // 5. 휴지통 목록 불러오기 및 30일 만료 항목 자동 영구 삭제
+        try {
+            const savedTrash = localStorage.getItem("dongtan_trash_programs");
+            this.trashPrograms = savedTrash ? JSON.parse(savedTrash) : [];
+            this.cleanExpiredTrash();
+        } catch {
+            this.trashPrograms = [];
+        }
     },
 
     savePrograms() {
@@ -206,6 +216,49 @@ const App = {
             localStorage.setItem("dongtan_padlet_programs", JSON.stringify(this.programs));
         } catch (e) {
             console.warn("로컬스토리지 저장 용량 초과 또는 권한 문제:", e);
+        }
+    },
+
+    saveTrash() {
+        try {
+            localStorage.setItem("dongtan_trash_programs", JSON.stringify(this.trashPrograms));
+        } catch (e) {
+            console.warn("휴지통 저장 실패:", e);
+        }
+        this.updateTrashBadge();
+    },
+
+    cleanExpiredTrash() {
+        const now = Date.now();
+        const initialCount = (this.trashPrograms || []).length;
+        this.trashPrograms = (this.trashPrograms || []).filter(p => {
+            if (!p.expiresAt) return true;
+            return new Date(p.expiresAt).getTime() > now;
+        });
+        if (this.trashPrograms.length !== initialCount) {
+            this.saveTrash();
+        }
+        this.updateTrashBadge();
+    },
+
+    updateTrashBadge() {
+        const count = (this.trashPrograms || []).length;
+        const navBadge = document.getElementById("nav-trash-count-badge");
+        if (navBadge) {
+            navBadge.textContent = `${count}건`;
+            if (count > 0) {
+                navBadge.className = "ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-rose-500 text-white font-bold shrink-0";
+            } else {
+                navBadge.className = "ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-slate-100 text-slate-500 font-bold shrink-0";
+            }
+        }
+        const tab1Badge = document.getElementById("tab1-trash-count-badge");
+        if (tab1Badge) {
+            tab1Badge.textContent = count;
+        }
+        const totalEl = document.getElementById("trash-total-count");
+        if (totalEl) {
+            totalEl.textContent = `${count}건`;
         }
     },
 
@@ -412,6 +465,13 @@ const App = {
         this.openProgramModal(targetId);
     },
 
+    deleteCurrentProgramCardToTrash() {
+        if (!this.currentProgramDetailId) return;
+        const targetId = this.currentProgramDetailId;
+        this.closeProgramDetailModal();
+        this.deleteProgramToTrash(targetId);
+    },
+
     switchTab(tabId) {
         if (this.currentTab === tabId) return;
         this.currentTab = tabId;
@@ -426,7 +486,8 @@ const App = {
             "tab-2": "2. 2027년 정책제안서 작성 아이디에이션 (5단계 워크플로우)",
             "tab-3": "3. 회칙 정리 (신·구 조문 대비표 & 파일 보관함)",
             "tab-4": "4. 협의체 전체 플로우 (2026~2027 연간 로드맵)",
-            "tab-5": "5. 위원 명단 관리 (운영위원회 & 분과위원)"
+            "tab-5": "5. 위원 명단 관리 (운영위원회 & 분과위원)",
+            "tab-6": "6. 휴지통 (삭제된 교육 제안 30일 보관함)"
         };
         const titleEl = document.getElementById("header-active-tab-title");
         if (titleEl && tabTitles[tabId]) {
@@ -451,6 +512,8 @@ const App = {
             this.renderCouncilFlow();
         } else if (tabId === "tab-5") {
             this.switchTab5Sub(this.tab5Sub || "division");
+        } else if (tabId === "tab-6") {
+            this.renderTrashPanel();
         }
         this.updateIcons();
     },
@@ -861,14 +924,17 @@ const App = {
                     <span class="text-slate-500 font-medium truncate max-w-[120px]">
                         ✍️ ${escapeHtml(prog.author)}
                     </span>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="App.handleVote('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition cursor-pointer">
+                    <div class="flex items-center space-x-1.5">
+                        <button onclick="App.handleVote('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-rose-50 text-rose-600 hover:bg-rose-100 font-semibold transition cursor-pointer" title="추천">
                             <i data-lucide="heart" class="w-3.5 h-3.5 fill-rose-500"></i>
                             <span>${prog.likes || 0}</span>
                         </button>
-                        <button onclick="App.openCommentModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer">
+                        <button onclick="App.openCommentModal('${escapeHtml(prog.id)}')" class="flex items-center space-x-1 px-2 py-1 rounded bg-slate-100 text-slate-600 hover:bg-slate-200 transition cursor-pointer" title="의견 등록">
                             <i data-lucide="message-square" class="w-3.5 h-3.5"></i>
                             <span>${(prog.comments || []).length}</span>
+                        </button>
+                        <button onclick="App.deleteProgramToTrash('${escapeHtml(prog.id)}')" class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer" title="삭제 (휴지통 30일 보관)">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                         </button>
                     </div>
                 </div>
@@ -1136,6 +1202,190 @@ const App = {
         link.download = `화성시_동탄구_2027교육프로그램취합목록_${new Date().toISOString().slice(0, 10)}.csv`;
         link.click();
         URL.revokeObjectURL(link.href);
+    },
+
+    // ==========================================
+    // 2-1. 휴지통 (삭제된 교육 제안 30일 임시 보관함)
+    // ==========================================
+    deleteProgramToTrash(progId) {
+        const prog = this.programs.find(p => p.id === progId);
+        if (!prog) return;
+
+        const confirmMsg = `[${prog.title}]\n\n해당 교육 제안 사업카드를 삭제하시겠습니까?\n\n• 삭제된 제안은 휴지통 탭에서 30일간 임시 보관됩니다.\n• 30일 이내 언제든지 [원클릭 복원]이 가능합니다.`;
+        if (!confirm(confirmMsg)) return;
+
+        const now = new Date();
+        const expires = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        prog.deletedAt = now.toISOString();
+        prog.expiresAt = expires.toISOString();
+
+        if (!this.trashPrograms) this.trashPrograms = [];
+        this.trashPrograms.unshift(prog);
+        this.programs = this.programs.filter(p => p.id !== progId);
+
+        this.savePrograms();
+        this.saveTrash();
+        this.renderPadletBoard();
+        if (this.currentTab === "tab-6") {
+            this.renderTrashPanel();
+        }
+
+        alert(`[${prog.title}] 교육 제안이 휴지통으로 이동되었습니다.\n(휴지통 탭에서 30일간 보관 및 복원 가능)`);
+    },
+
+    restoreProgramFromTrash(progId) {
+        const prog = (this.trashPrograms || []).find(p => p.id === progId);
+        if (!prog) return;
+
+        delete prog.deletedAt;
+        delete prog.expiresAt;
+
+        this.trashPrograms = this.trashPrograms.filter(p => p.id !== progId);
+        this.programs.unshift(prog);
+
+        this.savePrograms();
+        this.saveTrash();
+        this.renderPadletBoard();
+        this.renderTrashPanel();
+
+        alert(`[${prog.title}] 교육 프로그램이 1번 탭 패들렛 보드로 성공적으로 복원되었습니다!`);
+    },
+
+    restoreAllFromTrash() {
+        if (!this.trashPrograms || !this.trashPrograms.length) {
+            alert("휴지통에 보관된 항목이 없습니다.");
+            return;
+        }
+
+        if (!confirm(`휴지통에 보관 중인 ${this.trashPrograms.length}개의 교육 제안을 모두 1번 탭으로 복원하시겠습니까?`)) {
+            return;
+        }
+
+        this.trashPrograms.forEach(p => {
+            delete p.deletedAt;
+            delete p.expiresAt;
+            this.programs.unshift(p);
+        });
+
+        this.trashPrograms = [];
+        this.savePrograms();
+        this.saveTrash();
+        this.renderPadletBoard();
+        this.renderTrashPanel();
+
+        alert("휴지통의 모든 교육 제안이 1번 탭으로 복원되었습니다!");
+    },
+
+    permanentlyDeleteFromTrash(progId) {
+        const prog = (this.trashPrograms || []).find(p => p.id === progId);
+        if (!prog) return;
+
+        if (!confirm(`[${prog.title}]\n\n해당 교육 제안을 완전히 영구 삭제하시겠습니까?\n(영구 삭제 시 복구할 수 없습니다)`)) {
+            return;
+        }
+
+        this.trashPrograms = this.trashPrograms.filter(p => p.id !== progId);
+        this.saveTrash();
+        this.renderTrashPanel();
+        alert("해당 교육 제안이 영구 삭제되었습니다.");
+    },
+
+    emptyTrash() {
+        if (!this.trashPrograms || !this.trashPrograms.length) {
+            alert("휴지통이 이미 비어 있습니다.");
+            return;
+        }
+
+        if (!confirm(`휴지통을 비우시겠습니까?\n현재 보관된 ${this.trashPrograms.length}개의 교육 제안이 모두 영구 삭제되며 복구할 수 없습니다.`)) {
+            return;
+        }
+
+        this.trashPrograms = [];
+        this.saveTrash();
+        this.renderTrashPanel();
+        alert("휴지통을 완전히 비웠습니다.");
+    },
+
+    renderTrashPanel() {
+        this.cleanExpiredTrash();
+        const container = document.getElementById("trash-list-container");
+        if (!container) return;
+
+        const list = this.trashPrograms || [];
+        this.updateTrashBadge();
+
+        if (!list.length) {
+            container.innerHTML = `
+                <div class="glass-card p-12 text-center rounded-2xl border border-dashed border-slate-300">
+                    <div class="w-16 h-16 rounded-full bg-slate-100 text-slate-400 mx-auto flex items-center justify-center mb-3">
+                        <i data-lucide="trash-2" class="w-8 h-8"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-700 text-base mb-1">휴지통이 비어 있습니다.</h4>
+                    <p class="text-xs text-slate-500 mb-4">1번 탭 패들렛 보드에서 삭제한 교육 제안이 이곳에 30일간 임시 보관됩니다.</p>
+                    <button type="button" onclick="App.switchTab('tab-1')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition shadow-xs cursor-pointer">
+                        1번 탭 패들렛 보드로 이동
+                    </button>
+                </div>
+            `;
+            this.updateIcons();
+            return;
+        }
+
+        container.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                ${list.map(p => {
+                    const delDate = p.deletedAt ? new Date(p.deletedAt).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : "최근";
+                    const diffMs = p.expiresAt ? new Date(p.expiresAt).getTime() - Date.now() : 0;
+                    const remainDays = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+                    
+                    return `
+                        <div class="glass-card p-4 rounded-xl border border-rose-200/80 hover:border-rose-300 transition shadow-xs flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between gap-2 mb-2">
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="px-2 py-0.5 text-[10px] font-black bg-slate-800 text-white rounded">
+                                            ${escapeHtml(p.code || '1-1')}
+                                        </span>
+                                        <span class="text-[10px] px-2 py-0.5 font-bold rounded bg-slate-100 text-slate-700 border">
+                                            ${escapeHtml(p.category || '교육')}
+                                        </span>
+                                    </div>
+                                    <span class="text-[10px] px-2 py-0.5 font-black rounded-full bg-rose-100 text-rose-800 border border-rose-200 flex items-center gap-1">
+                                        <i data-lucide="clock" class="w-3 h-3 text-rose-600"></i>
+                                        D-${remainDays}일 보관
+                                    </span>
+                                </div>
+
+                                <h4 class="font-bold text-slate-900 text-sm mb-1.5 leading-snug line-clamp-2">
+                                    ${escapeHtml(p.title)}
+                                </h4>
+                                <p class="text-xs text-slate-600 line-clamp-2 mb-2.5 bg-slate-50 p-2 rounded border border-slate-100">
+                                    ${escapeHtml(p.purpose || p.subtitle || '')}
+                                </p>
+
+                                <div class="text-[11px] text-slate-500 space-y-0.5 border-t border-slate-100 pt-2 mb-3">
+                                    <div>제안위원: <strong class="text-slate-700">${escapeHtml(p.author || '제안위원')}</strong></div>
+                                    <div>삭제일시: ${delDate}</div>
+                                </div>
+                            </div>
+
+                            <div class="pt-2.5 border-t border-slate-200/70 flex items-center justify-between gap-1.5">
+                                <button type="button" onclick="App.restoreProgramFromTrash('${escapeHtml(p.id)}')" class="flex-1 py-1.5 px-2 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs rounded-lg flex items-center justify-center space-x-1 transition cursor-pointer shadow-xs">
+                                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                                    <span>원클릭 복원</span>
+                                </button>
+                                <button type="button" onclick="App.permanentlyDeleteFromTrash('${escapeHtml(p.id)}')" class="py-1.5 px-2.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 font-bold text-xs rounded-lg flex items-center justify-center space-x-1 transition cursor-pointer" title="영구 삭제">
+                                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-500"></i>
+                                    <span>영구삭제</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join("")}
+            </div>
+        `;
+        this.updateIcons();
     },
 
     // ==========================================
@@ -2756,6 +3006,7 @@ ${data.effects}
         this.renderSteeringMembersGrid();
         this.renderDivisionMembersGrid();
         this.renderCouncilFlow();
+        this.updateTrashBadge();
     }
 };
 
