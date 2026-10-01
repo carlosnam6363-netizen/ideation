@@ -150,16 +150,19 @@
                     </button>
 
                     <!-- 탭 3 -->
-                    <button data-tab="tab-3" class="nav-tab-btn group">
+                    <button data-tab="tab-3" class="nav-tab-btn group" id="nav-btn-tab-3">
                         <div class="w-8 h-8 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0 mr-3 group-hover:bg-slate-700 group-hover:text-white transition">
                             <i data-lucide="file-check-2" class="w-4 h-4"></i>
                         </div>
                         <div class="flex-1 min-w-0 pr-1">
                             <div class="flex items-center justify-between">
                                 <span class="text-xs font-bold truncate">3. 회칙 정리</span>
-                                <span class="ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-slate-200 text-slate-700 font-bold shrink-0">신구대비</span>
+                                <span id="tab3-lock-badge" class="ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold shrink-0 flex items-center gap-0.5">
+                                    <i data-lucide="lock" class="w-2.5 h-2.5"></i>
+                                    <span>비활성</span>
+                                </span>
                             </div>
-                            <p class="text-[10px] text-slate-400 truncate mt-0.5">제6기 개정안 및 법령해석</p>
+                            <p class="text-[10px] text-slate-400 truncate mt-0.5">비밀번호 인증 필요</p>
                         </div>
                     </button>
 
@@ -1714,6 +1717,10 @@
                             <i data-lucide="download" class="w-4 h-4"></i>
                             <span>원본 HWPX 파일 다운로드</span>
                         </a>
+                        <button type="button" onclick="App.lockBylaws()" class="px-3.5 py-2 bg-slate-800/90 hover:bg-rose-900/90 text-rose-200 border border-rose-400/40 font-bold text-xs rounded-xl shadow-md flex items-center space-x-1.5 transition cursor-pointer" title="열람 권한 해제 후 잠금 상태로 복귀">
+                            <i data-lucide="lock" class="w-3.5 h-3.5 text-rose-300"></i>
+                            <span>3번 탭 다시 잠그기</span>
+                        </button>
                         <span class="text-[11px] text-slate-300">※ 카카오톡 공유 원본 파일 연동 완료</span>
                     </div>
                 </div>
@@ -2520,6 +2527,60 @@
                     </button>
                     <button type="submit" class="flex-1 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition">
                         인증 실행
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 3번 탭: 회칙 정리 잠금 해제 비밀번호 인증 모달 -->
+    <div id="bylaws-auth-modal" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold">
+                        <i data-lucide="lock" class="w-4 h-4"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-slate-900 text-base">3번 탭 (회칙 정리) 보안 인증</h3>
+                        <p class="text-[11px] text-slate-500">열람 권한 확인이 필요합니다.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="App.closeBylawsAuthModal()" class="p-1 text-slate-400 hover:text-slate-600 rounded-lg transition cursor-pointer">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <form id="bylaws-auth-form" onsubmit="App.submitBylawsAuth(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span>회칙 열람 비밀번호를 입력해주세요</span>
+                        <span class="text-[10px] text-amber-600 font-semibold">보안 인증</span>
+                    </label>
+                    <input 
+                        id="bylaws-password-input" 
+                        type="password" 
+                        inputmode="numeric" 
+                        pattern="[0-9]*" 
+                        placeholder="비밀번호 입력" 
+                        maxlength="10"
+                        autocomplete="off"
+                        class="w-full text-center tracking-widest text-lg font-bold px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-amber-500 focus:bg-white transition"
+                        required
+                    >
+                    <p id="bylaws-auth-error-msg" class="text-xs text-rose-600 font-semibold mt-1.5 hidden flex items-center gap-1">
+                        <i data-lucide="alert-circle" class="w-3.5 h-3.5"></i>
+                        <span>비밀번호가 올바르지 않습니다. 다시 입력해주세요.</span>
+                    </p>
+                </div>
+
+                <div class="flex items-center space-x-2 pt-2">
+                    <button type="button" onclick="App.closeBylawsAuthModal()" class="flex-1 py-2.5 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition cursor-pointer">
+                        취소
+                    </button>
+                    <button type="submit" class="flex-1 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-sm transition flex items-center justify-center space-x-1 cursor-pointer">
+                        <i data-lucide="unlock" class="w-3.5 h-3.5"></i>
+                        <span>열람 승인</span>
                     </button>
                 </div>
             </form>

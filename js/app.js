@@ -55,6 +55,9 @@ const App = {
     divisionMembers: [],   // 분과 위원 명단
     tab5Sub: "division",   // 5번 탭의 활성 서브 탭 (기본값: 첨부 이미지와 같은 "division")
 
+    // 3번 탭 (회칙 정리) 보안 인증 상태 (비밀번호: 1123)
+    isBylawsAuthenticated: sessionStorage.getItem("dongtan_bylaws_auth") === "true",
+
     // 관리자 권한 상태
     isAdmin: sessionStorage.getItem("dongtan_admin_auth") === "true",
 
@@ -67,6 +70,7 @@ const App = {
         this.setupCouncilFlow();
         this.renderAll();
         this.updateAdminUI();
+        this.updateBylawsAuthUI();
         this.updateIcons();
     },
 
@@ -330,6 +334,10 @@ const App = {
             btn.addEventListener("click", () => {
                 const targetTab = btn.getAttribute("data-tab");
                 if (targetTab) {
+                    if (targetTab === "tab-3" && !this.isBylawsAuthenticated) {
+                        this.openBylawsAuthModal();
+                        return;
+                    }
                     this.switchTab(targetTab);
                     // 모바일 화면에서는 탭 선택 후 사이드바 메뉴 자동 닫기
                     if (window.innerWidth < 1024) {
@@ -502,6 +510,11 @@ const App = {
     },
 
     switchTab(tabId) {
+        if (tabId === "tab-3" && !this.isBylawsAuthenticated) {
+            this.openBylawsAuthModal();
+            return;
+        }
+
         if (this.currentTab === tabId) return;
         this.currentTab = tabId;
 
@@ -3427,6 +3440,75 @@ ${data.effects}
                 </div>
                 <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold group-hover:bg-blue-50 group-hover:text-blue-700 transition">인증</span>
             `;
+        }
+        this.updateIcons();
+    },
+
+    // 3번 탭 (회칙 정리) 보안 인증 모달 제어
+    openBylawsAuthModal() {
+        const modal = document.getElementById("bylaws-auth-modal");
+        const input = document.getElementById("bylaws-password-input");
+        const errorMsg = document.getElementById("bylaws-auth-error-msg");
+        if (errorMsg) errorMsg.classList.add("hidden");
+        if (input) input.value = "";
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setTimeout(() => {
+                if (input) input.focus();
+            }, 100);
+        }
+        this.updateIcons();
+    },
+
+    closeBylawsAuthModal() {
+        const modal = document.getElementById("bylaws-auth-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    submitBylawsAuth(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById("bylaws-password-input");
+        const errorMsg = document.getElementById("bylaws-auth-error-msg");
+        const pwd = (input ? input.value : "").trim();
+
+        if (pwd === "1123") {
+            this.isBylawsAuthenticated = true;
+            sessionStorage.setItem("dongtan_bylaws_auth", "true");
+            this.closeBylawsAuthModal();
+            this.updateBylawsAuthUI();
+            this.switchTab("tab-3");
+            alert("✅ 3번 탭(회칙 정리) 열람 권한이 정상 승인되었습니다.");
+        } else {
+            if (errorMsg) errorMsg.classList.remove("hidden");
+            if (input) {
+                input.value = "";
+                input.focus();
+            }
+        }
+    },
+
+    lockBylaws() {
+        this.isBylawsAuthenticated = false;
+        sessionStorage.removeItem("dongtan_bylaws_auth");
+        this.updateBylawsAuthUI();
+        this.switchTab("tab-1");
+        alert("🔒 3번 탭(회칙 정리)이 다시 잠금(비활성화) 처리되었습니다.");
+    },
+
+    updateBylawsAuthUI() {
+        const badge = document.getElementById("tab3-lock-badge");
+        if (badge) {
+            if (this.isBylawsAuthenticated) {
+                badge.className = "ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-100 text-emerald-800 font-bold shrink-0 flex items-center gap-0.5";
+                badge.innerHTML = '<i data-lucide="unlock" class="w-2.5 h-2.5"></i><span>승인됨</span>';
+            } else {
+                badge.className = "ml-1 text-[9px] px-1.5 py-0.2 rounded-full bg-amber-100 text-amber-800 font-bold shrink-0 flex items-center gap-0.5";
+                badge.innerHTML = '<i data-lucide="lock" class="w-2.5 h-2.5"></i><span>비활성</span>';
+            }
         }
         this.updateIcons();
     },
