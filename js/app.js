@@ -69,18 +69,60 @@ const App = {
         this.setupIdeation();
         this.setupBylaws();
         this.setupCouncilFlow();
+        this.setupProgramDraft();
         this.renderAll();
         this.updateAdminUI();
         this.updateBylawsAuthUI();
         this.updateIcons();
     },
 
-    // Lucide 아이콘 렌더링 최적화 (배치 처리)
+    // 토스트 알림 (사용자 경험 개선: Toast Notification)
+    showToast(message, type = 'info', duration = 3200) {
+        const container = document.getElementById("toast-container");
+        if (!container) return;
+
+        const toast = document.createElement("div");
+        const typeClasses = {
+            success: "toast-success",
+            error: "toast-error",
+            warning: "toast-warning",
+            info: "toast-info"
+        };
+        const icons = {
+            success: '<i data-lucide="check-circle-2" class="w-4 h-4 shrink-0 text-white"></i>',
+            error: '<i data-lucide="alert-circle" class="w-4 h-4 shrink-0 text-white"></i>',
+            warning: '<i data-lucide="alert-triangle" class="w-4 h-4 shrink-0 text-white"></i>',
+            info: '<i data-lucide="info" class="w-4 h-4 shrink-0 text-white"></i>'
+        };
+
+        toast.className = `toast-item ${typeClasses[type] || 'toast-info'}`;
+        toast.innerHTML = `
+            ${icons[type] || icons.info}
+            <span class="leading-tight">${escapeHtml(message)}</span>
+        `;
+
+        container.appendChild(toast);
+        this.updateIcons();
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateY(-10px) scale(0.95)';
+            setTimeout(() => {
+                if (toast.parentNode) toast.parentNode.removeChild(toast);
+            }, 300);
+        }, duration);
+    },
+
+    // Lucide 아이콘 렌더링 최적화 (배치 처리 & 안전 예외 처리)
     updateIcons() {
         if (typeof lucide === "undefined") return;
         if (this.iconDebounceTimer) cancelAnimationFrame(this.iconDebounceTimer);
         this.iconDebounceTimer = requestAnimationFrame(() => {
-            lucide.createIcons();
+            try {
+                lucide.createIcons();
+            } catch(e) {
+                console.warn("Lucide icon create warning:", e);
+            }
             this.iconDebounceTimer = null;
         });
     },
@@ -366,8 +408,7 @@ const App = {
                     this.switchTab(targetTab);
                     // 모바일 화면에서는 탭 선택 후 사이드바 메뉴 자동 닫기
                     if (window.innerWidth < 1024) {
-                        const wrapper = document.getElementById("sidebar-collapsible-wrapper");
-                        if (wrapper) wrapper.classList.add("hidden");
+                        this.closeMobileSidebar();
                     }
                 }
             });
@@ -375,23 +416,17 @@ const App = {
 
         // 사이드바 내부 모바일 토글 버튼
         const mobileToggleBtn = document.getElementById("mobile-sidebar-toggle-btn");
-        const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
-        if (mobileToggleBtn && collapsibleWrapper) {
+        if (mobileToggleBtn) {
             mobileToggleBtn.addEventListener("click", () => {
-                collapsibleWrapper.classList.toggle("hidden");
-                this.updateIcons();
+                this.toggleMobileSidebar();
             });
         }
 
         // 상단 헤더의 모바일 햄버거 메뉴 버튼
         const headerMobileBtn = document.getElementById("header-mobile-menu-btn");
-        if (headerMobileBtn && collapsibleWrapper) {
+        if (headerMobileBtn) {
             headerMobileBtn.addEventListener("click", () => {
-                collapsibleWrapper.classList.toggle("hidden");
-                if (!collapsibleWrapper.classList.contains("hidden")) {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
-                this.updateIcons();
+                this.toggleMobileSidebar();
             });
         }
 
@@ -400,7 +435,8 @@ const App = {
             { id: "program-modal", close: () => this.closeProgramModal() },
             { id: "steering-member-modal", close: () => this.closeSteeringModal() },
             { id: "division-member-modal", close: () => this.closeDivisionModal() },
-            { id: "admin-auth-modal", close: () => this.closeAdminModal() }
+            { id: "admin-auth-modal", close: () => this.closeAdminModal() },
+            { id: "cloud-sync-modal", close: () => this.closeCloudSyncModal() }
         ];
 
         modalBackdrops.forEach(({ id, close }) => {
@@ -419,8 +455,34 @@ const App = {
                 this.closeSteeringModal();
                 this.closeDivisionModal();
                 this.closeAdminModal();
+                this.closeCloudSyncModal();
+                this.closeMobileSidebar();
             }
         });
+    },
+
+    toggleMobileSidebar() {
+        const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
+        const backdrop = document.getElementById("sidebar-backdrop");
+        if (!collapsibleWrapper) return;
+
+        const isCurrentlyHidden = collapsibleWrapper.classList.contains("hidden");
+        if (isCurrentlyHidden) {
+            collapsibleWrapper.classList.remove("hidden");
+            if (backdrop) backdrop.classList.remove("hidden");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            collapsibleWrapper.classList.add("hidden");
+            if (backdrop) backdrop.classList.add("hidden");
+        }
+        this.updateIcons();
+    },
+
+    closeMobileSidebar() {
+        const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
+        const backdrop = document.getElementById("sidebar-backdrop");
+        if (collapsibleWrapper) collapsibleWrapper.classList.add("hidden");
+        if (backdrop) backdrop.classList.add("hidden");
     },
 
     openProgramModal(progId = null) {
@@ -464,6 +526,8 @@ const App = {
                 
                 if (form.elements["tags"]) form.elements["tags"].value = (prog.tags || []).join(", ");
             }
+            const banner = document.getElementById("program-draft-banner");
+            if (banner) banner.classList.add("hidden");
         } else {
             if (form) form.reset();
             if (titleEl) titleEl.textContent = "2027년 교육 프로그램 사업카드 작성";
@@ -472,6 +536,15 @@ const App = {
             if (form && form.elements["basis"]) form.elements["basis"].value = "「화성시 청년 기본 조례」 제21조, 「청년일자리 창출 촉진 조례」 제6조";
             if (form && form.elements["agency"]) form.elements["agency"].value = "화성시 청년청소년과 / 교육·참여·권리 분과 직접사업";
             if (form && form.elements["budgetInfo"]) form.elements["budgetInfo"].value = "시비 100%, 25,000천원";
+
+            // 임시 저장본 확인
+            const draft = localStorage.getItem("dongtan_program_draft");
+            const banner = document.getElementById("program-draft-banner");
+            if (draft && banner) {
+                banner.classList.remove("hidden");
+            } else if (banner) {
+                banner.classList.add("hidden");
+            }
         }
 
         modal.classList.remove("hidden");
@@ -489,6 +562,58 @@ const App = {
             modal.classList.add("hidden");
             modal.classList.remove("flex");
         }
+    },
+
+    // 임시 저장(Draft) 자동 감지 및 복원/삭제 관리
+    setupProgramDraft() {
+        const form = document.getElementById("new-program-form");
+        if (!form) return;
+
+        let debounceTimer;
+        form.addEventListener("input", () => {
+            const editingId = form.elements["editingId"] ? form.elements["editingId"].value : "";
+            if (editingId) return; // 수정 모드일 땐 자동저장 비활성
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const draftData = {};
+                Array.from(form.elements).forEach(el => {
+                    if (el.name && el.name !== "editingId") {
+                        draftData[el.name] = el.value;
+                    }
+                });
+                if (draftData.title || draftData.purpose || draftData.subtitle) {
+                    localStorage.setItem("dongtan_program_draft", JSON.stringify(draftData));
+                }
+            }, 600);
+        });
+    },
+
+    restoreProgramDraft() {
+        const saved = localStorage.getItem("dongtan_program_draft");
+        if (!saved) return;
+        try {
+            const data = JSON.parse(saved);
+            const form = document.getElementById("new-program-form");
+            if (!form) return;
+            Object.keys(data).forEach(key => {
+                if (form.elements[key]) {
+                    form.elements[key].value = data[key];
+                }
+            });
+            const banner = document.getElementById("program-draft-banner");
+            if (banner) banner.classList.add("hidden");
+            this.showToast("작성 중이던 임시 저장본을 성공적으로 불러왔습니다.", "info");
+        } catch(e) {
+            console.warn("임시 저장본 복원 실패:", e);
+        }
+    },
+
+    discardProgramDraft() {
+        localStorage.removeItem("dongtan_program_draft");
+        const banner = document.getElementById("program-draft-banner");
+        if (banner) banner.classList.add("hidden");
+        this.showToast("임시 저장본이 안전하게 삭제되었습니다.", "info");
     },
 
     openProgramDetailModal(progId) {
@@ -514,6 +639,56 @@ const App = {
             modal.classList.remove("flex");
         }
         this.currentProgramDetailId = null;
+    },
+
+    // 한글(HWP) 및 문서 서식용 텍스트 복사 (P3 편의 기능)
+    copyCurrentProgramCardHwp() {
+        if (!this.currentProgramDetailId) return;
+        const prog = this.programs.find(p => p.id === this.currentProgramDetailId);
+        if (!prog) return;
+
+        const hwpText = `【2027년 주요 청년사업 설명서 (교육·참여·권리 분과)】
+
+1. 사업 기본 정보
+- 사 업 명: [${prog.code || '1-1'}] ${prog.title}
+- 핵심비전: ${prog.subtitle || prog.vision || '동탄 청년 맞춤형 역량 강화'}
+- 제안위원: ${prog.author || '위원'}
+- 분과구분: 교육, 참여, 권리 분과 (${prog.category || '교육'})
+- 추진목표: ${prog.targetGoal || '청년 역량 강화 및 시정 참여 실현'}
+
+2. 사업 개요
+- 추진근거: ${prog.basis || '「화성시 청년 기본 조례」 제21조'}
+- 사업기간: ${prog.schedule || prog.period || '2027. 1. ~ 12.'}
+- 추진장소: ${prog.institution || prog.location || '화성시 동탄 청년공간'}
+- 사업대상: ${prog.target || '화성시 거주 및 활동 19세~39세 청년'}
+- 사업예산: ${prog.budgetInfo || prog.budgetRatio || '시비 100%'}
+- 추진부서: ${prog.agency || '화성시 청년청소년과 / 교육·참여·권리 분과'}
+
+3. 사업 필요성 및 추진 목적
+${prog.purpose || '청년들의 교육 참여 수요를 반영하여 실무 역량을 제고함.'}
+
+4. 주요 교육 프로그램 세부 구성
+${(prog.subPrograms || []).map((s, idx) => ` (${idx+1}) [${s.cat || '과정'}] ${s.name}: ${s.desc}`).join('\n')}
+
+5. 추진 실적 및 2027년 추진 계획
+[추진실적]
+${(prog.prevPerformance || []).map(p => ` - ${p}`).join('\n')}
+[2027년 추진일정]
+${(prog.plan2027 || []).map(p => ` - ${p}`).join('\n')}
+
+6. 기대 효과
+${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
+`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(hwpText).then(() => {
+                this.showToast("한글(HWP) 표 서식용 텍스트가 클립보드에 복사되었습니다! (한글 문서에 Ctrl+V로 붙여넣기)", "success");
+            }).catch(() => {
+                this.showToast("클립보드 복사에 실패했습니다.", "error");
+            });
+        } else {
+            this.showToast("클립보드 API가 지원되지 않는 환경입니다.", "warning");
+        }
     },
 
     printCurrentProgramCard() {
@@ -703,9 +878,17 @@ const App = {
         const budgetInfo = form.elements["budgetInfo"] ? form.elements["budgetInfo"].value.trim() : "시비 100%";
 
         if (!title || !purpose) {
-            alert("사업명과 사업내용(필요이유/추진목적)을 모두 입력해주세요.");
-            if (!title && form.elements["title"]) form.elements["title"].focus();
-            else if (!purpose && form.elements["purpose"]) form.elements["purpose"].focus();
+            if (!title && form.elements["title"]) {
+                form.elements["title"].classList.add("input-error-shake");
+                form.elements["title"].focus();
+                setTimeout(() => form.elements["title"].classList.remove("input-error-shake"), 600);
+                this.showToast("필수 항목 [사업명]을 입력해주세요.", "error");
+            } else if (!purpose && form.elements["purpose"]) {
+                form.elements["purpose"].classList.add("input-error-shake");
+                form.elements["purpose"].focus();
+                setTimeout(() => form.elements["purpose"].classList.remove("input-error-shake"), 600);
+                this.showToast("필수 항목 [사업 필요성 및 추진목적]을 입력해주세요.", "error");
+            }
             return;
         }
 
@@ -813,10 +996,13 @@ const App = {
             this.programs.unshift(newProg);
         }
 
+        // 임시 저장본 제거
+        localStorage.removeItem("dongtan_program_draft");
+
         this.savePrograms();
         this.renderPadletBoard();
         this.closeProgramModal();
-        alert(editingId ? "교육 프로그램 사업카드가 성공적으로 수정되었습니다!" : "2027년 교육 프로그램 사업카드가 성공적으로 등록되었습니다!");
+        this.showToast(editingId ? "교육 프로그램 사업카드가 성공적으로 수정되었습니다!" : "2027년 교육 프로그램 사업카드가 패들렛 보드에 성공적으로 등록되었습니다!", "success");
     },
 
     renderPadletBoard() {
@@ -1858,16 +2044,34 @@ const App = {
         const prevStep = this.currentStep;
         this.currentStep = stepNumber;
 
+        // 진행률 게이지 바 및 텍스트 갱신 (P2 인터랙션 보완)
+        const progressPercentages = [0, 20, 40, 60, 80, 100];
+        const percent = progressPercentages[stepNumber] || 20;
+        const progressBar = document.getElementById("ideation-progress-bar");
+        const progressText = document.getElementById("ideation-progress-percent");
+        if (progressBar) progressBar.style.width = `${percent}%`;
+        if (progressText) {
+            progressText.textContent = `${percent}% 진행 중 (Step ${stepNumber}/5)`;
+            if (percent === 100) {
+                progressText.className = "font-black text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200";
+            } else {
+                progressText.className = "font-black text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200";
+            }
+        }
+
         for (let i = 1; i <= 5; i++) {
             const stepBtn = document.getElementById(`step-indicator-${i}`);
             const line = document.getElementById(`step-line-${i}`);
             if (stepBtn) {
                 if (i === stepNumber) {
                     stepBtn.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 transition-all";
+                    stepBtn.innerHTML = `<span>${i}</span>`;
                 } else if (i < stepNumber) {
-                    stepBtn.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-500 text-white transition-all";
+                    stepBtn.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-emerald-500 text-white shadow-xs transition-all";
+                    stepBtn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i>`;
                 } else {
                     stepBtn.className = "w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all";
+                    stepBtn.innerHTML = `<span>${i}</span>`;
                 }
             }
             if (line && i < 5) {
@@ -1902,7 +2106,7 @@ const App = {
             this.loadProposal(this.selectedProposalIndex);
         }
 
-        document.getElementById("tab-2")?.scrollIntoView({ behavior: "smooth" });
+        document.getElementById("tab-2")?.scrollIntoView({ behavior: "smooth", block: "start" });
         this.updateIcons();
     },
 
@@ -3659,6 +3863,331 @@ ${data.effects}
             }
         }
         this.updateIcons();
+    },
+
+    // ==========================================
+    // [P0 긴급] 데이터 클라우드 동기화 & 실시간 협업 허브
+    // ==========================================
+    openCloudSyncModal() {
+        const modal = document.getElementById("cloud-sync-modal");
+        const urlInput = document.getElementById("cloud-api-url-input");
+        if (urlInput) {
+            urlInput.value = localStorage.getItem("dongtan_cloud_api_url") || "";
+        }
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        this.switchSyncTab("code");
+        this.updateIcons();
+    },
+
+    closeCloudSyncModal() {
+        const modal = document.getElementById("cloud-sync-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    switchSyncTab(tab) {
+        const panels = {
+            code: document.getElementById("sync-panel-code"),
+            file: document.getElementById("sync-panel-file"),
+            cloud: document.getElementById("sync-panel-cloud")
+        };
+        const btns = {
+            code: document.getElementById("sync-tab-code-btn"),
+            file: document.getElementById("sync-tab-file-btn"),
+            cloud: document.getElementById("sync-tab-cloud-btn")
+        };
+
+        const activeClass = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-blue-600 shadow-2xs transition flex items-center justify-center gap-1";
+        const inactiveClass = "flex-1 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-lg transition flex items-center justify-center gap-1";
+
+        Object.keys(panels).forEach(key => {
+            if (panels[key]) {
+                if (key === tab) {
+                    panels[key].classList.remove("hidden");
+                } else {
+                    panels[key].classList.add("hidden");
+                }
+            }
+            if (btns[key]) {
+                btns[key].className = key === tab ? activeClass : inactiveClass;
+            }
+        });
+        this.updateIcons();
+    },
+
+    // 1. 간편 동기화 코드 생성 및 클립보드 복사
+    generateAndCopySyncCode() {
+        try {
+            const payload = {
+                app: "dongtan-youth-platform",
+                version: "2026.10",
+                exportedAt: new Date().toISOString(),
+                programs: this.programs || [],
+                divisionMembers: this.divisionMembers || [],
+                prMembers: this.prMembers || []
+            };
+
+            const jsonStr = JSON.stringify(payload);
+            const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(encoded).then(() => {
+                    const status = document.getElementById("sync-code-copy-status");
+                    if (status) {
+                        status.classList.remove("hidden");
+                        setTimeout(() => status.classList.add("hidden"), 3000);
+                    }
+                    this.showToast("동기화 코드가 클립보드에 복사되었습니다. 단체 카톡방에 붙여넣기하세요!", "success");
+                }).catch(() => {
+                    this.fallbackCopyText(encoded);
+                });
+            } else {
+                this.fallbackCopyText(encoded);
+            }
+        } catch(e) {
+            console.error("동기화 코드 생성 실패:", e);
+            this.showToast("동기화 코드 생성 중 오류가 발생했습니다.", "error");
+        }
+    },
+
+    fallbackCopyText(text) {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        try {
+            document.execCommand("copy");
+            this.showToast("동기화 코드가 복사되었습니다! 카톡에 붙여넣기하세요.", "success");
+        } catch(err) {
+            prompt("아래 코드를 복사해주세요 (Ctrl+C):", text);
+        }
+        document.body.removeChild(ta);
+    },
+
+    // 2. 전달받은 동기화 코드 입력 및 데이터 병합
+    applySyncCode() {
+        const input = document.getElementById("sync-code-input");
+        if (!input) return;
+        const raw = input.value.trim();
+
+        if (!raw) {
+            this.showToast("공유받은 동기화 코드를 붙여넣어주세요.", "warning");
+            input.focus();
+            return;
+        }
+
+        try {
+            const jsonStr = decodeURIComponent(escape(atob(raw)));
+            const data = JSON.parse(jsonStr);
+
+            if (!data || !Array.isArray(data.programs)) {
+                throw new Error("유효하지 않은 데이터 구조입니다.");
+            }
+
+            const mergedCount = this.mergeSyncedPayload(data);
+            input.value = "";
+            this.showToast(`데이터 병합 완료! (${mergedCount.added}건 신규 추가, ${mergedCount.updated}건 업데이트)`, "success");
+            this.closeCloudSyncModal();
+        } catch(e) {
+            console.error("코드 병합 실패:", e);
+            this.showToast("올바른 동기화 코드가 아닙니다. 코드를 다시 확인해주세요.", "error");
+        }
+    },
+
+    // 3. 스마트 병합 엔진 (중복 방지 & 안전 업데이트)
+    mergeSyncedPayload(data) {
+        let added = 0;
+        let updated = 0;
+
+        if (Array.isArray(data.programs)) {
+            data.programs.forEach(newP => {
+                const idx = this.programs.findIndex(p => p.id === newP.id || (p.title === newP.title && p.author === newP.author));
+                if (idx === -1) {
+                    this.programs.unshift(newP);
+                    added++;
+                } else {
+                    // 추천 위원 명단(likedBy) 병합
+                    const currentLikedBy = Array.isArray(this.programs[idx].likedBy) ? this.programs[idx].likedBy : [];
+                    const incomingLikedBy = Array.isArray(newP.likedBy) ? newP.likedBy : [];
+                    incomingLikedBy.forEach(voter => {
+                        const vKey = typeof voter === 'string' ? voter : (voter.memberId || voter.name);
+                        const exists = currentLikedBy.some(cv => (typeof cv === 'string' ? cv : (cv.memberId || cv.name)) === vKey);
+                        if (!exists) currentLikedBy.push(voter);
+                    });
+                    this.programs[idx].likedBy = currentLikedBy;
+                    this.programs[idx].likes = currentLikedBy.length;
+                    updated++;
+                }
+            });
+            this.savePrograms();
+        }
+
+        // 분과위원 및 홍보팀 명단 보존
+        if (Array.isArray(data.divisionMembers) && data.divisionMembers.length > 0) {
+            data.divisionMembers.forEach(dm => {
+                if (!this.divisionMembers.some(m => m.id === dm.id || m.name === dm.name)) {
+                    this.divisionMembers.push(dm);
+                }
+            });
+            this.saveDivisionMembers();
+        }
+
+        if (Array.isArray(data.prMembers) && data.prMembers.length > 0) {
+            data.prMembers.forEach(pm => {
+                if (!this.prMembers.some(m => m.id === pm.id || m.name === pm.name)) {
+                    this.prMembers.push(pm);
+                }
+            });
+            this.savePrMembers();
+        }
+
+        this.renderAll();
+        return { added, updated };
+    },
+
+    // 4. 전체 백업 파일 다운로드
+    downloadFullBackupJson() {
+        const payload = {
+            app: "dongtan-youth-platform",
+            version: "2026.10",
+            exportedAt: new Date().toISOString(),
+            programs: this.programs,
+            divisionMembers: this.divisionMembers,
+            prMembers: this.prMembers,
+            steeringMembers: this.steeringMembers
+        };
+
+        const str = JSON.stringify(payload, null, 2);
+        const blob = new Blob([str], { type: "application/json;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+        a.href = url;
+        a.download = `동탄청년플랫폼_전체백업_${dateStr}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        this.showToast("전체 데이터 백업 JSON 파일이 성공적으로 다운로드되었습니다.", "info");
+    },
+
+    // 5. 백업 파일 업로드 및 병합
+    uploadBackupJson() {
+        const fileInput = document.getElementById("sync-file-input");
+        if (!fileInput || !fileInput.files.length) {
+            this.showToast("불러올 JSON 파일을 먼저 선택해주세요.", "warning");
+            return;
+        }
+
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const res = this.mergeSyncedPayload(data);
+                this.showToast(`JSON 파일 병합 성공! (${res.added}건 추가, ${res.updated}건 갱신)`, "success");
+                fileInput.value = "";
+                this.closeCloudSyncModal();
+            } catch(err) {
+                console.error("파일 파싱 실패:", err);
+                this.showToast("JSON 파일 형식이 올바르지 않습니다.", "error");
+            }
+        };
+        reader.readAsText(file, "UTF-8");
+    },
+
+    // 6. 클라우드 Google Sheets / REST API 연동
+    saveCloudApiUrl() {
+        const input = document.getElementById("cloud-api-url-input");
+        if (!input) return;
+        const url = input.value.trim();
+        localStorage.setItem("dongtan_cloud_api_url", url);
+        this.showToast("클라우드 연동 URL이 안전하게 저장되었습니다.", "success");
+    },
+
+    pushToCloudApi() {
+        const url = localStorage.getItem("dongtan_cloud_api_url") || (document.getElementById("cloud-api-url-input") ? document.getElementById("cloud-api-url-input").value.trim() : "");
+        if (!url) {
+            this.showToast("먼저 Google Apps Script 또는 REST API URL을 입력해주세요.", "warning");
+            return;
+        }
+
+        const payload = {
+            action: "push",
+            timestamp: new Date().toISOString(),
+            programs: this.programs,
+            divisionMembers: this.divisionMembers,
+            prMembers: this.prMembers
+        };
+
+        this.showToast("구글 스프레드시트로 데이터를 전송 중입니다...", "info");
+
+        fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            this.showToast("✅ 구글 스프레드시트로 최신 데이터가 성공적으로 전송되었습니다!", "success");
+        }).catch((err) => {
+            console.error("Cloud push failed:", err);
+            this.showToast("클라우드 전송에 실패했습니다. URL을 확인해주세요.", "error");
+        });
+    },
+
+    pullFromCloudApi() {
+        const url = localStorage.getItem("dongtan_cloud_api_url") || (document.getElementById("cloud-api-url-input") ? document.getElementById("cloud-api-url-input").value.trim() : "");
+        if (!url) {
+            this.showToast("먼저 Google Apps Script 또는 REST API URL을 입력해주세요.", "warning");
+            return;
+        }
+
+        this.showToast("구글 시트에서 최신 데이터를 가져오는 중입니다...", "info");
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data && Array.isArray(data.programs)) {
+                    const res = this.mergeSyncedPayload(data);
+                    this.showToast(`구글 시트 동기화 완료! (${res.added}건 추가, ${res.updated}건 업데이트)`, "success");
+                    this.closeCloudSyncModal();
+                } else {
+                    this.showToast("구글 시트 응답 데이터가 비어있거나 형식이 다릅니다.", "warning");
+                }
+            })
+            .catch(err => {
+                console.error("Cloud pull failed:", err);
+                this.showToast("구글 시트에서 데이터를 불러오지 못했습니다. URL과 배포 권한(모든 사용자)을 확인하세요.", "error");
+            });
+    },
+
+    copyGoogleScriptCode() {
+        const scriptCode = `// [화성시 청년정책협의체 Google Apps Script 실시간 연동 코드]
+// 구글 스프레드시트 > 확장 프로그램 > Apps Script에 아래 코드를 붙여넣고 [배포 > 웹 앱으로 배포]하세요.
+function doGet() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = sheet.getRange("A1").getValue();
+  return ContentService.createTextOutput(data || "{}").setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.getRange("A1").setValue(e.postData.contents);
+  return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
+}`;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(scriptCode).then(() => {
+                this.showToast("Google Apps Script 템플릿 코드가 클립보드에 복사되었습니다!", "success");
+            });
+        }
     },
 
     renderAll() {
