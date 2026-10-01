@@ -65,6 +65,7 @@ const App = {
 
     init() {
         this.loadStorage();
+        this.initGoogleAuth();
         this.setupNavigation();
         this.setupPadlet();
         this.setupIdeation();
@@ -73,6 +74,7 @@ const App = {
         this.renderAll();
         this.initAutoSync();
         this.updateAdminUI();
+        this.updateAuthUI();
         this.updateIcons();
     },
 
@@ -514,7 +516,8 @@ const App = {
             { id: "sync-config-modal", close: () => this.closeSyncConfigModal() },
             { id: "schedule-task-modal", close: () => this.closeScheduleTaskModal() },
             { id: "attendance-cell-modal", close: () => this.closeAttendanceCellModal() },
-            { id: "attendance-meeting-modal", close: () => this.closeAddAttendanceMeetingModal() }
+            { id: "attendance-meeting-modal", close: () => this.closeAddAttendanceMeetingModal() },
+            { id: "google-auth-modal", close: () => this.closeGoogleAuthModal() }
         ];
 
         modalBackdrops.forEach(({ id, close }) => {
@@ -540,6 +543,7 @@ const App = {
                 this.closeScheduleTaskModal();
                 this.closeAttendanceCellModal();
                 this.closeAddAttendanceMeetingModal();
+                this.closeGoogleAuthModal();
                 this.closeMobileSidebar();
             }
         });
@@ -577,6 +581,7 @@ const App = {
     },
 
     openProgramModal(progId = null) {
+        if (!this.requireEditPermission(progId ? "교육 제안 수정" : "신규 교육 제안 등록")) return;
         const modal = document.getElementById("program-modal");
         if (!modal) return;
         this.populateMemberSelect();
@@ -940,6 +945,7 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     },
 
     handleCreateProgram(form) {
+        if (!this.requireEditPermission("교육 제안 저장")) return;
         if (!form) form = document.getElementById("new-program-form");
         if (!form) return;
 
@@ -1905,6 +1911,7 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     // 2-1. 휴지통 (삭제된 교육 제안 30일 임시 보관함)
     // ==========================================
     deleteProgramToTrash(progId) {
+        if (!this.requireEditPermission("교육 제안 삭제")) return;
         const prog = this.programs.find(p => p.id === progId);
         if (!prog) return;
 
@@ -1932,6 +1939,7 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     },
 
     restoreProgramFromTrash(progId) {
+        if (!this.requireEditPermission("교육 제안 복원")) return;
         const prog = (this.trashPrograms || []).find(p => p.id === progId);
         if (!prog) return;
 
@@ -1950,6 +1958,7 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     },
 
     restoreAllFromTrash() {
+        if (!this.requireEditPermission("휴지통 전체 복원")) return;
         if (!this.trashPrograms || !this.trashPrograms.length) {
             alert("휴지통에 보관된 항목이 없습니다.");
             return;
@@ -1975,6 +1984,7 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     },
 
     permanentlyDeleteFromTrash(progId) {
+        if (!this.requireEditPermission("교육 제안 영구 삭제")) return;
         const prog = (this.trashPrograms || []).find(p => p.id === progId);
         if (!prog) return;
 
@@ -1989,6 +1999,7 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     },
 
     emptyTrash() {
+        if (!this.requireEditPermission("휴지통 비우기")) return;
         if (!this.trashPrograms || !this.trashPrograms.length) {
             alert("휴지통이 이미 비어 있습니다.");
             return;
@@ -3017,6 +3028,7 @@ ${data.effects}
 
     // 운영위원 삭제 기능 단추
     deleteSteeringMember(memberId) {
+        if (!this.requireEditPermission("운영위원 삭제")) return;
         const member = this.steeringMembers.find(m => m.id === memberId);
         if (!member) return;
         if (confirm(`'${member.name}' (${member.district} · ${member.role}) 위원을 운영위원회 명단에서 삭제하시겠습니까?`)) {
@@ -3030,6 +3042,7 @@ ${data.effects}
 
     // 운영위원 수정 모달 열기
     openEditSteeringModal(memberId) {
+        if (!this.requireEditPermission("운영위원 정보 수정")) return;
         const member = this.steeringMembers.find(m => m.id === memberId);
         if (!member) return;
 
@@ -3062,6 +3075,7 @@ ${data.effects}
 
     // 신규 운영위원 추가 모달 열기
     openAddSteeringModal() {
+        if (!this.requireEditPermission("운영위원 추가")) return;
         const title = document.getElementById("steering-modal-title");
         if (title) title.textContent = "신규 운영위원 추가";
 
@@ -3101,6 +3115,7 @@ ${data.effects}
     // 모달 폼 저장 (신규 등록 또는 기존 수정)
     saveSteeringMemberFromModal(e) {
         if (e) e.preventDefault();
+        if (!this.requireEditPermission("운영위원 저장")) return;
 
         const id = document.getElementById("modal-sm-id").value;
         const district = document.getElementById("modal-sm-district").value;
@@ -3695,6 +3710,7 @@ ${data.effects}
 
     // 분과 위원 삭제
     deleteDivisionMember(memberId) {
+        if (!this.requireEditPermission("분과 위원 삭제")) return;
         const member = this.divisionMembers.find(m => m.id === memberId);
         if (!member) return;
         if (confirm(`'${member.name}' (${member.role}) 위원을 분과 위원 명단에서 삭제하시겠습니까?`)) {
@@ -3706,6 +3722,7 @@ ${data.effects}
 
     // 분과 위원 수정 모달 열기
     openEditDivisionModal(memberId) {
+        if (!this.requireEditPermission("분과 위원 정보 수정")) return;
         const member = this.divisionMembers.find(m => m.id === memberId);
         if (!member) return;
 
@@ -3731,6 +3748,7 @@ ${data.effects}
 
     // 신규 분과 위원 추가 모달 열기
     openAddDivisionModal() {
+        if (!this.requireEditPermission("분과 위원 추가")) return;
         const title = document.getElementById("division-modal-title");
         if (title) title.textContent = "신규 분과 위원 추가";
 
@@ -3760,6 +3778,7 @@ ${data.effects}
     // 분과 위원 모달 저장 (신규/수정)
     saveDivisionMemberFromModal(e) {
         if (e) e.preventDefault();
+        if (!this.requireEditPermission("분과 위원 저장")) return;
 
         const id = document.getElementById("modal-dm-id").value;
         const name = document.getElementById("modal-dm-name").value.trim();
@@ -3795,6 +3814,294 @@ ${data.effects}
         this.renderDivisionMembersGrid();
 
         alert(id ? "분과 위원 정보가 수정되었습니다." : "신규 분과 위원이 추가되었습니다.");
+    },
+
+    // ==========================================
+    // [구글 계정 권한 통제] 대시보드 작성 및 수정 전용 인증 시스템
+    // ==========================================
+    AUTHORIZED_GOOGLE_EMAILS: [
+        "carlosnam6363@gmail.com",
+        "skysbule@gmail.com",
+        "jyjune0313@gmail.com",
+        "jeongsh0303@gmail.com",
+        "gbb0318@gmail.com",
+        "boingboohoo@gmail.com",
+        "skswlrndl@gmail.com"
+    ],
+    currentUser: null,
+
+    initGoogleAuth() {
+        try {
+            const saved = localStorage.getItem("dongtan_auth_user") || sessionStorage.getItem("dongtan_auth_user");
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed && parsed.email) {
+                    this.currentUser = parsed;
+                }
+            }
+        } catch (e) {
+            console.warn("Auth user parse error:", e);
+        }
+
+        if (this.hasEditPermission()) {
+            this.isAdmin = true;
+        }
+
+        this.updateAuthUI();
+        this.initGsiClient();
+    },
+
+    initGsiClient() {
+        if (typeof google !== "undefined" && google.accounts && google.accounts.id) {
+            const clientId = localStorage.getItem("dongtan_google_client_id") || "";
+            if (clientId) {
+                try {
+                    google.accounts.id.initialize({
+                        client_id: clientId,
+                        callback: (res) => this.handleGoogleCredentialResponse(res)
+                    });
+                } catch(e) {
+                    console.warn("GIS init error:", e);
+                }
+            }
+        }
+    },
+
+    handleGoogleCredentialResponse(response) {
+        if (!response || !response.credential) return;
+        try {
+            const base64Url = response.credential.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            const profile = JSON.parse(jsonPayload);
+            if (profile && profile.email) {
+                this.authenticateGoogleEmail(profile.email, profile.name, profile.picture);
+            }
+        } catch(e) {
+            console.error("JWT decode error:", e);
+            this.showToast("구글 인증 토큰 확인 중 오류가 발생했습니다.", "error");
+        }
+    },
+
+    hasEditPermission() {
+        if (!this.currentUser || !this.currentUser.email) return false;
+        const email = this.currentUser.email.trim().toLowerCase();
+        return this.AUTHORIZED_GOOGLE_EMAILS.includes(email);
+    },
+
+    requireEditPermission(actionName = "작성 및 수정") {
+        if (this.hasEditPermission()) return true;
+        this.showToast(`[권한 제한] '${actionName}'은(는) 승인된 구글 계정 로그인 시에만 가능합니다.`, "warning", 3500);
+        this.openGoogleAuthModal();
+        return false;
+    },
+
+    openGoogleAuthModal() {
+        const modal = document.getElementById("google-auth-modal");
+        const input = document.getElementById("google-email-input");
+        const errorMsg = document.getElementById("google-auth-error-msg");
+
+        if (input) {
+            input.value = this.currentUser ? this.currentUser.email : "";
+        }
+        if (errorMsg) errorMsg.classList.add("hidden");
+
+        this.renderGoogleAuthChips();
+
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+            setTimeout(() => {
+                if (input) input.focus();
+            }, 100);
+        }
+        this.updateIcons();
+    },
+
+    closeGoogleAuthModal() {
+        const modal = document.getElementById("google-auth-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
+        }
+    },
+
+    renderGoogleAuthChips() {
+        const container = document.getElementById("google-auth-chips-container");
+        if (!container) return;
+
+        const emailLabels = {
+            "carlosnam6363@gmail.com": "김남현 분과장",
+            "skysbule@gmail.com": "동탄구 위원",
+            "jyjune0313@gmail.com": "동탄구 위원",
+            "jeongsh0303@gmail.com": "정선화 위원",
+            "gbb0318@gmail.com": "곽보배 위원",
+            "boingboohoo@gmail.com": "동탄구 위원",
+            "skswlrndl@gmail.com": "동탄구 위원"
+        };
+
+        container.innerHTML = this.AUTHORIZED_GOOGLE_EMAILS.map(email => {
+            const isCurrent = this.currentUser && this.currentUser.email === email;
+            const label = emailLabels[email] || "승인 위원";
+            return `
+                <button type="button" onclick="App.selectQuickGoogleEmail('${email}')" 
+                    class="p-2 text-left rounded-lg text-xs transition border flex items-center justify-between cursor-pointer ${
+                        isCurrent 
+                            ? 'bg-blue-50 border-blue-400 text-blue-900 font-extrabold shadow-2xs' 
+                            : 'bg-white hover:bg-slate-100 border-slate-200 text-slate-700'
+                    }">
+                    <div class="truncate mr-1 min-w-0">
+                        <span class="font-bold text-[11px] block truncate">${email}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${label}</span>
+                    </div>
+                    <span class="shrink-0 text-[10px] px-2 py-0.5 rounded-full ${isCurrent ? 'bg-blue-600 text-white font-black' : 'bg-slate-100 text-slate-600 font-bold'}">
+                        ${isCurrent ? '로그인됨' : '선택 로그인'}
+                    </span>
+                </button>
+            `;
+        }).join("");
+    },
+
+    selectQuickGoogleEmail(email) {
+        const input = document.getElementById("google-email-input");
+        if (input) input.value = email;
+        this.authenticateGoogleEmail(email);
+    },
+
+    submitGoogleAuth(e) {
+        if (e) e.preventDefault();
+        const input = document.getElementById("google-email-input");
+        const email = (input ? input.value : "").trim();
+        this.authenticateGoogleEmail(email);
+    },
+
+    authenticateGoogleEmail(email, name = null, picture = null) {
+        const cleanEmail = (email || "").trim().toLowerCase();
+        const errorMsg = document.getElementById("google-auth-error-msg");
+        const errorText = document.getElementById("google-auth-error-text");
+
+        if (!cleanEmail) {
+            if (errorMsg && errorText) {
+                errorText.textContent = "구글 계정 이메일을 입력해주세요.";
+                errorMsg.classList.remove("hidden");
+            }
+            return;
+        }
+
+        if (this.AUTHORIZED_GOOGLE_EMAILS.includes(cleanEmail)) {
+            this.currentUser = {
+                email: cleanEmail,
+                name: name || cleanEmail.split("@")[0],
+                picture: picture || null,
+                authenticatedAt: new Date().toISOString()
+            };
+            localStorage.setItem("dongtan_auth_user", JSON.stringify(this.currentUser));
+            this.isAdmin = true;
+            sessionStorage.setItem("dongtan_admin_auth", "true");
+
+            if (errorMsg) errorMsg.classList.add("hidden");
+            this.closeGoogleAuthModal();
+            this.updateAuthUI();
+            this.renderAll();
+            this.showToast(`✅ [${cleanEmail}] 계정 인증 완료! 대시보드 작성 및 수정 권한이 활성화되었습니다.`, "success", 4000);
+        } else {
+            if (errorMsg && errorText) {
+                errorText.textContent = `[${cleanEmail}]은(는) 승인된 위원 구글 계정이 아닙니다. 지정된 7개 계정만 권한이 부여됩니다.`;
+                errorMsg.classList.remove("hidden");
+            }
+            this.showToast("대시보드 수정 권한이 부여되지 않은 구글 계정입니다.", "error", 3500);
+        }
+    },
+
+    logoutGoogle() {
+        if (confirm("구글 로그아웃하시겠습니까?\n대시보드는 '읽기 전용' 모드로 전환됩니다.")) {
+            this.currentUser = null;
+            localStorage.removeItem("dongtan_auth_user");
+            this.isAdmin = false;
+            sessionStorage.removeItem("dongtan_admin_auth");
+            this.updateAuthUI();
+            this.renderAll();
+            this.showToast("로그아웃되었습니다. 읽기 전용 상태입니다.", "info");
+        }
+    },
+
+    updateAuthUI() {
+        const hasAuth = this.hasEditPermission();
+
+        // 1. 헤더 영역 상태 렌더링
+        const headerContainer = document.getElementById("header-auth-status-container");
+        if (headerContainer) {
+            if (hasAuth && this.currentUser) {
+                headerContainer.innerHTML = `
+                    <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs shadow-2xs">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span class="hidden sm:inline font-bold text-[11px] truncate max-w-[140px]" title="${this.currentUser.email}">${this.currentUser.email}</span>
+                        <span class="px-1.5 py-0.2 rounded bg-emerald-200 text-emerald-900 text-[10px] font-black shrink-0">수정권한</span>
+                        <button type="button" onclick="App.logoutGoogle()" class="ml-1 text-[11px] text-slate-400 hover:text-rose-600 font-bold transition cursor-pointer" title="로그아웃">
+                            <i data-lucide="log-out" class="w-3.5 h-3.5 inline"></i>
+                        </button>
+                    </div>
+                `;
+            } else {
+                headerContainer.innerHTML = `
+                    <button type="button" onclick="App.openGoogleAuthModal()" class="flex items-center gap-1.5 px-2.5 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold shadow-2xs transition cursor-pointer" title="대시보드 내용 작성/수정 권한 구글 로그인">
+                        <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                        <span class="hidden sm:inline">Google 로그인</span>
+                        <span class="sm:hidden">로그인</span>
+                    </button>
+                `;
+            }
+        }
+
+        // 2. 사이드바 영역 상태 렌더링
+        const sidebarContainer = document.getElementById("sidebar-auth-status-container");
+        if (sidebarContainer) {
+            if (hasAuth && this.currentUser) {
+                sidebarContainer.innerHTML = `
+                    <div class="p-2.5 bg-emerald-50/90 border border-emerald-200 rounded-xl space-y-1.5 shadow-2xs">
+                        <div class="flex items-center justify-between text-emerald-900">
+                            <span class="flex items-center gap-1.5 text-xs font-extrabold">
+                                <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-600"></i>
+                                <span>수정 권한 활성</span>
+                            </span>
+                            <button type="button" onclick="App.logoutGoogle()" class="text-[10px] text-emerald-700 hover:text-rose-600 font-bold underline cursor-pointer">
+                                로그아웃
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-emerald-700 font-semibold truncate leading-tight">
+                            ${this.currentUser.email}
+                        </p>
+                    </div>
+                `;
+            } else {
+                sidebarContainer.innerHTML = `
+                    <button type="button" onclick="App.openGoogleAuthModal()"
+                        class="w-full flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition shadow-xs group cursor-pointer">
+                        <div class="flex items-center space-x-2">
+                            <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+                            <span class="truncate">구글 로그인 (권한)</span>
+                        </div>
+                        <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-bold group-hover:bg-blue-50 group-hover:text-blue-700 transition">인증</span>
+                    </button>
+                `;
+            }
+        }
+
+        // 3. 1번 탭 신규 등록 버튼 표시 상태 갱신
+        const addProgBtn = document.getElementById("open-program-modal-btn");
+        if (addProgBtn) {
+            if (hasAuth) {
+                addProgBtn.className = "px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-lg shadow-sm flex items-center space-x-1 transition cursor-pointer";
+                addProgBtn.title = "신규 교육 제안 등록 (수정 권한 활성)";
+            } else {
+                addProgBtn.className = "px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg shadow-xs flex items-center space-x-1 transition cursor-pointer";
+                addProgBtn.title = "신규 교육 제안 등록 (구글 로그인 필요)";
+            }
+        }
+
+        this.updateIcons();
     },
 
     // ==========================================
@@ -4455,6 +4762,7 @@ ${data.effects}
     },
 
     toggleScheduleMonth(taskId, month) {
+        if (!this.requireEditPermission("연간일정 추진 월 수정")) return;
         const year = this.scheduleYear || 2026;
         const tasks = this.annualSchedule[year] || [];
         const task = tasks.find(t => t.id === taskId);
@@ -4476,6 +4784,7 @@ ${data.effects}
     },
 
     openAddScheduleTaskModal() {
+        if (!this.requireEditPermission("연간 과업 추가")) return;
         const modal = document.getElementById("schedule-task-modal");
         const title = document.getElementById("schedule-modal-title");
         const form = document.getElementById("schedule-task-form");
@@ -4491,6 +4800,7 @@ ${data.effects}
     },
 
     openEditScheduleTaskModal(taskId) {
+        if (!this.requireEditPermission("연간 과업 수정")) return;
         const year = this.scheduleYear || 2026;
         const task = (this.annualSchedule[year] || []).find(t => t.id === taskId);
         if (!task) return;
@@ -4521,6 +4831,7 @@ ${data.effects}
 
     saveScheduleTask(event) {
         if (event) event.preventDefault();
+        if (!this.requireEditPermission("과업 저장")) return;
         const year = this.scheduleYear || 2026;
         const taskId = document.getElementById("modal-task-id").value;
         const category = document.getElementById("modal-task-category").value;
@@ -4560,6 +4871,7 @@ ${data.effects}
     },
 
     deleteScheduleTask(taskId) {
+        if (!this.requireEditPermission("과업 삭제")) return;
         const year = this.scheduleYear || 2026;
         const task = (this.annualSchedule[year] || []).find(t => t.id === taskId);
         if (!task) return;
@@ -4573,6 +4885,7 @@ ${data.effects}
     },
 
     copyScheduleToOtherYear() {
+        if (!this.requireEditPermission("연간일정 복사")) return;
         const currentYear = this.scheduleYear || 2026;
         const targetYear = currentYear === 2026 ? 2027 : 2026;
 
@@ -4591,6 +4904,7 @@ ${data.effects}
     },
 
     resetScheduleToInitial() {
+        if (!this.requireEditPermission("연간일정 초기화")) return;
         const year = this.scheduleYear || 2026;
         if (confirm(`공식 사진 2 기준의 초기 연간일정 템플릿으로 되돌리시겠습니까?\n(${year}년에 수정한 일정이 초기화됩니다)`)) {
             if (typeof ANNUAL_SCHEDULE_INITIAL !== "undefined" && ANNUAL_SCHEDULE_INITIAL[year]) {
@@ -4774,6 +5088,7 @@ ${data.effects}
     },
 
     quickToggleAttendance(memberId, meetingId) {
+        if (!this.requireEditPermission("출석 체크 변경")) return;
         const member = (this.attendanceData || []).find(m => m.id === memberId);
         if (!member) return;
 
@@ -4791,6 +5106,7 @@ ${data.effects}
     },
 
     editAttendanceNoteInline(memberId) {
+        if (!this.requireEditPermission("출석 비고 수정")) return;
         const member = (this.attendanceData || []).find(m => m.id === memberId);
         if (!member) return;
 
@@ -4805,6 +5121,7 @@ ${data.effects}
     },
 
     openAttendanceCellModal(memberId, meetingId) {
+        if (!this.requireEditPermission("출석 상세 정보 수정")) return;
         const member = (this.attendanceData || []).find(m => m.id === memberId);
         if (!member) return;
 
@@ -4849,6 +5166,7 @@ ${data.effects}
 
     saveAttendanceCellModal(event) {
         if (event) event.preventDefault();
+        if (!this.requireEditPermission("출석 정보 저장")) return;
         const memberId = document.getElementById("modal-att-member-id").value;
         const meetingId = document.getElementById("modal-att-meeting-id").value;
         const form = document.getElementById("attendance-cell-form");
@@ -4876,6 +5194,7 @@ ${data.effects}
     },
 
     openAddAttendanceMeetingModal() {
+        if (!this.requireEditPermission("회의 일정 열 추가")) return;
         const modal = document.getElementById("attendance-meeting-modal");
         const form = document.getElementById("attendance-meeting-form");
         if (!modal || !form) return;
@@ -4896,6 +5215,7 @@ ${data.effects}
 
     saveNewAttendanceMeeting(event) {
         if (event) event.preventDefault();
+        if (!this.requireEditPermission("회의 일정 저장")) return;
         const label = document.getElementById("modal-meeting-label").value.trim();
         const year = parseInt(document.getElementById("modal-meeting-year").value, 10);
         const type = document.getElementById("modal-meeting-type").value;
@@ -4921,6 +5241,7 @@ ${data.effects}
     },
 
     resetAttendanceToInitial() {
+        if (!this.requireEditPermission("출석부 초기화")) return;
         if (confirm("공식 사진 1 원본 데이터로 출석부를 되돌리시겠습니까?\n(12인 위원의 출석 및 비고가 초기 상태로 복구됩니다)")) {
             if (typeof ATTENDANCE_INITIAL_DATA !== "undefined" && typeof ATTENDANCE_MEETINGS !== "undefined") {
                 this.attendanceData = JSON.parse(JSON.stringify(ATTENDANCE_INITIAL_DATA));
