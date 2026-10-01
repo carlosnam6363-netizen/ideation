@@ -5547,6 +5547,10 @@ ${data.effects}
     }
 };
 
+if (typeof window !== "undefined") {
+    window.App = App;
+}
+
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
         App.init();

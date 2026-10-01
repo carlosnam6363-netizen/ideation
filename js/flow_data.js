@@ -775,3 +775,9 @@ const PR_MEMBERS_INITIAL = [
         badgeColor: "bg-rose-50 text-rose-700 border border-rose-200"
     }
 ];
+
+if (typeof window !== "undefined") {
+    window.COUNCIL_FLOW_DATA = COUNCIL_FLOW_DATA;
+    window.DIVISION_MEMBERS_INITIAL = DIVISION_MEMBERS_INITIAL;
+    window.PR_MEMBERS_INITIAL = PR_MEMBERS_INITIAL;
+}
