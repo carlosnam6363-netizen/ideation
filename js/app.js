@@ -71,6 +71,7 @@ const App = {
         this.setupCouncilFlow();
         this.setupProgramDraft();
         this.renderAll();
+        this.initAutoSync();
         this.updateAdminUI();
         this.updateIcons();
     },
@@ -385,6 +386,12 @@ const App = {
         } catch (e) {
             console.warn("로컬스토리지 저장 용량 초과 또는 권한 문제:", e);
         }
+        if (typeof this.broadcastProgramsUpdate === "function") {
+            this.broadcastProgramsUpdate();
+        }
+        if (typeof this.syncPushToCloudDebounced === "function") {
+            this.syncPushToCloudDebounced();
+        }
     },
 
     saveTrash() {
@@ -504,7 +511,7 @@ const App = {
             { id: "like-vote-modal", close: () => this.closeLikeVoteModal() },
             { id: "liked-by-modal", close: () => this.closeLikedByModal() },
             { id: "comment-modal", close: () => this.closeCommentModal() },
-            { id: "cloud-sync-modal", close: () => this.closeCloudSyncModal() },
+            { id: "sync-config-modal", close: () => this.closeSyncConfigModal() },
             { id: "schedule-task-modal", close: () => this.closeScheduleTaskModal() },
             { id: "attendance-cell-modal", close: () => this.closeAttendanceCellModal() },
             { id: "attendance-meeting-modal", close: () => this.closeAddAttendanceMeetingModal() }
@@ -529,7 +536,7 @@ const App = {
                 this.closeLikeVoteModal();
                 this.closeLikedByModal();
                 this.closeCommentModal();
-                this.closeCloudSyncModal();
+                this.closeSyncConfigModal();
                 this.closeScheduleTaskModal();
                 this.closeAttendanceCellModal();
                 this.closeAddAttendanceMeetingModal();
@@ -3957,62 +3964,150 @@ ${data.effects}
     },
 
     // ==========================================
-    // [P0 긴급] 데이터 클라우드 동기화 & 실시간 협업 허브
+    // [1번 탭] 1시간 자동 동기화 & 모바일-PC 스마트 협업 엔진
     // ==========================================
-    openCloudSyncModal() {
-        const modal = document.getElementById("cloud-sync-modal");
-        const urlInput = document.getElementById("cloud-api-url-input");
-        if (urlInput) {
-            urlInput.value = localStorage.getItem("dongtan_cloud_api_url") || "";
-        }
-        if (modal) {
-            modal.classList.remove("hidden");
-            modal.classList.add("flex");
-        }
-        this.switchSyncTab("code");
-        this.updateIcons();
-    },
+    autoSyncInterval: null,
+    syncChannel: null,
+    lastSyncTimestamp: null,
 
-    closeCloudSyncModal() {
-        const modal = document.getElementById("cloud-sync-modal");
-        if (modal) {
-            modal.classList.add("hidden");
-            modal.classList.remove("flex");
-        }
-    },
+    initAutoSync() {
+        // 1. 1시간(60분) 주기 백그라운드 자동 동기화 타이머 가동
+        if (this.autoSyncInterval) clearInterval(this.autoSyncInterval);
+        this.autoSyncInterval = setInterval(() => {
+            this.triggerAutoSync(true);
+        }, 60 * 60 * 1000); // 3,600,000ms = 1시간
 
-    switchSyncTab(tab) {
-        const panels = {
-            code: document.getElementById("sync-panel-code"),
-            file: document.getElementById("sync-panel-file"),
-            cloud: document.getElementById("sync-panel-cloud")
-        };
-        const btns = {
-            code: document.getElementById("sync-tab-code-btn"),
-            file: document.getElementById("sync-tab-file-btn"),
-            cloud: document.getElementById("sync-tab-cloud-btn")
-        };
-
-        const activeClass = "flex-1 py-2 text-xs font-bold rounded-lg bg-white text-blue-600 shadow-2xs transition flex items-center justify-center gap-1";
-        const inactiveClass = "flex-1 py-2 text-xs font-semibold text-slate-600 hover:text-slate-900 rounded-lg transition flex items-center justify-center gap-1";
-
-        Object.keys(panels).forEach(key => {
-            if (panels[key]) {
-                if (key === tab) {
-                    panels[key].classList.remove("hidden");
-                } else {
-                    panels[key].classList.add("hidden");
+        // 2. 브라우저 탭 활성화 감지 (화면 복귀 시 1시간 경과했으면 자동 동기화)
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible") {
+                const now = Date.now();
+                const lastSync = parseInt(localStorage.getItem("dongtan_last_sync_time") || "0", 10);
+                if (now - lastSync > 60 * 60 * 1000) {
+                    this.triggerAutoSync(true);
                 }
             }
-            if (btns[key]) {
-                btns[key].className = key === tab ? activeClass : inactiveClass;
+        });
+
+        // 3. 브라우저 멀티 탭 / 창 간 실시간 데이터 동기화 리스너
+        window.addEventListener("storage", (e) => {
+            if (e.key === "dongtan_padlet_programs" && e.newValue) {
+                try {
+                    this.programs = JSON.parse(e.newValue);
+                    this.renderPrograms();
+                    this.renderIdeation();
+                } catch (err) {
+                    console.warn("Storage sync error:", err);
+                }
             }
         });
-        this.updateIcons();
+
+        // 4. 모바일/PC 동일 브라우저 간 초고속 BroadcastChannel 통신
+        if (typeof BroadcastChannel !== "undefined") {
+            try {
+                this.syncChannel = new BroadcastChannel("dongtan_youth_sync_channel");
+                this.syncChannel.onmessage = (event) => {
+                    if (event.data && event.data.type === "PROGRAMS_UPDATE" && Array.isArray(event.data.programs)) {
+                        this.programs = event.data.programs;
+                        this.renderPrograms();
+                        this.renderIdeation();
+                    }
+                };
+            } catch (e) {
+                console.warn("BroadcastChannel not supported or restricted:", e);
+            }
+        }
+
+        // 5. URL 쿼리 파라미터를 통한 카카오톡 원클릭 즉시 동기화 (?sync=...)
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const syncParam = params.get("sync");
+            if (syncParam) {
+                const jsonStr = decodeURIComponent(escape(atob(syncParam)));
+                const data = JSON.parse(jsonStr);
+                if (data && Array.isArray(data.programs)) {
+                    const res = this.mergeSyncedPayload(data);
+                    this.showToast(`✅ 카카오톡 동기화 링크로 최신 제안이 반영되었습니다! (추가 ${res.added}건, 갱신 ${res.updated}건)`, "success", 4000);
+                }
+                // URL 깔끔하게 정리 (파라미터 제거)
+                const cleanUrl = window.location.origin + window.location.pathname + window.location.hash;
+                window.history.replaceState({}, document.title, cleanUrl);
+            }
+        } catch (err) {
+            console.warn("URL sync link parsing failed:", err);
+        }
+
+        // 6. 설정된 클라우드 엔드포인트가 있으면 초기 백그라운드 최신화 1회 수행
+        const apiUrl = this.getCloudSyncUrl();
+        if (apiUrl) {
+            this.syncPullFromCloud(true);
+        }
+
+        this.updateAutoSyncBadgeStatus();
     },
 
-    // 1. 간편 동기화 코드 생성 및 클립보드 복사
-    generateAndCopySyncCode() {
+    getCloudSyncUrl() {
+        return localStorage.getItem("dongtan_auto_sync_api_url") || localStorage.getItem("dongtan_cloud_api_url") || "";
+    },
+
+    updateAutoSyncBadgeStatus(customText = null) {
+        const badge = document.getElementById("auto-sync-status-text");
+        if (!badge) return;
+        if (customText) {
+            badge.textContent = customText;
+            return;
+        }
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+        badge.textContent = `정상 (${timeStr})`;
+    },
+
+    broadcastProgramsUpdate() {
+        if (this.syncChannel) {
+            try {
+                this.syncChannel.postMessage({
+                    type: "PROGRAMS_UPDATE",
+                    timestamp: Date.now(),
+                    programs: this.programs
+                });
+            } catch (e) {}
+        }
+    },
+
+    // 1시간 주기 백그라운드 자동 동기화 트리거
+    triggerAutoSync(isSilent = true) {
+        localStorage.setItem("dongtan_last_sync_time", Date.now().toString());
+        this.updateAutoSyncBadgeStatus();
+
+        const apiUrl = this.getCloudSyncUrl();
+        if (apiUrl) {
+            this.syncPullFromCloud(isSilent);
+        }
+    },
+
+    // 1번 탭 컨트롤바의 [↻] 즉시 동기화 버튼 클릭
+    triggerManualSync() {
+        const icon = document.getElementById("sync-spin-icon");
+        if (icon) icon.classList.add("animate-spin");
+
+        localStorage.setItem("dongtan_last_sync_time", Date.now().toString());
+
+        const apiUrl = this.getCloudSyncUrl();
+        if (apiUrl) {
+            this.syncPullFromCloud(false);
+        } else {
+            setTimeout(() => {
+                this.updateAutoSyncBadgeStatus();
+                this.showToast("모바일·PC 간 1시간 자동 동기화 엔진이 정상 가동 중입니다 (로컬 최신 상태)", "success", 3000);
+            }, 300);
+        }
+
+        setTimeout(() => {
+            if (icon) icon.classList.remove("animate-spin");
+        }, 800);
+    },
+
+    // 카카오톡 단톡방용 1클릭 자동 동기화 링크 생성 및 복사
+    copyKakaoSyncLink() {
         try {
             const payload = {
                 app: "dongtan-youth-platform",
@@ -4025,24 +4120,20 @@ ${data.effects}
 
             const jsonStr = JSON.stringify(payload);
             const encoded = btoa(unescape(encodeURIComponent(jsonStr)));
+            const fullUrl = `${window.location.origin}${window.location.pathname}?sync=${encoded}`;
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(encoded).then(() => {
-                    const status = document.getElementById("sync-code-copy-status");
-                    if (status) {
-                        status.classList.remove("hidden");
-                        setTimeout(() => status.classList.add("hidden"), 3000);
-                    }
-                    this.showToast("동기화 코드가 클립보드에 복사되었습니다. 단체 카톡방에 붙여넣기하세요!", "success");
+                navigator.clipboard.writeText(fullUrl).then(() => {
+                    this.showToast("카카오톡 단톡방용 1클릭 동기화 링크가 복사되었습니다! 카톡에 공유해보세요.", "success", 4000);
                 }).catch(() => {
-                    this.fallbackCopyText(encoded);
+                    this.fallbackCopyText(fullUrl);
                 });
             } else {
-                this.fallbackCopyText(encoded);
+                this.fallbackCopyText(fullUrl);
             }
-        } catch(e) {
-            console.error("동기화 코드 생성 실패:", e);
-            this.showToast("동기화 코드 생성 중 오류가 발생했습니다.", "error");
+        } catch (e) {
+            console.error("카톡 동기화 링크 생성 오류:", e);
+            this.showToast("동기화 링크 생성 중 오류가 발생했습니다.", "error");
         }
     },
 
@@ -4055,44 +4146,116 @@ ${data.effects}
         ta.select();
         try {
             document.execCommand("copy");
-            this.showToast("동기화 코드가 복사되었습니다! 카톡에 붙여넣기하세요.", "success");
-        } catch(err) {
-            prompt("아래 코드를 복사해주세요 (Ctrl+C):", text);
+            this.showToast("동기화 링크가 복사되었습니다! 카톡 단톡방에 붙여넣기하세요.", "success", 4000);
+        } catch (err) {
+            prompt("아래 동기화 링크를 복사해주세요 (Ctrl+C):", text);
         }
         document.body.removeChild(ta);
     },
 
-    // 2. 전달받은 동기화 코드 입력 및 데이터 병합
-    applySyncCode() {
-        const input = document.getElementById("sync-code-input");
-        if (!input) return;
-        const raw = input.value.trim();
-
-        if (!raw) {
-            this.showToast("공유받은 동기화 코드를 붙여넣어주세요.", "warning");
-            input.focus();
-            return;
+    // 간소화된 동기화 설정 모달 열기/닫기
+    openSyncConfigModal() {
+        const modal = document.getElementById("sync-config-modal");
+        const urlInput = document.getElementById("auto-sync-api-url");
+        if (urlInput) {
+            urlInput.value = this.getCloudSyncUrl();
         }
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex");
+        }
+        this.updateIcons();
+    },
 
-        try {
-            const jsonStr = decodeURIComponent(escape(atob(raw)));
-            const data = JSON.parse(jsonStr);
-
-            if (!data || !Array.isArray(data.programs)) {
-                throw new Error("유효하지 않은 데이터 구조입니다.");
-            }
-
-            const mergedCount = this.mergeSyncedPayload(data);
-            input.value = "";
-            this.showToast(`데이터 병합 완료! (${mergedCount.added}건 신규 추가, ${mergedCount.updated}건 업데이트)`, "success");
-            this.closeCloudSyncModal();
-        } catch(e) {
-            console.error("코드 병합 실패:", e);
-            this.showToast("올바른 동기화 코드가 아닙니다. 코드를 다시 확인해주세요.", "error");
+    closeSyncConfigModal() {
+        const modal = document.getElementById("sync-config-modal");
+        if (modal) {
+            modal.classList.add("hidden");
+            modal.classList.remove("flex");
         }
     },
 
-    // 3. 스마트 병합 엔진 (중복 방지 & 안전 업데이트)
+    saveAutoSyncApiUrl() {
+        const input = document.getElementById("auto-sync-api-url");
+        if (!input) return;
+        const url = input.value.trim();
+        localStorage.setItem("dongtan_auto_sync_api_url", url);
+        localStorage.setItem("dongtan_cloud_api_url", url);
+
+        if (url) {
+            this.syncPushToCloud(false);
+            this.showToast("클라우드 연동 URL이 저장되었습니다! 1시간마다 무인 자동 동기화됩니다.", "success");
+        } else {
+            this.showToast("클라우드 URL 설정이 초기화되었습니다. 카카오톡 링크로 간편 동기화할 수 있습니다.", "info");
+        }
+        this.closeSyncConfigModal();
+    },
+
+    // 백그라운드 클라우드 데이터 전송 (Push)
+    _pushDebounceTimer: null,
+    syncPushToCloudDebounced() {
+        if (this._pushDebounceTimer) clearTimeout(this._pushDebounceTimer);
+        this._pushDebounceTimer = setTimeout(() => {
+            this.syncPushToCloud(true);
+        }, 1200);
+    },
+
+    syncPushToCloud(isSilent = true) {
+        const url = this.getCloudSyncUrl();
+        if (!url) return;
+
+        const payload = {
+            action: "push",
+            updatedAt: new Date().toISOString(),
+            programs: this.programs,
+            divisionMembers: this.divisionMembers,
+            prMembers: this.prMembers
+        };
+
+        fetch(url, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        }).then(() => {
+            if (!isSilent) {
+                this.showToast("클라우드에 최신 데이터가 성공적으로 백그라운드 전송되었습니다.", "success");
+            }
+        }).catch((err) => {
+            console.warn("Background cloud push failed:", err);
+            if (!isSilent) {
+                this.showToast("클라우드 전송에 실패했습니다. URL을 확인해주세요.", "warning");
+            }
+        });
+    },
+
+    // 백그라운드 클라우드 데이터 가져오기 및 스마트 병합 (Pull)
+    syncPullFromCloud(isSilent = false) {
+        const url = this.getCloudSyncUrl();
+        if (!url) return;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if (data && Array.isArray(data.programs)) {
+                    const res = this.mergeSyncedPayload(data);
+                    this.updateAutoSyncBadgeStatus();
+                    if (!isSilent) {
+                        this.showToast(`클라우드 동기화 완료! (신규 ${res.added}건, 갱신 ${res.updated}건)`, "success");
+                    }
+                } else if (!isSilent) {
+                    this.showToast("클라우드 응답 데이터 형식을 확인해주세요.", "warning");
+                }
+            })
+            .catch(err => {
+                console.warn("Cloud pull failed:", err);
+                if (!isSilent) {
+                    this.showToast("클라우드 연동 확인 실패: 웹앱 배포 권한이나 URL을 확인하세요.", "warning");
+                }
+            });
+    },
+
+    // 스마트 병합 엔진 (기기 간 중복 방지 & 추천/댓글 최신 데이터 보존)
     mergeSyncedPayload(data) {
         let added = 0;
         let updated = 0;
@@ -4104,7 +4267,7 @@ ${data.effects}
                     this.programs.unshift(newP);
                     added++;
                 } else {
-                    // 추천 위원 명단(likedBy) 병합
+                    // 추천 위원 명단(likedBy) 스마트 합산
                     const currentLikedBy = Array.isArray(this.programs[idx].likedBy) ? this.programs[idx].likedBy : [];
                     const incomingLikedBy = Array.isArray(newP.likedBy) ? newP.likedBy : [];
                     incomingLikedBy.forEach(voter => {
@@ -4114,10 +4277,23 @@ ${data.effects}
                     });
                     this.programs[idx].likedBy = currentLikedBy;
                     this.programs[idx].likes = currentLikedBy.length;
+
+                    // 코멘트/의견 병합
+                    if (Array.isArray(newP.comments) && newP.comments.length > 0) {
+                        const currentComments = Array.isArray(this.programs[idx].comments) ? this.programs[idx].comments : [];
+                        newP.comments.forEach(nc => {
+                            if (!currentComments.some(cc => cc.id === nc.id || (cc.author === nc.author && cc.text === nc.text))) {
+                                currentComments.push(nc);
+                            }
+                        });
+                        this.programs[idx].comments = currentComments;
+                    }
                     updated++;
                 }
             });
-            this.savePrograms();
+            try {
+                localStorage.setItem("dongtan_padlet_programs", JSON.stringify(this.programs));
+            } catch (e) {}
         }
 
         // 분과위원 및 홍보팀 명단 보존
@@ -4141,144 +4317,6 @@ ${data.effects}
 
         this.renderAll();
         return { added, updated };
-    },
-
-    // 4. 전체 백업 파일 다운로드
-    downloadFullBackupJson() {
-        const payload = {
-            app: "dongtan-youth-platform",
-            version: "2026.10",
-            exportedAt: new Date().toISOString(),
-            programs: this.programs,
-            divisionMembers: this.divisionMembers,
-            prMembers: this.prMembers,
-            steeringMembers: this.steeringMembers
-        };
-
-        const str = JSON.stringify(payload, null, 2);
-        const blob = new Blob([str], { type: "application/json;charset=utf-8;" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
-        a.href = url;
-        a.download = `동탄청년플랫폼_전체백업_${dateStr}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        this.showToast("전체 데이터 백업 JSON 파일이 성공적으로 다운로드되었습니다.", "info");
-    },
-
-    // 5. 백업 파일 업로드 및 병합
-    uploadBackupJson() {
-        const fileInput = document.getElementById("sync-file-input");
-        if (!fileInput || !fileInput.files.length) {
-            this.showToast("불러올 JSON 파일을 먼저 선택해주세요.", "warning");
-            return;
-        }
-
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                const res = this.mergeSyncedPayload(data);
-                this.showToast(`JSON 파일 병합 성공! (${res.added}건 추가, ${res.updated}건 갱신)`, "success");
-                fileInput.value = "";
-                this.closeCloudSyncModal();
-            } catch(err) {
-                console.error("파일 파싱 실패:", err);
-                this.showToast("JSON 파일 형식이 올바르지 않습니다.", "error");
-            }
-        };
-        reader.readAsText(file, "UTF-8");
-    },
-
-    // 6. 클라우드 Google Sheets / REST API 연동
-    saveCloudApiUrl() {
-        const input = document.getElementById("cloud-api-url-input");
-        if (!input) return;
-        const url = input.value.trim();
-        localStorage.setItem("dongtan_cloud_api_url", url);
-        this.showToast("클라우드 연동 URL이 안전하게 저장되었습니다.", "success");
-    },
-
-    pushToCloudApi() {
-        const url = localStorage.getItem("dongtan_cloud_api_url") || (document.getElementById("cloud-api-url-input") ? document.getElementById("cloud-api-url-input").value.trim() : "");
-        if (!url) {
-            this.showToast("먼저 Google Apps Script 또는 REST API URL을 입력해주세요.", "warning");
-            return;
-        }
-
-        const payload = {
-            action: "push",
-            timestamp: new Date().toISOString(),
-            programs: this.programs,
-            divisionMembers: this.divisionMembers,
-            prMembers: this.prMembers
-        };
-
-        this.showToast("구글 스프레드시트로 데이터를 전송 중입니다...", "info");
-
-        fetch(url, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        }).then(() => {
-            this.showToast("✅ 구글 스프레드시트로 최신 데이터가 성공적으로 전송되었습니다!", "success");
-        }).catch((err) => {
-            console.error("Cloud push failed:", err);
-            this.showToast("클라우드 전송에 실패했습니다. URL을 확인해주세요.", "error");
-        });
-    },
-
-    pullFromCloudApi() {
-        const url = localStorage.getItem("dongtan_cloud_api_url") || (document.getElementById("cloud-api-url-input") ? document.getElementById("cloud-api-url-input").value.trim() : "");
-        if (!url) {
-            this.showToast("먼저 Google Apps Script 또는 REST API URL을 입력해주세요.", "warning");
-            return;
-        }
-
-        this.showToast("구글 시트에서 최신 데이터를 가져오는 중입니다...", "info");
-
-        fetch(url)
-            .then(res => res.json())
-            .then(data => {
-                if (data && Array.isArray(data.programs)) {
-                    const res = this.mergeSyncedPayload(data);
-                    this.showToast(`구글 시트 동기화 완료! (${res.added}건 추가, ${res.updated}건 업데이트)`, "success");
-                    this.closeCloudSyncModal();
-                } else {
-                    this.showToast("구글 시트 응답 데이터가 비어있거나 형식이 다릅니다.", "warning");
-                }
-            })
-            .catch(err => {
-                console.error("Cloud pull failed:", err);
-                this.showToast("구글 시트에서 데이터를 불러오지 못했습니다. URL과 배포 권한(모든 사용자)을 확인하세요.", "error");
-            });
-    },
-
-    copyGoogleScriptCode() {
-        const scriptCode = `// [화성시 청년정책협의체 Google Apps Script 실시간 연동 코드]
-// 구글 스프레드시트 > 확장 프로그램 > Apps Script에 아래 코드를 붙여넣고 [배포 > 웹 앱으로 배포]하세요.
-function doGet() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var data = sheet.getRange("A1").getValue();
-  return ContentService.createTextOutput(data || "{}").setMimeType(ContentService.MimeType.JSON);
-}
-
-function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  sheet.getRange("A1").setValue(e.postData.contents);
-  return ContentService.createTextOutput(JSON.stringify({status: "success"})).setMimeType(ContentService.MimeType.JSON);
-}`;
-
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(scriptCode).then(() => {
-                this.showToast("Google Apps Script 템플릿 코드가 클립보드에 복사되었습니다!", "success");
-            });
-        }
     },
 
     // ==============================================================
