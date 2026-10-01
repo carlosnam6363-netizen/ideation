@@ -67,16 +67,19 @@
     <!-- 화면 상단 토스트 알림 컨테이너 (Toast Notifications) -->
     <div id="toast-container" role="region" aria-live="polite"></div>
 
+    <!-- 모바일 사이드바 드로어 배경 딤 오버레이 (클릭 시 닫힘) -->
+    <div id="mobile-sidebar-backdrop" onclick="App.closeMobileSidebar()" class="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-40 hidden lg:hidden transition-opacity"></div>
+
     <div class="min-h-screen flex flex-col lg:flex-row">
         <!-- ============================================================== -->
-        <!-- 좌측 고정 사이드바 네비게이션 (모든 탭 선택) -->
+        <!-- 좌측 고정 사이드바 네비게이션 (모바일: 슬라이드오버 드로어 / PC: 좌측 고정 바) -->
         <!-- ============================================================== -->
-        <aside id="main-sidebar" class="w-full lg:w-72 xl:w-80 bg-white border-b lg:border-b-0 lg:border-r border-slate-200 flex flex-col shrink-0 lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto z-40 shadow-xs">
-            <!-- 사이드바 상단 브랜딩 -->
-            <div class="p-5 border-b border-slate-100">
-                <div class="flex items-center space-x-3">
-                    <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 text-white flex items-center justify-center shadow-md ring-2 ring-blue-100 shrink-0">
-                        <i data-lucide="compass" class="w-6 h-6"></i>
+        <aside id="main-sidebar" class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white border-r border-slate-200 flex flex-col shrink-0 overflow-y-auto shadow-2xl -translate-x-full transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:w-72 xl:w-80 lg:h-screen lg:sticky lg:top-0 lg:z-40 lg:shadow-xs">
+            <!-- 사이드바 상단 브랜딩 & 모바일 닫기 단추 -->
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div class="flex items-center space-x-3 min-w-0">
+                    <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-700 via-indigo-600 to-teal-500 text-white flex items-center justify-center shadow-md ring-2 ring-blue-100 shrink-0">
+                        <i data-lucide="compass" class="w-5 h-5"></i>
                     </div>
                     <div class="min-w-0">
                         <div class="flex items-center space-x-1.5">
@@ -95,21 +98,16 @@
                         </p>
                     </div>
                 </div>
-
-                <!-- 모바일 메뉴 토글 버튼 -->
-                <div class="mt-3 lg:hidden flex items-center justify-between pt-2 border-t border-slate-100">
-                    <span class="text-xs font-bold text-slate-500">메뉴 펼치기 / 접기</span>
-                    <button id="mobile-sidebar-toggle-btn" type="button" class="p-1.5 text-slate-600 hover:text-blue-600 hover:bg-slate-100 rounded-lg flex items-center gap-1 text-xs font-semibold cursor-pointer">
-                        <i data-lucide="menu" class="w-4 h-4"></i>
-                        <span id="mobile-menu-label">메뉴</span>
-                    </button>
-                </div>
+                <!-- 모바일 전용 닫기 단추 -->
+                <button type="button" onclick="App.closeMobileSidebar()" class="lg:hidden p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition shrink-0 ml-1 cursor-pointer" title="메뉴 닫기">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
             </div>
 
-            <!-- 사이드바 접이식 컨텐츠 래퍼 (모바일 토글 대응) -->
-            <div id="sidebar-collapsible-wrapper" class="hidden lg:flex flex-col flex-1">
+            <!-- 사이드바 컨텐츠 래퍼 -->
+            <div id="sidebar-collapsible-wrapper" class="flex flex-col flex-1">
                 <!-- 사이드바 위원회 현황 뱃지 위젯 & 클라우드 동기화 단추 -->
-                <div class="px-5 py-3 bg-slate-50/80 border-b border-slate-100 hidden lg:flex flex-col gap-2 text-xs">
+                <div class="px-5 py-3 bg-slate-50/80 border-b border-slate-100 flex flex-col gap-2 text-xs">
                     <div class="flex items-center justify-between text-slate-600">
                         <span class="flex items-center space-x-1.5">
                             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -310,50 +308,53 @@
                     <button data-cat="기타" class="padlet-cat-filter px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-600 hover:bg-slate-100 transition border border-slate-200">기타</button>
                 </div>
 
-                <!-- 우측: 검색, 뷰모드, 액션 버튼 -->
-                <div class="flex items-center space-x-3 w-full md:w-auto justify-between md:justify-end">
+                <!-- 우측: 검색, 뷰모드, 액션 버튼 (모바일 줄바꿈 flex-wrap 대응) -->
+                <div class="flex flex-wrap items-center gap-2 w-full md:w-auto justify-between md:justify-end">
                     <!-- 검색창 -->
-                    <div class="relative w-48 sm:w-60">
+                    <div class="relative flex-1 sm:flex-initial sm:w-56 min-w-[140px]">
                         <i data-lucide="search" class="w-4 h-4 text-slate-400 absolute left-3 top-2.5"></i>
-                        <input id="padlet-search-input" type="text" placeholder="프로그램, 위원, 태그 검색..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+                        <input id="padlet-search-input" type="text" placeholder="프로그램, 위원 검색..." class="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
                     </div>
 
-                    <!-- 뷰 전환 토글 (컬럼별 vs 그리드) -->
-                    <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100">
-                        <button id="view-columns-btn" title="12명 위원 컬럼 뷰" class="px-2.5 py-1 text-xs font-bold rounded-md bg-blue-600 text-white transition flex items-center space-x-1">
-                            <i data-lucide="columns-3" class="w-3.5 h-3.5"></i>
-                            <span class="hidden sm:inline">위원별</span>
+                    <!-- 액션 버튼 그룹 -->
+                    <div class="flex items-center flex-wrap gap-1.5 shrink-0">
+                        <!-- 뷰 전환 토글 (컬럼별 vs 그리드) -->
+                        <div class="inline-flex rounded-lg border border-slate-200 p-0.5 bg-slate-100">
+                            <button id="view-columns-btn" title="12명 위원 컬럼 뷰" class="px-2 py-1 text-xs font-bold rounded-md bg-blue-600 text-white transition flex items-center space-x-1">
+                                <i data-lucide="columns-3" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">위원별</span>
+                            </button>
+                            <button id="view-grid-btn" title="통합 카드 그리드 뷰" class="px-2 py-1 text-xs font-medium rounded-md bg-white text-slate-700 hover:bg-slate-50 transition flex items-center space-x-1">
+                                <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                                <span class="hidden sm:inline">전체그리드</span>
+                            </button>
+                        </div>
+
+                        <!-- CSV 내보내기 -->
+                        <button id="export-programs-csv-btn" class="px-2 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg flex items-center space-x-1 shadow-sm transition" title="엑셀 CSV 다운로드">
+                            <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
+                            <span class="hidden sm:inline">엑셀</span>
                         </button>
-                        <button id="view-grid-btn" title="통합 카드 그리드 뷰" class="px-2.5 py-1 text-xs font-medium rounded-md bg-white text-slate-700 hover:bg-slate-50 transition flex items-center space-x-1">
-                            <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-                            <span class="hidden sm:inline">전체그리드</span>
+
+                        <!-- 실시간 데이터 동기화 & 공유 허브 -->
+                        <button type="button" onclick="App.openCloudSyncModal()" class="px-2.5 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-lg flex items-center space-x-1 shadow-xs transition cursor-pointer" title="12인 위원 간 제안 데이터 실시간 동기화/병합">
+                            <i data-lucide="cloud" class="w-3.5 h-3.5 text-indigo-600"></i>
+                            <span class="hidden sm:inline">동기화</span>
+                        </button>
+
+                        <!-- 휴지통 바로가기 -->
+                        <button type="button" onclick="App.switchTab('tab-6')" class="px-2 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg flex items-center space-x-1 shadow-xs transition cursor-pointer" title="삭제된 교육 제안 30일 보관함">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+                            <span class="hidden sm:inline">휴지통</span>
+                            <span id="tab1-trash-count-badge" class="px-1.5 py-0.2 rounded-full bg-rose-200 text-rose-800 text-[10px] font-black">0</span>
+                        </button>
+
+                        <!-- 신규 교육 등록 버튼 -->
+                        <button id="open-program-modal-btn" type="button" onclick="App.openProgramModal()" class="px-3 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-lg shadow-sm flex items-center space-x-1 transition cursor-pointer">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                            <span>제안하기</span>
                         </button>
                     </div>
-
-                    <!-- CSV 내보내기 -->
-                    <button id="export-programs-csv-btn" class="px-3 py-1.5 text-xs font-bold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg flex items-center space-x-1 shadow-sm transition">
-                        <i data-lucide="download" class="w-3.5 h-3.5 text-slate-500"></i>
-                        <span class="hidden sm:inline">엑셀출력</span>
-                    </button>
-
-                    <!-- 실시간 데이터 동기화 & 공유 허브 -->
-                    <button type="button" onclick="App.openCloudSyncModal()" class="px-3 py-1.5 text-xs font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 rounded-lg flex items-center space-x-1 shadow-xs transition cursor-pointer" title="12인 위원 간 제안 데이터 실시간 동기화/병합">
-                        <i data-lucide="cloud" class="w-3.5 h-3.5 text-indigo-600"></i>
-                        <span class="hidden sm:inline">데이터 동기화</span>
-                    </button>
-
-                    <!-- 휴지통 바로가기 -->
-                    <button type="button" onclick="App.switchTab('tab-6')" class="px-2.5 py-1.5 text-xs font-bold text-rose-700 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg flex items-center space-x-1 shadow-xs transition cursor-pointer" title="삭제된 교육 제안 30일 보관함">
-                        <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
-                        <span class="hidden sm:inline">휴지통</span>
-                        <span id="tab1-trash-count-badge" class="px-1.5 py-0.2 rounded-full bg-rose-200 text-rose-800 text-[10px] font-black">0</span>
-                    </button>
-
-                    <!-- 신규 교육 등록 버튼 -->
-                    <button id="open-program-modal-btn" type="button" onclick="App.openProgramModal()" class="px-3.5 py-1.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 active:scale-95 rounded-lg shadow-sm flex items-center space-x-1 transition cursor-pointer">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        <span>교육 제안</span>
-                    </button>
                 </div>
             </div>
 
@@ -397,58 +398,58 @@
                     <div id="ideation-progress-bar" class="bg-gradient-to-r from-blue-600 via-indigo-600 to-teal-500 h-2 rounded-full transition-all duration-500 ease-out" style="width: 20%;"></div>
                 </div>
 
-                <div class="flex items-center justify-between max-w-4xl mx-auto pt-2">
+                <div class="flex items-center justify-between max-w-4xl mx-auto pt-2 overflow-x-auto pb-1 gap-1 sm:gap-2">
                     <!-- Step 1 -->
-                    <div onclick="App.goToStep(1)" class="flex flex-col items-center cursor-pointer group">
-                        <div id="step-indicator-1" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 transition-all">
+                    <div onclick="App.goToStep(1)" class="flex flex-col items-center cursor-pointer group shrink-0 min-w-[58px] sm:min-w-0">
+                        <div id="step-indicator-1" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm bg-blue-600 text-white shadow-lg ring-4 ring-blue-100 transition-all">
                             1
                         </div>
-                        <span class="text-[11px] font-bold text-slate-700 mt-2 text-center group-hover:text-blue-600">
-                            1. 설문조사 실태
+                        <span class="text-[10px] sm:text-[11px] font-bold text-slate-700 mt-1.5 text-center group-hover:text-blue-600 line-clamp-1 max-w-[65px] sm:max-w-none">
+                            1. 실태분석
                         </span>
                     </div>
-                    <div id="step-line-1" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+                    <div id="step-line-1" class="flex-1 h-0.5 sm:h-1 bg-slate-200 mx-1 sm:mx-2 transition-all"></div>
 
                     <!-- Step 2 -->
-                    <div onclick="App.goToStep(2)" class="flex flex-col items-center cursor-pointer group">
-                        <div id="step-indicator-2" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                    <div onclick="App.goToStep(2)" class="flex flex-col items-center cursor-pointer group shrink-0 min-w-[58px] sm:min-w-0">
+                        <div id="step-indicator-2" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
                             2
                         </div>
-                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
-                            2. 전문/강점 선택
+                        <span class="text-[10px] sm:text-[11px] font-medium text-slate-500 mt-1.5 text-center group-hover:text-blue-600 line-clamp-1 max-w-[65px] sm:max-w-none">
+                            2. 강점선택
                         </span>
                     </div>
-                    <div id="step-line-2" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+                    <div id="step-line-2" class="flex-1 h-0.5 sm:h-1 bg-slate-200 mx-1 sm:mx-2 transition-all"></div>
 
                     <!-- Step 3 -->
-                    <div onclick="App.goToStep(3)" class="flex flex-col items-center cursor-pointer group">
-                        <div id="step-indicator-3" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                    <div onclick="App.goToStep(3)" class="flex flex-col items-center cursor-pointer group shrink-0 min-w-[58px] sm:min-w-0">
+                        <div id="step-indicator-3" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
                             3
                         </div>
-                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
-                            3. 온통청년 MCP연계
+                        <span class="text-[10px] sm:text-[11px] font-medium text-slate-500 mt-1.5 text-center group-hover:text-blue-600 line-clamp-1 max-w-[65px] sm:max-w-none">
+                            3. 온통청년
                         </span>
                     </div>
-                    <div id="step-line-3" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+                    <div id="step-line-3" class="flex-1 h-0.5 sm:h-1 bg-slate-200 mx-1 sm:mx-2 transition-all"></div>
 
                     <!-- Step 4 -->
-                    <div onclick="App.goToStep(4)" class="flex flex-col items-center cursor-pointer group">
-                        <div id="step-indicator-4" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                    <div onclick="App.goToStep(4)" class="flex flex-col items-center cursor-pointer group shrink-0 min-w-[58px] sm:min-w-0">
+                        <div id="step-indicator-4" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
                             4
                         </div>
-                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
-                            4. 화성·친화도시 벤치마킹
+                        <span class="text-[10px] sm:text-[11px] font-medium text-slate-500 mt-1.5 text-center group-hover:text-blue-600 line-clamp-1 max-w-[65px] sm:max-w-none">
+                            4. 벤치마킹
                         </span>
                     </div>
-                    <div id="step-line-4" class="flex-1 h-1 bg-slate-200 mx-2 transition-all"></div>
+                    <div id="step-line-4" class="flex-1 h-0.5 sm:h-1 bg-slate-200 mx-1 sm:mx-2 transition-all"></div>
 
                     <!-- Step 5 -->
-                    <div onclick="App.goToStep(5)" class="flex flex-col items-center cursor-pointer group">
-                        <div id="step-indicator-5" class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
+                    <div onclick="App.goToStep(5)" class="flex flex-col items-center cursor-pointer group shrink-0 min-w-[58px] sm:min-w-0">
+                        <div id="step-indicator-5" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm bg-slate-100 text-slate-400 border border-slate-200 transition-all">
                             5
                         </div>
-                        <span class="text-[11px] font-medium text-slate-500 mt-2 text-center group-hover:text-blue-600">
-                            5. 정책제안 5선 추천
+                        <span class="text-[10px] sm:text-[11px] font-medium text-slate-500 mt-1.5 text-center group-hover:text-blue-600 line-clamp-1 max-w-[65px] sm:max-w-none">
+                            5. 제안완성
                         </span>
                     </div>
                 </div>
@@ -2270,7 +2271,7 @@
                 </button>
             </div>
 
-            <form id="new-program-form" onsubmit="event.preventDefault(); App.handleCreateProgram(this); return false;" class="space-y-4">
+            <form id="new-program-form" class="space-y-4">
                 <input type="hidden" name="editingId" id="program-editing-id" value="">
 
                 <!-- 임시 저장(Draft) 복원 안내 배너 -->
@@ -2423,29 +2424,36 @@
     <!-- ============================================================== -->
     <div id="program-detail-modal" class="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-5 overflow-y-auto">
         <div class="bg-slate-100 rounded-2xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl border border-slate-300 max-h-[96vh] flex flex-col">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-200 mb-3 no-print">
-                <div class="flex items-center space-x-2">
-                    <span class="px-2.5 py-1 bg-blue-900 text-white font-bold text-xs rounded">화성시 시정보고 표준서식</span>
-                    <h3 class="font-bold text-slate-800 text-sm sm:text-base">2027년 주요 청년사업 설명서 (사업카드)</h3>
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-slate-200 mb-3 no-print">
+                <div class="flex items-center justify-between sm:justify-start space-x-2">
+                    <div class="flex items-center space-x-2 min-w-0">
+                        <span class="px-2 py-0.5 bg-blue-900 text-white font-bold text-[10px] sm:text-xs rounded shrink-0">표준서식</span>
+                        <h3 class="font-bold text-slate-800 text-xs sm:text-base truncate">2027년 주요 청년사업 설명서 (사업카드)</h3>
+                    </div>
+                    <!-- 모바일용 상단 우측 닫기 버튼 -->
+                    <button type="button" onclick="App.closeProgramDetailModal()" class="sm:hidden p-1.5 text-slate-500 hover:text-slate-800 bg-white rounded-lg border border-slate-200 transition shrink-0 cursor-pointer" title="닫기">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
                 </div>
-                <div class="flex items-center space-x-2">
-                    <button type="button" onclick="App.copyCurrentProgramCardHwp()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-sm transition cursor-pointer" title="한글(HWP) 파일에 표 형태로 즉시 붙여넣을 수 있는 텍스트 복사">
-                        <i data-lucide="file-text" class="w-4 h-4"></i>
+                <div class="flex items-center flex-wrap gap-1.5">
+                    <button type="button" onclick="App.copyCurrentProgramCardHwp()" class="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center space-x-1 shadow-sm transition cursor-pointer" title="한글(HWP) 파일에 표 형태로 즉시 붙여넣을 수 있는 텍스트 복사">
+                        <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
                         <span>한글(HWP) 복사</span>
                     </button>
-                    <button type="button" onclick="App.printCurrentProgramCard()" class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center space-x-1.5 shadow-sm transition cursor-pointer">
-                        <i data-lucide="printer" class="w-4 h-4"></i>
-                        <span>인쇄 / PDF 저장</span>
+                    <button type="button" onclick="App.printCurrentProgramCard()" class="px-2.5 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-lg text-xs font-bold flex items-center space-x-1 shadow-sm transition cursor-pointer">
+                        <i data-lucide="printer" class="w-3.5 h-3.5"></i>
+                        <span>인쇄 / PDF</span>
                     </button>
-                    <button type="button" onclick="App.editCurrentProgramCard()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer">
+                    <button type="button" onclick="App.editCurrentProgramCard()" class="px-2.5 py-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer">
                         <i data-lucide="edit-3" class="w-3.5 h-3.5 text-slate-500"></i>
                         <span>내용 수정</span>
                     </button>
-                    <button type="button" onclick="App.deleteCurrentProgramCardToTrash()" class="px-3 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer" title="해당 교육 제안 삭제 및 휴지통 이동">
+                    <button type="button" onclick="App.deleteCurrentProgramCardToTrash()" class="px-2.5 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-lg text-xs font-bold flex items-center space-x-1 transition cursor-pointer" title="해당 교육 제안 삭제 및 휴지통 이동">
                         <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-500"></i>
-                        <span>삭제(휴지통)</span>
+                        <span>삭제</span>
                     </button>
-                    <button type="button" onclick="App.closeProgramDetailModal()" class="p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200 transition cursor-pointer">
+                    <!-- 데스크톱용 닫기 버튼 -->
+                    <button type="button" onclick="App.closeProgramDetailModal()" class="hidden sm:inline-flex p-1.5 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-200 transition cursor-pointer" title="닫기">
                         <i data-lucide="x" class="w-5 h-5"></i>
                     </button>
                 </div>

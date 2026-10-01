@@ -430,12 +430,17 @@ const App = {
             });
         }
 
-        // 모바일/PC 공통 모달 배경 클릭 및 ESC 키 닫기 지원
+        // 모바일/PC 공통 모달 배경 클릭 및 ESC 키 닫기 지원 (모바일 터치 닫기 지원)
         const modalBackdrops = [
             { id: "program-modal", close: () => this.closeProgramModal() },
+            { id: "program-detail-modal", close: () => this.closeProgramDetailModal() },
             { id: "steering-member-modal", close: () => this.closeSteeringModal() },
             { id: "division-member-modal", close: () => this.closeDivisionModal() },
             { id: "admin-auth-modal", close: () => this.closeAdminModal() },
+            { id: "bylaws-auth-modal", close: () => this.closeBylawsAuthModal() },
+            { id: "like-vote-modal", close: () => this.closeLikeVoteModal() },
+            { id: "liked-by-modal", close: () => this.closeLikedByModal() },
+            { id: "comment-modal", close: () => this.closeCommentModal() },
             { id: "cloud-sync-modal", close: () => this.closeCloudSyncModal() }
         ];
 
@@ -455,6 +460,10 @@ const App = {
                 this.closeSteeringModal();
                 this.closeDivisionModal();
                 this.closeAdminModal();
+                this.closeBylawsAuthModal();
+                this.closeLikeVoteModal();
+                this.closeLikedByModal();
+                this.closeCommentModal();
                 this.closeCloudSyncModal();
                 this.closeMobileSidebar();
             }
@@ -462,20 +471,34 @@ const App = {
     },
 
     toggleMobileSidebar() {
-        const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
-        if (!collapsibleWrapper) return;
-        collapsibleWrapper.classList.toggle("hidden");
-        if (!collapsibleWrapper.classList.contains("hidden")) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+        const sidebar = document.getElementById("main-sidebar");
+        const backdrop = document.getElementById("mobile-sidebar-backdrop");
+        if (!sidebar) return;
+
+        const isClosed = sidebar.classList.contains("-translate-x-full");
+        if (isClosed) {
+            sidebar.classList.remove("-translate-x-full");
+            sidebar.classList.add("translate-x-0");
+            if (backdrop) backdrop.classList.remove("hidden");
+            document.body.classList.add("overflow-hidden");
+        } else {
+            sidebar.classList.add("-translate-x-full");
+            sidebar.classList.remove("translate-x-0");
+            if (backdrop) backdrop.classList.add("hidden");
+            document.body.classList.remove("overflow-hidden");
         }
         this.updateIcons();
     },
 
     closeMobileSidebar() {
-        const collapsibleWrapper = document.getElementById("sidebar-collapsible-wrapper");
-        if (collapsibleWrapper && window.innerWidth < 1024) {
-            collapsibleWrapper.classList.add("hidden");
+        const sidebar = document.getElementById("main-sidebar");
+        const backdrop = document.getElementById("mobile-sidebar-backdrop");
+        if (sidebar && window.innerWidth < 1024) {
+            sidebar.classList.add("-translate-x-full");
+            sidebar.classList.remove("translate-x-0");
         }
+        if (backdrop) backdrop.classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
     },
 
     openProgramModal(progId = null) {
@@ -1226,7 +1249,7 @@ ${prog.effects || '청년 정주여건 개선 및 실무 역량 강화'}
     },
 
     renderProgramReportCardHTML(prog) {
-        const contactDisplay = this.isAdminAuthenticated
+        const contactDisplay = this.isAdmin
             ? (prog.contact || "010-3351-6363")
             : (prog.contact ? "010-****-**** (관리자 인증 필요)" : "010-****-****");
 

@@ -359,6 +359,11 @@ body {
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
 
+/* 모바일 사이드바 드로어 전환 애니메이션 */
+#main-sidebar {
+    transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 
 
 
